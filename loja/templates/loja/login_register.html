@@ -1,0 +1,51 @@
+{% extends 'main.html' %}
+{% block content %}
+{% if pagina == 'login' %}
+<!-- LOGIN -->
+<div class="container">
+    <div>
+        <h3> Login: </h3>
+    </div>
+    <form action="" method="POST" class="form-horizontal">
+        {% csrf_token %}
+        <div>
+            <label> Email </label>
+            <input id='email' type="email" name="email" placeholder="e.g. bigEmail@gmail.com" />
+        </div>
+        <div>
+            <label> Password </label>
+            <input id='password' type="password" name="password"
+                placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+        </div>
+        <button type="submit" id="login" class="btn btn-primary">Login</button>
+    </form>
+    <div class="auth__action">
+        <p>Haven't signed up yet?</p>
+        <a href="{% url 'loja-register-Utilizador' %}">Sign Up</a>
+    </div>
+</div>
+{% else %}
+<!-- REGISTO -->
+<div class="container">
+    <div>
+        <h3>Registration</h3>
+    </div>
+    <div class="form-container">
+        <form action="" method="POST" class="form" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+            <div>
+              <label>{{field.label}}</label>
+              {{field}}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Register</button>
+        </form>
+        <div class="auth__action">
+            <p>Already signed up?</p>
+            <a href="{% url 'loja-login' %}">Login</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock content %}

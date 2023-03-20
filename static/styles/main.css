@@ -1,0 +1,39 @@
+body{
+	background-color: rgb(250, 250, 250);
+}
+.bg-dark{
+    background-color:rgba(171, 83, 83, 0.785) !important;
+}
+
+#imagem-perfil{
+    width: 25px !important;
+    height: 25px !important;
+    border-radius: 100%;
+    display: inline-block;
+    margin-left: 15px;
+}
+#aMinhaNavBarEspacoUser{
+    margin-left: auto;
+
+}
+
+
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .form-container label {
+    margin: 10px;
+  }
+  
+  .form-container input {
+    margin: 10px;
+    padding: 5px;
+    border-radius: 5px;
+    border: none;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  }

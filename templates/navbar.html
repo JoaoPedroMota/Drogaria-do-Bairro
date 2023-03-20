@@ -1,0 +1,41 @@
+{% load static %}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <a class="navbar-brand" href="{% url 'loja-home' %}">Drogaria do Bairro</a>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="{% url 'loja-home' %}">Home <span class="sr-only">(current)</span></a>
+      </li>
+
+
+      <!-- logado -->
+    {% if request.user.is_authenticated %}
+    </ul>
+    <div class="ml-auto" id="aMinhaNavBarEspacoUser">
+      <div class="dropdown">
+        <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown"
+          aria-haspopup="true" aria-expanded="false">
+          <img class="imagens" id='imagem-perfil' src="{{request.user.imagem_perfil.url}}"
+            style="width:50px;height: 50px;border-radius: 100%;" />
+          <span>@{{request.user.username}}</span>
+        </a>
+        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink">
+          <a class="dropdown-item" href="{% url 'loja-logout' %}">Log-out</a>
+        </div>
+      </div>
+    </div>
+    <!-- Não Logado -->
+    {% else %}
+
+
+    <li class="nav-item active">
+      <a class="nav-link" href="{% url 'loja-login' %}">Login <span class="sr-only">(current)</span></a>
+    </li>
+    </ul>
+    {% endif %}
+
+
+  </div>
+</nav>
