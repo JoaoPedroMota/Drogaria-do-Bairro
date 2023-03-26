@@ -51,6 +51,25 @@ class Fornecedor(models.Model):
 
 
 class UnidadeProducao(models.Model):
+    """_summary_
+
+    Args:
+        models (_type_): _description_
+    ----------------------------------
+    TIPO_UNIDADE : list
+        tipo de unidades possiveis. Mais tarde poderá ser uma classe
+    fornecedor: foreignkey
+        referencia quem é o fornecedor dono desta unidade de producao
+    pais: charfield. str
+        em que país está esta unidade de producao
+    cidade: charfield. str
+        em que cidade está esta unidade de producao
+    morada: charfield. str
+        qual é a morada desta unidade de producao. (Rua Torta 4 3ºD)
+        
+    tipo_unidade: charfield. str
+        que tipo de unidade é esta de facto
+    """
     TIPO_UNIDADE = [
         ('A', 'Armazém'),
         ('Q', 'Quinta'),
@@ -64,7 +83,7 @@ class UnidadeProducao(models.Model):
     pais = models.CharField(max_length=100, null=True, blank=False)
     cidade = models.CharField(max_length=100, null=True, blank=False)
     # freguesia = models.CharField(max_length=100, null=True, blank=False)
-    morada = models.CharField(max_length=100, null=True, blank=False)
+    morada = models.CharField(max_length=200, null=True, blank=False)
     tipo_unidade = models.CharField(max_length=1, choices=TIPO_UNIDADE, default='', null=True, blank=False)
     # lista produtos
     
@@ -76,7 +95,7 @@ class Tipo(models.Model):
 
     Args:
         models (_type_): _description_
-    ----------------------------------------------------------------
+        ----------------------------------
     nome: CharField. str 
         nome do tipo de produto. Por exemplo: Roupa
     pai: CharField. str
