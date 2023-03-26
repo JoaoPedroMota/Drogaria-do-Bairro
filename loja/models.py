@@ -70,6 +70,21 @@ class UnidadeProducao(models.Model):
     
 
 class Tipo(models.Model):
+    """
+    Tipo de produto.
+    
+
+    Args:
+        models (_type_): _description_
+    ----------------------------------------------------------------
+    nome: CharField. str 
+        nome do tipo de produto. Por exemplo: Roupa
+    pai: CharField. str
+        esta classe é descendente de outra? Por exemplo: 
+        Roupa --> Roupa Criança.  Roupa Criança é descendente
+        de Roupa
+    """
+
     nome = models.CharField(max_length=100, blank=False, null=True)
     pai = models.ForeignKey("Tipo", blank=True, null=True, on_delete=models.CASCADE)
     
