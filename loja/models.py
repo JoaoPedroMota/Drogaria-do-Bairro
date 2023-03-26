@@ -44,7 +44,33 @@ class Fornecedor(models.Model):
     utilizador = models.ForeignKey(Utilizador, on_delete=models.CASCADE, null=False, related_name='fornecedor')
     #lista_produtos
     #lista_veiculos
+    # lista_unidades_producao
     descricao = models.TextField(blank=True, null=True, max_length=500)
     def __str__(self):
         return self.utilizador.nome
+
+
+class UnidadeProducao(models.Model):
+    TIPO_UNIDADE = [
+        ('A', 'Armazém'),
+        ('Q', 'Quinta'),
+        ('MM', 'Mini-mercado'),
+        ('SM', 'Supermercado'),
+        ('HM', 'Hipermercado'),
+        ('LR', 'Loja de Rua'),
+        ('LCC', 'Loja Centro Comercial'),
+    ]
+    fornecedor = models.ForeignKey(Fornecedor, null=True, blank=False, on_delete=models.CASCADE)
+    pais = models.CharField(max_length=100, null=True, blank=False)
+    cidade = models.CharField(max_length=100, null=True, blank=False)
+    # freguesia = models.CharField(max_length=100, null=True, blank=False)
+    morada = models.CharField(max_length=100, null=True, blank=False)
+    tipo_unidade = models.CharField(max_length=1, choices=TIPO_UNIDADE, default='', null=True, blank=False)
+    # lista produtos
     
+
+class Tipo(models.Model):
+    nome = models.CharField(max_length=100, blank=False, null=True)
+    pai = models.ForeignKey("Tipo", blank=True, null=True, on_delete=models.CASCADE)
+    
+    created = models.DateTimeField(auto_now_add=True, null=True, blank=False)   
