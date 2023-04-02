@@ -157,7 +157,6 @@ class Utilizador(AbstractUser):
         return self.is_admin and self.is_superuser
     
     class Meta:
-    class Meta:
         verbose_name = 'Utilizador'
         verbose_name_plural = 'Utilizadores'
         ordering = ['username', '-created', '-updated']
@@ -171,6 +170,11 @@ class Consumidor(models.Model):
     # encomendas = Models.OneToMany
     def __str__(self):
         return self.utilizador.nome
+    class Meta:
+        verbose_name = 'Consumidor'
+        verbose_name_plural = 'Consumidores'
+    
+    
 
 
 class Fornecedor(models.Model):
