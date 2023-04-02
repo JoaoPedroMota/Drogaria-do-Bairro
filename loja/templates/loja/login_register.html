@@ -33,12 +33,7 @@
     <div class="form-container">
         <form action="" method="POST" class="form" enctype="multipart/form-data">
             {% csrf_token %}
-            {% for field in form %}
-            <div>
-              <label>{{field.label}}</label>
-              {{field}}
-            </div>
-            {% endfor %}
+            {{form.as_p}}
             <button type="submit" class="btn btn-primary">Register</button>
         </form>
         <div class="auth__action">

@@ -14,3 +14,10 @@ class FornecedorFormulario(ModelForm):
         model = Fornecedor
         fields = '__all__'
         exclude = {'utilizador'}
+        
+        
+        
+class EditarPerfil(ModelForm):
+    class Meta:
+        model = Utilizador
+        fields = ['nome', 'username','email', 'pais','cidade','telemovel','imagem_perfil',]

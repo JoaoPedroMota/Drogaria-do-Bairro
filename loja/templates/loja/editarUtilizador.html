@@ -1,0 +1,17 @@
+{% extends 'main.html' %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <p>Editar Perfil</p>
+    </div>
+    <form action="" method="POST" class="form" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{form.as_p }}
+        <button type="submit" class="btn btn-primary">Guardar</button>
+    </form>
+    <form action="{% url 'loja-delete-conta' request.user.id %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary" id="bt_apagar_conta">Apagar apagar-conta</button>
+    </form>
+</div>
+{% endblock content %}

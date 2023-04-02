@@ -108,6 +108,17 @@ class Utilizador(AbstractUser):
     # Campos personalizados
     nome = models.CharField(max_length=200, null=True)
     email = models.EmailField(unique=True, null=True, blank=False, error_messages={'unique': 'Já existe um utilizador com esse e-mail.'})
+    username = models.CharField(
+        max_length=20,
+        unique=True,
+        null=True,
+        blank=False,
+        validators=[ASCIIUsernameValidator()],
+        help_text='Obrigatório: Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ são permitidos.',
+        error_messages={
+            'unique': 'Já existe um utilizador com esse nome de utilizador.',
+        },
+    )
     pais = models.CharField(max_length=200, null=True, blank=False)
     cidade = models.CharField(max_length=200, null=True, blank=False) 
     morada = models.CharField(max_length=200, null=True, blank=False)
@@ -120,17 +131,7 @@ class Utilizador(AbstractUser):
     is_admin = models.BooleanField(default=False, help_text='Designa se este utilizador tem permissão para realizar ações de administrador.')
     
     # Campo personalizado de username
-    username = models.CharField(
-        max_length=20,
-        unique=True,
-        null=True,
-        blank=False,
-        validators=[ASCIIUsernameValidator()],
-        help_text='Obrigatório. 20 caracteres ou menos. Apenas letras, dígitos e @/./+/-/_ são permitidos.',
-        error_messages={
-            'unique': 'Já existe um utilizador com esse nome de utilizador.',
-        },
-    )
+
     updated = models.DateTimeField(auto_now=True, null=True, blank=False)
     created = models.DateTimeField(auto_now_add=True, null=True, blank=False)
     
@@ -163,7 +164,7 @@ class Utilizador(AbstractUser):
 
     
 class Consumidor(models.Model):
-    utilizador = models.ForeignKey(Utilizador, on_delete=models.CASCADE, null=False, related_name='consumidor')
+    utilizador = models.OneToOneField(Utilizador, on_delete=models.CASCADE, null=False, related_name='consumidor')
     #carrinho = carrinho atual
     # encomendas = Models.OneToMany
     def __str__(self):
@@ -176,7 +177,7 @@ class Consumidor(models.Model):
 
 
 class Fornecedor(models.Model):
-    utilizador = models.ForeignKey(Utilizador, on_delete=models.CASCADE, null=False, related_name='fornecedor')
+    utilizador = models.OneToOneField(Utilizador, on_delete=models.CASCADE, null=False, related_name='fornecedor')
     #lista_produtos
     #lista_veiculos
     descricao = models.TextField(blank=True, null=True, max_length=500)

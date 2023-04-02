@@ -2,9 +2,9 @@ from django.shortcuts import redirect, render
 from .models import Utilizador, Fornecedor, Consumidor
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import UtilizadorFormulario, FornecedorFormulario
+from .forms import UtilizadorFormulario, FornecedorFormulario, EditarPerfil
 from django.contrib.auth.decorators import login_required
-
+from django.http import HttpResponse
 
 # Create your views here.
 def loja(request):
@@ -85,3 +85,51 @@ def formFornecedor(request):
 def logutUtilizador(request):
     logout(request)
     return redirect('loja-home')
+
+
+
+@login_required(login_url='loja-login')
+def editarPerfil(request):
+    pagina = 'editarPerfil'
+    utilizador = request.user
+    form = EditarPerfil(instance=utilizador)
+    if request.method == 'POST':
+        form = EditarPerfil(request.POST, request.FILES,instance = utilizador)
+        #fields = []
+        username = request.POST.get('username')
+        utilizador.nome = request.POST.get('nome')
+        utilizador.email = request.POST.get('email')
+        utilizador.pais = request.POST.get('pais')
+        utilizador.cidade = request.POST.get('cidade')
+        utilizador.telemovel = request.POST.get('telemovel')
+        utilizador.imagem_perfil = request.POST.get('imagem_perfil')
+        utilizador.username = username  
+        
+        if form.is_valid():
+            utilizador = form.save(commit=False)
+            utilizador.username = username.lower()
+            utilizador.pais = utilizador.pais.upper()
+            utilizador.cidade = utilizador.cidade.upper()
+            utilizador.save()
+            return redirect('loja-home')
+            
+    
+    context = {'form':form, 'pagina':pagina}
+    return render(request, 'loja/editarUtilizador.html', context)
+
+
+
+
+@login_required(login_url='loja-login')
+def apagarConta(request,pk):
+    utilizador = Utilizador.objects.get(pk=pk)
+    
+    if request.user != utilizador:
+        return HttpResponse('Você não deveria estar aqui!')
+    if request.method == 'POST':
+        logout(request)
+        utilizador.delete()
+        return redirect('loja-home')
+    context={'objeto':utilizador, 'pagina':'apagar-conta'}
+    return render(request,'loja/delete.html', context)
+        

@@ -9,5 +9,7 @@ urlpatterns = [
     path('register/', views.registerUtilizador, name='loja-register-Utilizador'),
     path('logout', views.logutUtilizador, name='loja-logout'),
     path('form-fornecedor/', views.formFornecedor, name='loja-form-forcedor'),
+    path('editarPerfil/', views.editarPerfil, name='loja-editarPerfil'),
+    path('apagar-conta/<str:pk>/', views.apagarConta, name='loja-delete-conta'),
     
 ]
