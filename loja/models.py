@@ -77,8 +77,6 @@ class CustomUserManager(UserManager):
 
 
 
-
-class Utilizador(AbstractUser):
 class Utilizador(AbstractUser):
     """
     Utilizador é uma classe de utilizador personalizada que estende a classe AbstractUser padrão do Django.
