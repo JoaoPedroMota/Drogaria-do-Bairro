@@ -1,0 +1,554 @@
+openapi: 3.0.3
+info:
+  title: Projeto PGP 
+  description: API do Projeto de 3 Ano de Tecnologias de Informação
+  contact:
+    name: Grupo 06
+    url: www.drogariadobairro.pt
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:8000/
+tags:
+  - name: user
+    description: Everything about consumers and supliers
+  - name: shop
+    description: Everything about consumers 
+  - name: work
+    description: Everything about supliers
+   
+paths:
+  ################################USER#######################################################################
+  
+  
+  /user/{userID}:
+    description: Path relative to users
+    get:
+      tags:
+        - user
+      summary: Filter user by unique ID
+      parameters:
+      - in: path
+        name: userID
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          minLength: 1
+          description: Numeric ID of the user to get
+      responses:
+        200: 
+          description: successful operation
+          content:
+              application/json:
+                schema:
+                  type: string
+                  
+        400: 
+          description:   Invalid username supplied
+        404: 
+          description: User not found
+          
+    put:
+      summary: This can only be done by the logged in user.
+      tags:
+        - user
+      parameters:
+      - in: path
+        name: userID
+        description: name that need to be updated.
+        required: true            
+        schema:  
+          type: integer
+          format: int64
+          minimum: 1
+          minLength: 1
+      responses:
+        400:
+          description:   Invalid user supplied        
+        404:      
+          description:   User not found    
+    delete:  
+      tags:
+        - user
+      summary: Delete user and  this can only be done by the logged in user.
+      parameters:
+      - in: path
+        name:  userID
+        required: true            
+        schema:  
+          type: integer
+          format: int64
+          minimum: 1
+          minLength: 1
+      responses:
+        200:
+          description: successful operation
+        
+          
+        400:
+          description:   Invalid username supplied
+     
+        404:
+          description:   User not found
+                
+  /user/login:       
+    
+    get:
+      tags:
+        - user
+      summary:   Makes the login 
+      parameters:
+      - in: query
+        name: username
+        description: The user for login
+        required: true            
+        schema:  
+          type: string
+      - in: query
+        name: password
+        description: The user for login in clear text
+        required: true            
+        schema:  
+          type: string  
+      responses:
+        200:
+          description: successful operation
+        
+          
+        400:
+          description:   Invalid username/password supplied
+  /user/logout:   
+    get:
+      tags:
+        - user
+      summary:   Logs out current logged in user session
+      
+      responses:
+        200:
+          description: successful operation
+        
+          
+  /user:   
+     post:
+      tags:
+        - user
+      summary: This can only be done by the logged in user
+     
+  
+      requestBody:
+        content:
+          application/json:
+             schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  username:
+                    type: integer
+                  email:
+                    type: string
+                  password:
+                    type: string
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+           
+      responses:
+          202: 
+            description:   Successful operation
+            content:
+                application/json:
+                  schema:
+                    type: string
+              
+  ###########################################CONSUMIDOR######################################################
+  /shop/products:
+    get:
+      tags:
+        - shop
+      summary: Get all products in a array
+      
+      responses:
+        "200": 
+          description: successful operation
+      
+  /shop/products/{nome}:
+    get:
+      tags:
+        - shop
+      summary: Filter produtcts by name
+      parameters:
+        - name: nome
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200": 
+          description:   successful operation
+        
+        "400": 
+          description:   Invalid name supplied
+        "404": 
+          description:   Product not found 
+          
+  /shop/order/{orderID}:
+    get:
+      tags:
+        - shop
+      summary: Get a order by the unique ID
+      parameters:
+        - name: orderID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            minLength: 1 
+      responses:
+        "200": 
+          description:   successful operation
+          
+        "400": 
+          description:   Invalid name supplied
+        "404": 
+          description:   Order not found
+  
+  
+    delete:
+      tags:
+        - shop
+      summary: Delete order by ID
+      parameters:
+        - name: orderID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            minLength: 1 
+      responses:
+        200:
+          description: Order that was deleted
+          
+      
+        400:
+          description:   Invalid order supplied
+      
+        404:
+          description:   Order not found    
+  
+  /shop/order:
+    
+    get:
+      tags:
+        - shop
+      summary: Get all orders made by the user
+      description: Vizualiza todos as encomendas
+      responses:
+        "200": 
+          description:   successful operation
+          
+        "400": 
+          description:   Invalid name supplied
+        "404": 
+          description:   Order not found  
+
+  
+         
+         
+      
+    
+  /shop/cart:
+    get:
+      tags:
+        - shop
+      summary: See the shopping cart
+      description: Get shopping cart, products at the moment that can be turned into an order
+      responses:
+        "200": 
+          description:   successful operation
+          content:
+            application/json:
+              schema:
+                 type: object
+                 example: [["batatas",3,3.2],["tomates",1,10],["cenouras",5,2.5]]
+        "400": 
+          description:   Invalid name supplied
+        "404": 
+          description:   Order not found
+        
+    put:
+      tags:
+        - shop
+      summary: Make changes do the cart
+      requestBody:
+        description:  Array of objects
+        required: true
+        content:
+            application/json:
+              schema:
+                 type: array
+                 items:
+                  type: object
+                  example: [["tomates",1,10],["cenouras",5,2.5]]
+      responses:
+        '400':
+          description:   Invalid input supplied
+        '404':
+          description: Cart not found  
+    post:
+      tags:
+        - shop
+      summary: Make an object order
+      requestBody:
+          content:
+            application/json:
+              schema:
+                 type: object
+                 properties:
+                    idOrder:
+                      type: integer
+                    product:
+                      type: object
+                     
+                      example: [1,["batatas",3,3.2],["tomates",1,10],["cenouras",5,2.5]]
+                   
+      responses:
+        "405": 
+         description: Invalid Input  
+  /shop/order/payments:
+  
+    get:
+      tags:
+        - shop
+      summary: Payment Methods
+      responses:
+        "200": 
+          description:   successful operation
+          
+        "400": 
+          description:   Invalid input supplied
+        "404": 
+          description:   payment not found
+
+  /shop/order/payments/{selection-payment}:
+    get:
+      tags:
+        - shop
+      summary: Confirmation of purchase
+      parameters:
+      - in: path
+        name: selection-payment
+        required: true
+        schema:
+            type: integer
+      responses:
+        "200": 
+          description:   successful operation
+         
+        "400": 
+          description:   Payment failed
+        "404": 
+          description:   payment not found
+     
+  #########################################FORNECEDOR##################################################################          
+  /work/orders/{orderID}:            
+    put:         
+      tags:
+        - work
+      summary: Fill the order where we will associate a vehicle     
+      parameters:
+      - in: path
+        name: orderID
+        description: The user for login
+        required: true            
+        schema:  
+          type: string
+      
+      requestBody:
+        content:
+          application/json:
+             schema:
+              type: object
+              properties:
+                username:
+                  type: integer
+                    
+                vehicles:
+                  type: integer
+                
+                product:
+                  type: object    
+                            
+      responses:
+        200:
+          description: successful operation        
+        400: 
+          description:   Invalid input supplied
+        404: 
+          description:   productionUnitsID not found
+      
+  /work/orders :
+    get:
+      tags:
+        - work
+      summary: Get all the orders associated to the suplier
+      responses:
+        "200": 
+          description:   successful operation
+           
+        "400": 
+          description:   Invalid input supplied
+        "404": 
+          description:   Order not found  
+            
+  /work/vehicles :
+    
+    get:
+      tags:
+        - work
+      summary: Get all vehicles
+      description: Get the list of vehicles availables
+      responses:
+        "200": 
+          description:   successful operation
+
+        "400": 
+          description:   Invalid input supplied
+        "404": 
+          description:   Vehicles not found            
+               
+  
+  /work/vehicles/{vehiclesId} :
+   
+    get:
+      tags:
+        - work
+      summary: Get a especified vehicle
+      parameters:
+        - name: vehiclesId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            minLength: 1 
+      responses:
+        "200": 
+          description:   Successful operation
+       
+           
+        "400": 
+          description:   Invalid input supplied
+        "404": 
+          description:   VehiclesID not found
+
+    delete:
+      tags:
+        - work
+      summary: Apaga veiculo atraves do ID dado
+      parameters:
+        - name: vehiclesId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            minLength: 1 
+      responses:
+        200:
+          description: Vehicle that was deleted
+      
+        400:
+          description:   Invalid Vehicle supplied
+     
+        404:
+          description:   Vehicle not found
+          
+  /work/productionUnits:
+    put:
+      tags:
+        - work
+      summary: Altera UnidadesDeProducao
+      requestBody:
+        content:
+          application/json:
+            schema:
+                type: object
+                example: ["Continente","Amadora"] ##fornecedor, unidadeProducao
+      responses:
+        "405": 
+          description:   Invalid productionUnit
+    post:
+      tags:
+        - work
+      summary: Cria UnidadesDeProducao
+      requestBody:
+        content:
+          application/json:
+            schema:
+                type: object
+                example: ["Continente","Saldanha"] ##fornecedor, unidadeProducao
+      responses:
+        "405": 
+          description:   Invalid productionUnit
+    
+  /work/productionUnits/{productionUnitsID} :
+    get:
+      tags:
+        - work
+      summary: Obtem informacao da UnidadeDeProducaoPretendia
+      parameters:
+        - name: productionUnitsID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            minLength: 1 
+      
+      responses:
+        "200": 
+          description:   Successful operation
+        "400": 
+          description:   Invalid input supplied
+        "404": 
+          description:   productionUnitsID not found
+    delete:
+      tags:
+         - work
+      summary: Apaga UnidadeDeProducao
+      parameters:
+        - name: productionUnitsID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            minLength: 1 
+      responses:
+        200:
+          description: productionUnitsID that was deleted
+        400:
+          description:   Invalid productionUnitsID supplied
+        404:
+          description:   productionUnitsID not found            
+
+        
+        
+        
+        
+        
+              
+                
