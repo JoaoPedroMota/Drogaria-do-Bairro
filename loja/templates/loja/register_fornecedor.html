@@ -1,14 +1,11 @@
 {% extends 'main.html' %}
 {% block content %}
 <div class="container">
-<h3>Conte-nos mais sobre si. </h3>
+<h3>Conte-nos mais sobre si. (opcional) </h3>
 <form action="" method="POST">
     {% csrf_token %}
     <div class="form-group">
-        {% for field in formulario %}
-        <label>{{field.label}}</label>
-        {{field}}
-        {% endfor %}
+        {{form.as_p}}
         <button class="btn btn--main" type="submit"> Submit </button>
     </div>
 </form>

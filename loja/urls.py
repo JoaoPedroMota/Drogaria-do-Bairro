@@ -11,5 +11,7 @@ urlpatterns = [
     path('form-fornecedor/', views.formFornecedor, name='loja-form-forcedor'),
     path('editarPerfil/', views.editarPerfil, name='loja-editarPerfil'),
     path('apagar-conta/<str:pk>/', views.apagarConta, name='loja-delete-conta'),
+    path('perfil/<str:userName>/', views.perfil, name='loja-perfil'),
+    
     
 ]

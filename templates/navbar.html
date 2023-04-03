@@ -22,8 +22,15 @@
           <span>@{{request.user.username}}</span>
         </a>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink">
-          <a class="dropdown-item" href="{% url 'loja-logout' %}">Log-out</a>
-          <a class="dropdown-item" href="{% url 'loja-editarPerfil' %}">Editar Perfil</a>
+          <a class="dropdown-item" href="{% url 'loja-perfil' request.user.username  %}">Perfil</a>
+          <!-- Adicionar links futuros em cima do Logout -->
+
+
+
+
+
+
+          <a class="dropdown-item" href="{% url 'loja-logout' %}">Logout</a>
         </div>
       </div>
     </div>

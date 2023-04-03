@@ -45,3 +45,12 @@ body{
   color: rgb(255,255,255);
   margin-top: 25px;
 }
+
+
+#botaoEditarPeril {
+  background-color: rgb(0,0,255);
+  color: rgb(255,255,255);
+  margin-top: 25px;
+  margin-bottom: 25px;
+  margin-right: 25px;
+}

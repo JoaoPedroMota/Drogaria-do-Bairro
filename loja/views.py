@@ -41,7 +41,6 @@ def loginUtilizador(request):
     context = {'pagina':pagina}
     return render(request, 'loja/login_register.html', context)
 
-
 def registerUtilizador(request):
     pagina = 'registo'
     form = UtilizadorFormulario()
@@ -133,3 +132,11 @@ def apagarConta(request,pk):
     context={'objeto':utilizador, 'pagina':'apagar-conta'}
     return render(request,'loja/delete.html', context)
         
+        
+
+@login_required(login_url='loja-login')
+def perfil(request, userName):
+    utilizador = Utilizador.objects.get(username=userName)
+    pagina = 'perfil'
+    context={'pagina':pagina, 'utilizadorView': utilizador}
+    return render(request,'loja/perfil.html',context)

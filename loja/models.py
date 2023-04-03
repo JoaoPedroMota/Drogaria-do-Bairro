@@ -6,6 +6,7 @@ from django.contrib.auth.validators import ASCIIUsernameValidator
 from django.contrib.auth.models import UserManager
 from django.core.exceptions import ValidationError
 from django.db.models import Q
+from django_countries.fields import CountryField
 # Create your models here.
 
 
@@ -119,10 +120,10 @@ class Utilizador(AbstractUser):
             'unique': 'Já existe um utilizador com esse nome de utilizador.',
         },
     )
-    pais = models.CharField(max_length=200, null=True, blank=False)
+    pais = CountryField(null=True, blank=False, default='PT')
     cidade = models.CharField(max_length=200, null=True, blank=False) 
-    morada = models.CharField(max_length=200, null=True, blank=False)
-    telemovel = PhoneNumberField(null=True, blank=True, unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'})
+    #morada = models.CharField(max_length=200, null=True, blank=False)
+    telemovel = PhoneNumberField(null=True, blank=True, unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
     tipo_utilizador = models.CharField(max_length=1, choices=TIPO_UTILIZADOR, default='', null=True)
     imagem_perfil = models.ImageField(null=True, default="avatar.svg")
     

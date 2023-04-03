@@ -40,8 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     'loja.apps.LojaConfig',
-    
+        
+    'django_countries',
     'phonenumber_field',
+
 ]
 
 
