@@ -13,18 +13,17 @@
         </a>
         <h3>Back</h3>
     </div>
+    <div class="form__group">
+        <p>Tem a certeza de que pretende apagar
+            {% if pagina == 'apagar-conta' %}
+                a conta 
+            {% endif %}
+            "{{objeto}}"?</p>
+    </div>
     <form class='form' method="POST" action="">
         {% csrf_token %}
-        <div class="form__group">
-            <p>Tem a certeza de que pretende apagar
-                {% if pagina=='apagar-conta' %}
-                    a conta 
-                {% endif %}
-                "{{objeto}}"?</p>
-        </div>
-
         <div class="for__group">
-            <input class="btn btn--main" type="submit" value="Confirmar" />
+            <input class="btn btn--main" id="bt_apagar_conta" type="submit" value="Confirmar" />
         </div>
 
     </form>
