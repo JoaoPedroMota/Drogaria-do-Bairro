@@ -174,7 +174,86 @@ class Consumidor(models.Model):
         verbose_name = 'Consumidor'
         verbose_name_plural = 'Consumidores'
     
+class Veiculo(models.Model):
+    TIPO_VEICULO = [
+        ('C', 'Carro'),
+        ('E', 'Estafeta a pé'),
+        ('M', 'Mota'),
+        ('B', 'Bicicleta'),
+        ('T', 'Trotinete'),
+        ('CR', 'Carrinha'),
+        ('CM', 'Camião'),
+    ]
+    ESTADOS = [
+        ('D', 'Disponível'),
+        ('A-C', 'A caminho'),
+        ('E', 'A entregar'),
+        ('I/M', 'Indisponível/Manutenção'),
+        ('R', 'Regresso'),
+        ('W', 'À espera'),
+        
+    ]
+    nome = models.CharField(max_length=200, null=True, blank=False)
+    unidadeProducao = models.ForeignKey("UnidadeProducao", null=True, blank=False, on_delete=models.CASCADE)
+    tipo_veiculo = models.CharField(max_length=1, choices=TIPO_VEICULO, default='', null=True, blank=False)
+    estado_veiculo = models.CharField(max_length=1, choices=ESTADO_VEICULO, default='D', null=True, blank=False)
+    @property
+    def estado(self):
+        return self.estado_veiculo
     
+    def __str__(self):
+        return self.nome
+class UnidadeProducao(models.Model):
+    """_summary_
+    Args:
+        models (_type_): _description_
+    ----------------------------------
+    TIPO_UNIDADE : list
+        tipo de unidades possiveis. Mais tarde poderá ser uma classe
+    fornecedor: foreignkey
+        referencia quem é o fornecedor dono desta unidade de producao
+    pais: charfield. str
+        em que país está esta unidade de producao
+    cidade: charfield. str
+        em que cidade está esta unidade de producao
+    morada: charfield. str
+        qual é a morada desta unidade de producao. (Rua Torta 4 3ºD)
+        
+    tipo_unidade: charfield. str
+        que tipo de unidade é esta de facto
+    """
+    # TIPO_UNIDADE = [
+    #     ('A', 'Armazém'),
+    #     ('Q', 'Quinta'),
+    #     ('MM', 'Mini-mercado'),
+    #     ('SM', 'Supermercado'),
+    #     ('HM', 'Hipermercado'),
+    #     ('LR', 'Loja de Rua'),
+    #     ('LCC', 'Loja Centro Comercial'),
+    # ]
+    nome = models.CharField(max_length=200, null=True, blank=False)
+    fornecedor = models.ForeignKey("Fornecedor", null=True, blank=False, on_delete=models.CASCADE)
+    pais = CountryField(null=True, blank=False, default='PT')
+    cidade = models.CharField(max_length=100, null=True, blank=False)
+    # freguesia = models.CharField(max_length=100, null=True, blank=False)
+    morada = models.CharField(max_length=200, null=True, blank=False)
+    # tipo_unidade = models.CharField(max_length=1, choices=TIPO_UNIDADE, default='', null=True, blank=False)
+    # lista produtos
+    def get_all_veiculos(self):
+        return Veiculo.objects.filter(unidadeProducao=self)
+    
+    def get_veiculo_por_id(self, id):
+        try:
+            veiculo = Veiculo.objects.get(id=id)
+            if veiculo in self.get_veiculos():
+                return veiculo
+            else:
+                raise ValueError('Esta veiculo não pertence a esta unidade de producao')
+        except Veiculo.DoesNotExist:
+            raise ValueError('Não encontrei nenhum veículo com base no id dado')
+        
+    def __str__(self):
+        return self.nome
 
 
 class Fornecedor(models.Model):
@@ -185,3 +264,17 @@ class Fornecedor(models.Model):
     def __str__(self):
         return self.utilizador.nome
     
+    def get_all_unidadesProducao(self):
+        return UnidadeProducao.objects.filter(fornecedor=self)
+    
+    def get_unidade_producao_por_id(self, id):
+        try:
+            unidade = UnidadeProducao.objects.get(id=id)
+            if unidade in self.get_unidades_producao():
+                return unidade
+            else:
+                raise ValueError('Esta unidade de produção não pertence a este fornecedor')
+        except UnidadeProducao.DoesNotExist:
+            raise ValueError('Não encontrei nenhuma unidade de produção com base no id dado')
+        
+
