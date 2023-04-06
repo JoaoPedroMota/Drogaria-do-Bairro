@@ -79,7 +79,7 @@ def formFornecedor(request):
             return redirect('loja-home')
         else:
             messages.error(request,'Ocorreu um erro durante o processo de registo')
-    context = {'formulario':form}
+    context = {'form':form}
     return render(request,'loja/register_fornecedor.html' ,context)
 
 def logutUtilizador(request):
