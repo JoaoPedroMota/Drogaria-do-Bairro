@@ -23,6 +23,7 @@
         </a>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink">
           <a class="dropdown-item" href="{% url 'loja-logout' %}">Log-out</a>
+          <a class="dropdown-item" href="/profile">Profile</a>
         </div>
       </div>
     </div>
@@ -31,7 +32,7 @@
 
 
     <li class="nav-item active">
-      <a class="nav-link" href="{% url 'loja-login' %}">Login <span class="sr-only">(current)</span></a>
+      <a class="nav-link" href="/login/auth0">Login <span class="sr-only">(current)</span></a>
     </li>
     </ul>
     {% endif %}

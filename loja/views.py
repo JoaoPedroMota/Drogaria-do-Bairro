@@ -4,12 +4,29 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from .forms import UtilizadorFormulario, FornecedorFormulario
 from django.contrib.auth.decorators import login_required
-
-
+import json
 # Create your views here.
 def loja(request):
     context = {}
     return render(request, 'loja/loja.html', context)
+
+def profile(request):
+    user=request.user
+
+    auth0_user=user.social_auth.get(provider='auth0')
+
+    user_data={
+        'user_id':auth0_user.uid,
+        'name':auth0_user.firstname,
+        'picture':auth0_user.extra_data['picture']
+    }
+
+    context={
+        'user_data':json.dumps(user_data,indent=4),
+        'auth0_user':auth0_user        
+    }
+
+    return render(request, 'profile.html',context)
 
 def carrinho(request):
     context = {}
