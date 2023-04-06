@@ -54,3 +54,22 @@ body{
   margin-bottom: 25px;
   margin-right: 25px;
 }
+
+
+
+#TabelaUPfornecedores, #TabelaVeiculo {
+  width: 100%;
+  table-layout: auto;
+  text-align: center;
+  /* border: 1px solid rgb(204,204,204); */
+  margin-bottom: 50px;
+  margin-top: 50px;
+}
+
+#TabelaUPfornecedores tr, #TabelaVeiculo tr {
+  border-bottom: 1px solid rgb(204,204,204);
+}
+
+#TabelaUPfornecedores td, #TabelaVeiculo td {
+  width: auto;
+}

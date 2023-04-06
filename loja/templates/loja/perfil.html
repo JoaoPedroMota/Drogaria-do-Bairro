@@ -1,23 +1,73 @@
-{% extends 'main.html' %}
-{% block content %}
-<div class="container">
-    <div>
-        <img class="imagens" id='imagem-perfil-perfil' src="{{utilizadorView.imagem_perfil.url}}"
-        style="width:50px;height: 50px;border-radius: 100%;" />
-    </div>
-    <div>
-        <h5>{{utilizadorView.nome}}</h5>
-        <p>@{{utilizadorView.username}}
-        {% if request.user == utilizadorView %}
-        <form action="{% url 'loja-editarPerfil' %}" method="" class="form-wrapper">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-primary" id="botaoEditarPeril">Editar Perfil</button>
-        </form>
+<div>
+    {% extends 'main.html' %}
+    {% block content %}
+    <div class="container">
+        <div id="infoGeralPerfil">
+            <div id="imagemPerfil">
+                <img class="imagens" id='imagem-perfil-perfil' src="{{utilizadorView.imagem_perfil.url}}"
+                    style="width:50px;height: 50px;border-radius: 100%;" />
+            </div>
+            <h5>{{utilizadorView.nome}}</h5>
+            <p>@{{utilizadorView.username}}</p>
+            {% if request.user == utilizadorView %}
+            <form action="{% url 'loja-editarPerfil' %}" method="" class="form-wrapper">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" id="botaoEditarPeril">Editar Perfil</button>
+            </form>
+            {% endif %}
+        </div>
+        {% if request.user.is_fornecedor %}
+        <div id="Fornecedor">
+            <div id="infoGeralFornecedor">
+                {% if numero_up > 0 %}
+                <div id="numeroUPfornecedor">
+                    <p>Número de unidades de produção: {{numero_up}}.</p>
+                </div>
+                <div id="divTabelaPerfilFornecedor">
+                    <table id="TabelaUPfornecedores">
+                        <tr>
+                            <th>Id Interno</th>
+                            <th>Nome</th>
+                            <th>País</th>
+                            <th>Cidade</th>
+                            <th>Morada</th>
+                            <th>Tipo de Unidade</th>
+                            <th id="semBorda">Link</th>
+                        </tr>
+                        {% for up in unidadesProducao %}
+                        <tr>
+                            <td>{{ up.id }}</td>
+                            <td>{{ up.nome }}</td>
+                            <td>{{ up.get_pais_display }}</td>
+                            <td>{{ up.cidade }}</td>
+                            <td>{{ up.morada }}</td>
+                            <td>{{ up.get_tipo_unidade_display }}</td>
+                            <td><a href="{% url 'loja-unidadeProducao' userName=request.user.username id=up.id %}">Expandir</a></td>
+
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                {% else %}
+                <p>Ainda não tem unidades de produção associadas. Crie uma com o botão abaixo! </p>
+                {% endif %}
+            </div>
+            <div id="botaoAdicionarUP">
+                <form action="{% url 'loja-criarUP' request.user.username %}" method="" class="form-wrapper">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary" id="botaoCriarUP">Adicionar Unidade Produção</button>
+                </form>
+            </div>
+        </div>
+
+        {% elif request.user.is_consumidor %}
+        <div id="Consumidor">
+            <!-- ESPAÇO PARA COISAS DE UM CONSUMIDOR -->
+        </div>
+
         {% endif %}
+
+
+        {% endblock %}
+
     </div>
-</div>
-{% endblock %}
-
-<script>
-
-</script>

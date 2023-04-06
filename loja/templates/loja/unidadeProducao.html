@@ -1,0 +1,52 @@
+{% extends 'main.html' %}
+{% block content %}
+<div id="UnidadeProducao">
+    <a href="{% url 'loja-perfil' request.user.username %}" class="layout__boxTitle">
+        <div  class="container">
+            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+            <title>arrow-left</title>
+            <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
+            </svg>
+            <h6>Voltar</h6>
+        </div>
+    </a>
+    <div id="infoGeralUnidadeProducao">
+        <h4>Unidade de Produção: {{unidadeProducao.nome}}</h4>
+        {% if num_veiculos > 0 %}
+        <div id="numeroVeiculos">
+            <p>Número de veículos desta unidade de produção: {{num_veiculos}}.</p>
+        </div>
+        <div id="divTabelaVeiculos">
+            <table id="TabelaVeiculo">
+                <tr>
+                    <th>Id Interno</th>
+                    <th>Nome</th>
+                    <th>Tipo Veículo</th>
+                    <th>Estado</th>
+                </tr>
+                {% for veiculo in veiculos %}
+                <tr>
+                    <td>{{ veiculo.id }}</td>
+                    <td>{{ veiculo.nome }}</td>
+                    <td>{{ veiculo.get_tipo_veiculo_display }}</td>
+                    <td>{{ veiculo.get_estado_veiculo_display }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% else %}
+        <p>Ainda não tem veículos nesta unidade de produção. Crie um com o botão abaixo! </p>
+        {% endif %}
+    </div>
+    <div id="botaoAdicionarVeiculos">
+        <form action="{% url 'loja-criarVeiculo' userName=request.user.username id=unidadeProducao.id %}" method="" class="form-wrapper">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary" id="botaoCriarUP">Adicionar Veículo</button>
+        </form>
+    </div>
+</div>
+
+
+
+
+{% endblock content%}

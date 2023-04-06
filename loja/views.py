@@ -1,10 +1,11 @@
 from django.shortcuts import redirect, render
-from .models import Utilizador, Fornecedor, Consumidor
+from django.urls import reverse
+from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import UtilizadorFormulario, FornecedorFormulario, EditarPerfil
+from .forms import UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 
 # Create your views here.
 def loja(request):
@@ -50,8 +51,8 @@ def registerUtilizador(request):
         if formulario.is_valid():
             utilizador = formulario.save(commit=False)
             utilizador.username = utilizador.username.lower()
-            utilizador.pais = utilizador.pais.upper()
             utilizador.cidade = utilizador.cidade.upper()
+            utilizador.nome = utilizador.first_name+' '+ utilizador.last_name
             utilizador.save()
             login(request,utilizador)
             if utilizador.tipo_utilizador == "C":
@@ -96,7 +97,9 @@ def editarPerfil(request):
         form = EditarPerfil(request.POST, request.FILES,instance = utilizador)
         #fields = []
         username = request.POST.get('username')
-        utilizador.nome = request.POST.get('nome')
+        utilizador.first_name = request.POST.get('first_name')
+        utilizador.last_name = request.POST.get('last_name')
+        utilizador.nome = utilizador.first_name + ' ' + utilizador.last_name
         utilizador.email = request.POST.get('email')
         utilizador.pais = request.POST.get('pais')
         utilizador.cidade = request.POST.get('cidade')
@@ -107,7 +110,6 @@ def editarPerfil(request):
         if form.is_valid():
             utilizador = form.save(commit=False)
             utilizador.username = username.lower()
-            utilizador.pais = utilizador.pais.upper()
             utilizador.cidade = utilizador.cidade.upper()
             utilizador.save()
             return redirect('loja-home')
@@ -136,7 +138,86 @@ def apagarConta(request,pk):
 
 @login_required(login_url='loja-login')
 def perfil(request, userName):
-    utilizador = Utilizador.objects.get(username=userName)
+    utilizadorPerfil = Utilizador.objects.get(username=userName)
     pagina = 'perfil'
-    context={'pagina':pagina, 'utilizadorView': utilizador}
+    context={'pagina':pagina, 'utilizadorView': utilizadorPerfil}
+    if utilizadorPerfil.is_fornecedor():
+        fornecedor = utilizadorPerfil.fornecedor
+        unidadesProducao = fornecedor.unidades_producao.all()
+        numero_up = unidadesProducao.count()
+        context['unidadesProducao'] = unidadesProducao
+        context['numero_up'] = numero_up
     return render(request,'loja/perfil.html',context)
+
+@login_required(login_url='loja-login')
+def criarUP(request, userName):
+    utilizador = Utilizador.objects.get(username=userName)
+    fornecedor_id = utilizador.fornecedor
+    pagina = 'criarUP'
+    formulario = criarUnidadeProducaoFormulario()
+    if request.user.is_fornecedor():
+        if request.method == 'POST':
+            formulario = criarUnidadeProducaoFormulario(request.POST)
+            if formulario.is_valid():
+                UnidadeProducao.objects.create(
+                    fornecedor = fornecedor_id,
+                    tipo_unidade = request.POST.get('tipo_unidade'),
+                    nome = request.POST.get('nome'),
+                    pais = request.POST.get('pais'),
+                    cidade = request.POST.get('cidade'),
+                    morada = request.POST.get('morada')
+                )
+                link = reverse('loja-perfil', args=[request.user.username])
+                return redirect(link)
+            else:
+                messages.error(request,'Ocorreu um erro durante o processo de adição de uma Unidade de Produção')
+    else:
+        return HttpResponseForbidden()
+    
+    context = {'form':formulario, 'pagina':pagina}
+    return render(request, 'loja/criarUP.html', context)
+
+
+
+def unidadeProducao(request, userName, id):
+    context = {}
+    utilizador = Utilizador.objects.get(username=userName)
+    fornecedor = utilizador.fornecedor
+    #fornecedor.unidades_producao.all()
+    unidadeProducao = fornecedor.unidades_producao.get(pk=id)
+    veiculos = unidadeProducao.veiculo_set.all()
+    
+    num_veiculos = veiculos.count()
+    
+    
+    context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':unidadeProducao}
+    return render(request, 'loja/unidadeProducao.html', context)
+
+
+
+@login_required(login_url='loja-login')
+def criarVeiculo(request, userName, id):
+    pagina = 'criarVeiculo'
+    utilizador = Utilizador.objects.get(username=userName)
+    fornecedor= utilizador.fornecedor
+    unidadeProducao = fornecedor.unidades_producao.get(pk=id)
+    formulario = criarVeiculoFormulario()
+    if request.user.is_fornecedor():
+        if request.method == 'POST':
+            formulario = criarVeiculoFormulario(request.POST)
+            if formulario.is_valid():
+                Veiculo.objects.create(
+                    unidadeProducao = unidadeProducao,
+                    tipo_veiculo = request.POST.get('tipo_veiculo'),
+                    nome = request.POST.get('nome'),
+                    estado_veiculo = Veiculo.disponivel
+                )
+                link = reverse('loja-unidadeProducao', args=[userName, id])
+                return redirect(link)
+            else:
+                messages.error(request,'Ocorreu um erro durante o processo de adição de uma Unidade de Produção')
+    else:
+        return HttpResponseForbidden()
+    
+    context = {'form':formulario, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
+    return render(request, 'loja/criarVeiculo.html', context)

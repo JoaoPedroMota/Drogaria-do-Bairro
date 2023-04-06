@@ -12,6 +12,10 @@ urlpatterns = [
     path('editarPerfil/', views.editarPerfil, name='loja-editarPerfil'),
     path('apagar-conta/<str:pk>/', views.apagarConta, name='loja-delete-conta'),
     path('perfil/<str:userName>/', views.perfil, name='loja-perfil'),
-    
-    
+    path('perfil/<str:userName>/criarUP/', views.criarUP, name='loja-criarUP'),
+    path('perfil/<str:userName>/unidadeProducao/<str:id>/', views.unidadeProducao, name='loja-unidadeProducao'),
+    path('perfil/<str:userName>/unidadeProducao/<str:id>/criarVeiculo/', views.criarVeiculo, name="loja-criarVeiculo"),
 ]
+
+
+

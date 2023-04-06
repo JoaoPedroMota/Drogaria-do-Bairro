@@ -76,8 +76,6 @@ class CustomUserManager(UserManager):
         return super().create_superuser(password=password, **extra_fields)
 
 
-
-
 class Utilizador(AbstractUser):
     """
     Utilizador é uma classe de utilizador personalizada que estende a classe AbstractUser padrão do Django.
@@ -144,6 +142,15 @@ class Utilizador(AbstractUser):
     
     objects = CustomUserManager()
     
+    
+    def is_fornecedor(self):
+        return self.tipo_utilizador == Utilizador.FORNECEDOR
+    
+    def is_consumidor(self):
+        return self.tipo_utilizador == Utilizador.CONSUMIDOR
+    
+    
+    
     def has_perm(self, perm, obj=None):
         """
         Retorna True se o utilizador tem a permissão especificada. Este método é necessário para compatibilidade com o Django Admin.
@@ -162,8 +169,6 @@ class Utilizador(AbstractUser):
         ordering = ['username', '-created', '-updated']
     
     
-
-    
 class Consumidor(models.Model):
     utilizador = models.OneToOneField(Utilizador, on_delete=models.CASCADE, null=False, related_name='consumidor')
     #carrinho = carrinho atual
@@ -175,34 +180,50 @@ class Consumidor(models.Model):
         verbose_name_plural = 'Consumidores'
     
 class Veiculo(models.Model):
+    carro = 'C'
+    estafeta = 'E'
+    mota = 'M'
+    bicicleta = 'B'
+    trotineta = 'T'
+    carrinha = 'CR'
+    camiao = 'CM'
     TIPO_VEICULO = [
-        ('C', 'Carro'),
-        ('E', 'Estafeta a pé'),
-        ('M', 'Mota'),
-        ('B', 'Bicicleta'),
-        ('T', 'Trotinete'),
-        ('CR', 'Carrinha'),
-        ('CM', 'Camião'),
+        (carro, 'Carro'),
+        (estafeta, 'Estafeta a pé'),
+        (mota, 'Mota'),
+        (bicicleta, 'Bicicleta'),
+        (trotineta, 'Trotineta'),
+        (carrinha, 'Carrinha'),
+        (camiao, 'Camião'),
     ]
-    ESTADOS = [
-        ('D', 'Disponível'),
-        ('A-C', 'A caminho'),
-        ('E', 'A entregar'),
-        ('I/M', 'Indisponível/Manutenção'),
-        ('R', 'Regresso'),
-        ('W', 'À espera'),
+    disponivel = 'D'
+    aCaminho = 'A-C'
+    aEntregar = 'E'
+    indisponivel = 'I/M'
+    regresso = 'R'
+    espera = 'W'
+    ESTADO_VEICULO = [
+        (disponivel, 'Disponível'),
+        (aCaminho, 'A caminho'),
+        (aEntregar, 'A entregar'),
+        (indisponivel, 'Indisponível/Manutenção'),
+        (regresso, 'Regresso'),
+        (espera, 'À espera'),
         
     ]
     nome = models.CharField(max_length=200, null=True, blank=False)
     unidadeProducao = models.ForeignKey("UnidadeProducao", null=True, blank=False, on_delete=models.CASCADE)
-    tipo_veiculo = models.CharField(max_length=1, choices=TIPO_VEICULO, default='', null=True, blank=False)
-    estado_veiculo = models.CharField(max_length=1, choices=ESTADO_VEICULO, default='D', null=True, blank=False)
+    tipo_veiculo = models.CharField(max_length=5, choices=TIPO_VEICULO, default='', null=True, blank=False)
+    estado_veiculo = models.CharField(max_length=5, choices=ESTADO_VEICULO, default='D', null=True, blank=False)
     @property
     def estado(self):
         return self.estado_veiculo
     
     def __str__(self):
         return self.nome
+    
+    
+    
 class UnidadeProducao(models.Model):
     """_summary_
     Args:
@@ -222,22 +243,23 @@ class UnidadeProducao(models.Model):
     tipo_unidade: charfield. str
         que tipo de unidade é esta de facto
     """
-    # TIPO_UNIDADE = [
-    #     ('A', 'Armazém'),
-    #     ('Q', 'Quinta'),
-    #     ('MM', 'Mini-mercado'),
-    #     ('SM', 'Supermercado'),
-    #     ('HM', 'Hipermercado'),
-    #     ('LR', 'Loja de Rua'),
-    #     ('LCC', 'Loja Centro Comercial'),
-    # ]
+    TIPO_UNIDADE = [
+        ('A', 'Armazém'),
+        ('Q', 'Quinta'),
+        ('MM', 'Mini-mercado'),
+        ('SM', 'Supermercado'),
+        ('HM', 'Hipermercado'),
+        ('LR', 'Loja de Rua'),
+        ('LCC', 'Loja Centro Comercial'),
+        ('O', 'Outro')
+    ]
     nome = models.CharField(max_length=200, null=True, blank=False)
-    fornecedor = models.ForeignKey("Fornecedor", null=True, blank=False, on_delete=models.CASCADE)
+    fornecedor = models.ForeignKey("Fornecedor", null=True, blank=False, on_delete=models.CASCADE, related_name="unidades_producao")
     pais = CountryField(null=True, blank=False, default='PT')
     cidade = models.CharField(max_length=100, null=True, blank=False)
     # freguesia = models.CharField(max_length=100, null=True, blank=False)
     morada = models.CharField(max_length=200, null=True, blank=False)
-    # tipo_unidade = models.CharField(max_length=1, choices=TIPO_UNIDADE, default='', null=True, blank=False)
+    tipo_unidade = models.CharField(max_length=5, choices=TIPO_UNIDADE, default='', null=True, blank=False)
     # lista produtos
     def get_all_veiculos(self):
         return Veiculo.objects.filter(unidadeProducao=self)
