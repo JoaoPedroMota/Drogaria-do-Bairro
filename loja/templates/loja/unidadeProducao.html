@@ -13,9 +13,11 @@
     <div id="infoGeralUnidadeProducao">
         <h4>Unidade de Produção: {{unidadeProducao.nome}}</h4>
         {% if num_veiculos > 0 %}
+        <div id="'VEICULOS">
         <div id="numeroVeiculos">
             <p>Número de veículos desta unidade de produção: {{num_veiculos}}.</p>
         </div>
+        <h6>Veículos:</h6>
         <div id="divTabelaVeiculos">
             <table id="TabelaVeiculo">
                 <tr>
@@ -34,6 +36,7 @@
                 {% endfor %}
             </table>
         </div>
+    </div>
         {% else %}
         <p>Ainda não tem veículos nesta unidade de produção. Crie um com o botão abaixo! </p>
         {% endif %}
