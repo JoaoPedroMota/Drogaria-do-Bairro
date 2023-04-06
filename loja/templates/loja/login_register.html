@@ -3,38 +3,62 @@
 {% if pagina == 'login' %}
 <!-- LOGIN -->
 <div class="container">
-    <div>
-        <h3> Login: </h3>
+    <div class="login-heading">
+        <h3>Login:</h3>
     </div>
     <form action="" method="POST" class="form-horizontal">
         {% csrf_token %}
-        <div>
-            <label> Email </label>
-            <input id='email' type="email" name="email" placeholder="e.g. bigEmail@gmail.com" />
+        <div class="form-group">
+            <label for="email" class="col-sm-2 control-label">Email:</label>
+            <div class="col-sm-5">
+                <input type="email" class="form-control" id="email" name="email" placeholder="e.g. bigEmail@gmail.com">
+            </div>
         </div>
-        <div>
-            <label> Password </label>
-            <input id='password' type="password" name="password"
-                placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+        <div class="form-group">
+            <label for="password" class="col-sm-2 control-label">Password:</label>
+            <div class="col-sm-5">
+                <input type="password" class="form-control" id="password" name="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
+            </div>
         </div>
-        <button type="submit" id="login" class="btn btn-primary">Login</button>
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-5">
+                <button type="submit" id="login" class="btn btn-primary">Login</button>
+            </div>
+        </div>
     </form>
     <div class="auth__action">
-        <p>Haven't signed up yet?</p>
-        <a href="{% url 'loja-register-Utilizador' %}">Sign Up</a>
+        <p>Ainda não tem conta?</p>
+        <a href="{% url 'loja-register-Utilizador' %}">Registe-se aqui</a>
     </div>
 </div>
+
+
 {% else %}
 <!-- REGISTO -->
 <div class="container">
     <div>
-        <h3>Registration</h3>
+        <h3>Registo</h3>
     </div>
     <div class="form-container">
         <form action="" method="POST" class="form" enctype="multipart/form-data">
             {% csrf_token %}
-            {{form.as_p}}
-            <button type="submit" class="btn btn-primary">Register</button>
+            {% for field in form %}
+            <div class="form-group row">
+                <div class="col-md-4">
+                    {{ field.label_tag }}
+                </div>
+                <div class="col-md-4">
+                    {{ field }}
+                    {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Registar</button>
         </form>
         <div class="auth__action">
             <p>Already signed up?</p>
@@ -42,5 +66,7 @@
         </div>
     </div>
 </div>
+
+
 {% endif %}
 {% endblock content %}

@@ -64,6 +64,8 @@ def registerUtilizador(request):
             
         else:
             messages.error(request,'Ocorreu um erro durante o processo de registo.')
+            form = formulario  # reatribui o formulário com erros
+
     context = {'pagina': pagina, 'form': form}
     return render(request,'loja/login_register.html', context)
 
