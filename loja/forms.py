@@ -7,8 +7,6 @@ class UtilizadorFormulario(UserCreationForm):
         model = Utilizador
         fields = ['nome', 'username', 'email', 'password1', 'password2', 'pais','cidade','morada','telemovel','tipo_utilizador','imagem_perfil']
         
-        
-        
 class FornecedorFormulario(ModelForm):
     class Meta:
         model = Fornecedor

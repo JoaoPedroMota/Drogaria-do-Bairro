@@ -65,10 +65,6 @@ AUTHENTICATION_BACKENDS={
 AUTH_USER_MODEL = 'loja.Utilizador'
 PHONENUMBER_DEFAULT_REGION = 'PT'
 
-
-
-
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

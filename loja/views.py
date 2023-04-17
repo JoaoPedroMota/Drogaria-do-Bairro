@@ -5,6 +5,9 @@ from django.contrib.auth import authenticate, login, logout
 from .forms import UtilizadorFormulario, FornecedorFormulario
 from django.contrib.auth.decorators import login_required
 import json
+from decouple import config
+from django.http import HttpResponseRedirect
+
 # Create your views here.
 def loja(request):
     context = {}
@@ -17,7 +20,7 @@ def profile(request):
 
     user_data={
         'user_id':auth0_user.uid,
-        'name':auth0_user.firstname,
+        'name':user.nome,
         'picture':auth0_user.extra_data['picture']
     }
 
@@ -99,6 +102,12 @@ def formFornecedor(request):
     context = {'formulario':form}
     return render(request,'loja/register_fornecedor.html' ,context)
 
-def logutUtilizador(request):
+@login_required
+def logoutUtilizador(request):
     logout(request)
-    return redirect('loja-home')
+
+    domain = config('APP_DOMAIN')
+    client_id = config('APP_CLIENT_ID')
+    return_to = 'http://127.0.0.1:8000/'
+
+    return redirect(f'https://{domain}/v2/logout?client_id={client_id}&returnTo={return_to}')
