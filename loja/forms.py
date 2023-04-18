@@ -34,3 +34,6 @@ class criarVeiculoFormulario(ModelForm):
     class Meta:
         model=Veiculo
         fields = ['nome', 'tipo_veiculo']
+
+class ConfirmacaoForm(forms.Form):
+    nome_veiculo = forms.CharField()

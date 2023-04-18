@@ -215,6 +215,10 @@ class Veiculo(models.Model):
     unidadeProducao = models.ForeignKey("UnidadeProducao", null=True, blank=False, on_delete=models.CASCADE)
     tipo_veiculo = models.CharField(max_length=5, choices=TIPO_VEICULO, default='', null=True, blank=False)
     estado_veiculo = models.CharField(max_length=5, choices=ESTADO_VEICULO, default='D', null=True, blank=False)
+
+    updated = models.DateTimeField(auto_now=True, null=True, blank=False)
+    created = models.DateTimeField(auto_now_add=True, null=True, blank=False)
+
     @property
     def estado(self):
         return self.estado_veiculo
@@ -260,6 +264,10 @@ class UnidadeProducao(models.Model):
     # freguesia = models.CharField(max_length=100, null=True, blank=False)
     morada = models.CharField(max_length=200, null=True, blank=False)
     tipo_unidade = models.CharField(max_length=5, choices=TIPO_UNIDADE, default='', null=True, blank=False)
+
+    updated = models.DateTimeField(auto_now=True, null=True, blank=False)
+    created = models.DateTimeField(auto_now_add=True, null=True, blank=False)
+
     # lista produtos
     def get_all_veiculos(self):
         return Veiculo.objects.filter(unidadeProducao=self)
