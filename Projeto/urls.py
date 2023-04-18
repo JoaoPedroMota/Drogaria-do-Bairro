@@ -20,7 +20,8 @@ from django.conf.urls.static import static #imagens de perfil
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('loja.urls'))
+    path('', include('loja.urls')),
+    path('api/', include('loja.api.urls')),
 ]
 
 
