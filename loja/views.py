@@ -26,7 +26,7 @@ def loginUtilizador(request):
     if request.user.is_authenticated:
         print("entrei")
         return redirect('loja-home')
-    if request.method == 'GET':
+    if request.method == 'POST':
         email = request.GET.get('email')
         password = request.GET.get('password')
         try:
@@ -46,7 +46,7 @@ def registerUtilizador(request):
     pagina = 'registo'
     form = UtilizadorFormulario()
     
-    if request.method == 'PUT':
+    if request.method == 'POST':
         formulario = UtilizadorFormulario(request.PUT, request.FILES)
         if formulario.is_valid():
             utilizador = formulario.save(commit=False)
@@ -69,7 +69,7 @@ def registerUtilizador(request):
 
 def formFornecedor(request):
     form = FornecedorFormulario()
-    if request.method == 'PUT':
+    if request.method == 'POST':
         formulario = FornecedorFormulario(request.PUT)
         if formulario.is_valid():
             Fornecedor.objects.create(
@@ -156,7 +156,7 @@ def criarUP(request, userName):
     pagina = 'criarUP'
     formulario = criarUnidadeProducaoFormulario()
     if request.user.is_fornecedor():
-        if request.method == 'PUT':
+        if request.method == 'POST':
             formulario = criarUnidadeProducaoFormulario(request.PUT)
             if formulario.is_valid():
                 UnidadeProducao.objects.create(
@@ -203,7 +203,7 @@ def criarVeiculo(request, userName, id):
     unidadeProducao = fornecedor.unidades_producao.get(pk=id)
     formulario = criarVeiculoFormulario()
     if request.user.is_fornecedor():
-        if request.method == 'PUT':
+        if request.method == 'POST':
             formulario = criarVeiculoFormulario(request.PUT)
             if formulario.is_valid():
                 Veiculo.objects.create(
