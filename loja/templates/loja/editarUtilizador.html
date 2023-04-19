@@ -1,33 +1,93 @@
 <div>
     {% extends 'main.html' %}
+    {% load static %}
     {% block content %}
-    <div class="container">
-        <div class="row">
-            <h4>Editar Perfil</h4>
-        </div>
-    
-        <a href="{% url 'loja-perfil' request.user.username %}" class="layout__boxTitle">
-            <div  class="container">
-            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
-              <title>arrow-left</title>
-              <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
-            </svg>
-            <h6>Voltar</h6>
-        </div>
-          </a>
-        <div class="row button-container">
-            <form action="" method="POST" class="form-wrapper" enctype="multipart/form-data">
-                {% csrf_token %}
-                {{form.as_p }}
-                <button type="submit" class="btn btn-primary">Guardar</button>
-            </form>
-            <form action="{% url 'loja-delete-conta' request.user.id %}" method="" class="form-wrapper">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-primary" id="bt_apagar_conta">Apagar conta</button>
-            </form>
+    <style>
+        
+    </style>
+
+    <div class="breadcrumb-section breadcrumb-bg">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 offset-lg-2 text-center">
+                    <div class="breadcrumb-text">
+                       
+                        <p>Editar o seu perfil</p>
+                        <br>
+                    <div >
+                        <form action="" method="POST" class="form-wrapper" enctype="multipart/form-data">
+                            {% csrf_token %}
+
+                            {% for field in form %}
+                            <input type="{{ field.field.widget.input_type }}"
+                                name="{{ field.name }}"
+                                value="{{ field.value }}"
+                                placeholder="{{ field.name }}"
+                                {% if field.required %}required{% endif %}
+                                {% if field.id %}id="{{ field.id }}"{% endif %}>
+                        {% endfor %}
+                        <input type="submit" id="login" value="GUARDAR">
+                        </form>
+                        
+                        
+                    </div>
+                    <form action="{% url 'loja-delete-conta' request.user.id %}" method="" class="form-wrapper">
+                        {% csrf_token %}
+                        <input type="submit" id="login" value="APAGAR CONTA">
+                    </form>
+                    <a href="{% url 'loja-perfil' request.user.username %}" class="layout__boxTitle">
+                        <div  class="container">
+                        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+                        <title>arrow-left</title>
+                        <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
+                        </svg>
+                        <h6>Voltar</h6>
+                    </div>
+                    </a>
+                </div>
+            </div>
+            </div>
         </div>
     </div>
+    <!-- end breadcrumb section -->
+    
+    
+               
+        </div>
+    </div>
+    <!-- end cart -->
+    
+    <!-- logo carousel -->
+    <div class="logo-carousel-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="logo-carousel-inner">
+                        <div class="single-logo-item">
+                            <img src="{%static 'website/assets/img/company-logos/1.png' %}" alt="">
+                        </div>
+                        <div class="single-logo-item">
+                            <img src="{%static 'website/assets/img/company-logos/2.png' %}" alt="">
+                        </div>
+                        <div class="single-logo-item">
+                            <img src="{%static 'website/assets/img/company-logos/3.png' %}" alt="">
+                        </div>
+                        <div class="single-logo-item">
+                            <img src="{%static 'website/assets/img/company-logos/4.png' %}" alt="">
+                        </div>
+                        <div class="single-logo-item">
+                            <img src="{%static 'website/assets/img/company-logos/5.png' %}" alt="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
 
+
+
+   
 
     
     {% endblock content %}

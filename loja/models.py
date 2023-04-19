@@ -113,7 +113,7 @@ class Utilizador(AbstractUser):
         null=True,
         blank=False,
         validators=[ASCIIUsernameValidator()],
-        help_text='Obrigatório: Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ são permitidos.',
+        help_text='Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ ',
         error_messages={
             'unique': 'Já existe um utilizador com esse nome de utilizador.',
         },

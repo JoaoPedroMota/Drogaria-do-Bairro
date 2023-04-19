@@ -13,7 +13,12 @@ from .forms import ConfirmacaoForm
 def loja(request):
     context = {}
     return render(request, 'loja/loja.html', context)
-
+def contacts(request):
+    context = {}
+    return render(request, 'loja/contacts.html', context)
+def about(request):
+    context = {}
+    return render(request, 'loja/about.html', context)
 def carrinho(request):
     context = {}
     return render(request, 'loja/carrinho.html', context)
@@ -21,12 +26,19 @@ def carrinho(request):
 def checkout(request):
     context = {}
     return render(request, 'loja/checkout.html', context)
+def news(request):
+    context = {}
+    return render(request, 'loja/news.html', context)
 
+
+def shop(request):
+    context = {}
+    return render(request, 'loja/shop.html', context)
 
 def loginUtilizador(request):
     pagina='login'
     if request.user.is_authenticated:
-        print("entrei")
+      
         return redirect('loja-home')
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -37,6 +49,7 @@ def loginUtilizador(request):
             messages.error(request,"Este email não corresponde a nenhum utilizador registado")
         utilizador = authenticate(request, email=email, password=password)
         if utilizador is not None:
+            
             login(request, utilizador)
             return redirect('loja-home')
         else:
