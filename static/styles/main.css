@@ -1,4 +1,4 @@
-body{
+/* body{
 	background-color: rgb(250, 250, 250);
 }
 .bg-dark{
@@ -62,7 +62,7 @@ body{
   table-layout: auto;
   text-align: center;
   /* border: 1px solid rgb(204,204,204); */
-  margin-bottom: 50px;
+  /* margin-bottom: 50px;
   margin-top: 50px;
 }
 
@@ -72,5 +72,5 @@ body{
 
 #TabelaUPfornecedores td, #TabelaVeiculo td {
   width: auto;
-}
-
+/* }
+ */

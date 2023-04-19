@@ -4,6 +4,10 @@ from .views import removerUnidadeProducao, removerVeiculo
 
 urlpatterns = [
     path('', views.loja, name='loja-home'),
+    path('about/', views.about, name='about'),
+    path('contacts/', views.contacts, name='contacts'),
+    path('shop/', views.shop, name='shop'),
+    path('news/', views.news, name='news'),
     path('carrinho/', views.carrinho, name='loja-carrinho'),
     path('checkout/', views.checkout, name='loja-checkout'),
     path('login/', views.loginUtilizador, name='loja-login'),
