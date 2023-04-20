@@ -107,7 +107,7 @@
                             <div id="botaoRemoverUnidadeProducao" style="margin-top: 15px;">
                                 <form action="{% url 'loja-removerUnidadeProducao' userName=request.user.username id=unidadeProducao.id %}" method="post">
                                     {% csrf_token %}
-                                    <input type="submit" id="login" onclick="return confirm('Tem certeza que deseja remover a unidade de produção {{ unidadeProducao.nome }}?')" value="REMOVER VEÍCULO">
+                                    <input type="submit" id="login" onclick="return confirm('Tem certeza que deseja remover a unidade de produção {{ unidadeProducao.nome }}?')" value="botaoRemoverUnidadeProducao">
                                 </form>
                             </div>
                             <br>
