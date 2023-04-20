@@ -1,12 +1,14 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo
+from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo, Produto
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario
+from .forms import UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
+from .models import UnidadeProducao, Produto, Categoria, Marca
+
 
 
 # Create your views here.
@@ -261,4 +263,45 @@ def remover_veiculo(request, id):
     else:
         form = ConfirmacaoForm()
     return render(request, 'loja/removerVeiculo.html', {'form': form, 'veiculo': veiculo})
+
+
+
+from django.shortcuts import render, redirect
+from .models import UnidadeProducao, Produto, Categoria, Marca
+from .forms import ProdutoForm
+
+def criar_produto(request, userName, id):
+    unidade = UnidadeProducao.objects.get(pk=id)
+    if request.method == 'POST':
+        form = ProdutoForm(request.POST)
+        if form.is_valid():
+            produto = form.save(commit=False)
+            categoria_nome = form.cleaned_data['categoria']
+            categoria, _ = Categoria.objects.get_or_create(nome=categoria_nome)
+            produto.categoria = categoria
+            marca_nome = form.cleaned_data['marca']
+            marca, _ = Marca.objects.get_or_create(nome=marca_nome)
+            produto.marca = marca
+            produto.unidade_producao = unidade
+            produto.save()
+            messages.success(request, 'Produto criado com sucesso!')
+            return redirect('loja-unidadeProducao', userName=userName, id=id)
+    else:
+        form = ProdutoForm()
+    return render(request, 'loja/criar_produto.html', {'form': form})
+
+
+
+
+
+
+
+def ver_produtos(request):
+    produtos = Produto.objects.all()
+    context = {'produtos': produtos}
+    return render(request, 'ver_produtos.html', context)
+
+
+
+
 

@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
-from .views import removerUnidadeProducao, removerVeiculo
+from .views import removerUnidadeProducao, removerVeiculo, criar_produto, ver_produtos
+from django.contrib import admin
 
 urlpatterns = [
     path('', views.loja, name='loja-home'),
@@ -18,7 +19,11 @@ urlpatterns = [
     path('perfil/<str:userName>/unidadeProducao/<str:id>/criarVeiculo/', views.criarVeiculo, name="loja-criarVeiculo"),
     path('removerVeiculo/<str:userName>/<int:id>/', removerVeiculo, name='loja-removerVeiculo'),
     path('<str:userName>/unidadeProducao/<int:id>/remover', removerUnidadeProducao, name='loja-removerUnidadeProducao'),
+    path('criar_produto/<str:userName>/<int:id>', views.criar_produto, name='loja-criarProduto'),
+    #path('admin/', admin.site.urls),
+    #path('ver_produtos/', views.ver_produtos, name='loja-listaProdutos'),
 ]
+
 
 
 

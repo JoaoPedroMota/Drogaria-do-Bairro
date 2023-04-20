@@ -42,7 +42,7 @@
                             <td>{{ up.cidade }}</td>
                             <td>{{ up.morada }}</td>
                             <td>{{ up.get_tipo_unidade_display }}</td>
-                            <td><a href="{% url 'loja-unidadeProducao' userName=request.user.username id=up.id %}">Expandir</a></td>
+                            <td><a href="{% url 'loja-unidadeProducao' userName=request.user.username id=up.id %}">Gerir Veiculos/Gerir Produtos</a></td>
 
                         </tr>
                         {% endfor %}
