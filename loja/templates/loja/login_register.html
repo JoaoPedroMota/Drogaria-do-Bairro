@@ -48,8 +48,14 @@
         font-size:12px !important;
         width: 280px;
     }
-    .link{
-        color:white
+    
+   
+    .invalid-feedback{
+        font-weight: bold;
+        color: yellow;
+        
+       
+       
     }
 </style>
 <div class="hero-area hero-bg">
@@ -85,7 +91,7 @@
                                
                             {% endif %}
                             {% for error in field.errors %}
-                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        <div class="invalid-feedback d-block">{{ error }}</div>
                             {% endfor %}
                         </div>
                         

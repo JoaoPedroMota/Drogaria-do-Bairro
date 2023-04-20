@@ -61,9 +61,11 @@
                     {% if request.user == utilizadorView %}
                     <form action="{% url 'loja-editarPerfil' %}" method="" >
                     {% csrf_token %}
+                    <br>
                     <input type="submit" id="login" value="EDITAR PERFIL">
                     </form>
                     {% endif %}
+                    <br>
                 </div>
                 {% if request.user.is_fornecedor %}
                 <div id="Fornecedor">
@@ -101,6 +103,7 @@
                         <p>Ainda não tem unidades de produção associadas. Crie uma com o botão abaixo! </p>
                         {% endif %}
                     </table>
+                    <br>
                     <div id="botaoAdicionarUP">
                         <form action="{% url 'loja-criarUP' request.user.username %}" method="" class="form-wrapper">
                             {% csrf_token %}

@@ -437,6 +437,7 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
     left: 70%;
   }
   
+  
   .colorlib-bubbles li:nth-child(6) {
     left: 80%;
     width: 120px;
@@ -530,7 +531,23 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
       transform: translateY(-700px) rotate(600deg);
     }
   }
-  
+  @media(max-height:971px) {
+      .subtitle{
+        display: none;
+      }
+      form {
+        margin-top:-60px !important;
+      }
+      #login{
+       
+        font-size:10px !important;
+      }
+      .form-group input {
+        font-size:12px !important;
+        
+              } 
+       
+  }
   /*-- responsive-design --*/
   @media(max-width:1440px) {
     input[type="text"], input[type="email"], input[type="password"] {
