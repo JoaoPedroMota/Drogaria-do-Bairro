@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-tjts^qxve#o%%t3)w6pa%g82om42ay(&9@7ic6ce+yo6@p27lc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["0.0.0.0", "34.160.106.29"]
 
 
 # Application definition
@@ -89,15 +89,14 @@ WSGI_APPLICATION = 'Projeto.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'db-drogaria',
+        'HOST': '34.0.198.90',
+        'PORT': '5432',
+        'NAME': 'drogaria_db',
         'USER': 'user1',
         'PASSWORD': '12345',
-        'HOST': '34.175.141.4',
-        'PORT': '5432',
     }
 }
 
