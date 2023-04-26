@@ -2,13 +2,14 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from loja.models import Utilizador, Consumidor, Fornecedor, UnidadeProducao, Veiculo
+from rest_framework import status
 ### serializers ###
 from .serializers import UtilizadorSerializer, ConsumidorSerializer, ForncedorSerializer, UnidadeProducaoSerializer, VeiculoSerializer
 
 
 
 @api_view(['GET'])  # Exemplo para as próximas views: @api_view(['GET', 'PUT' 'POST'])
-def getRotas(request):
+def getRotas(request, format=None):
     """Todas as rotas que a API fornece
 
     Args:
@@ -37,22 +38,22 @@ def getRotas(request):
 
 
 @api_view(['GET']) 
-def getUtilizadores(request):
+def getUtilizadores(request, format=None):
     utilizadores = Utilizador.objects.all() # lista de objetos. uma queryset
     respostaDevolver = UtilizadorSerializer(utilizadores, many=True) # many --> Se for um objeto a serializar é False. Se for mais que um é True.
     # FIXME retirar comentários para entender o que é o UtilizadorSerializer devolve.
-    print("####################################")
-    print("\n\n\n\n\n")
-    print(respostaDevolver)
-    print("\n\n\n\n\n")
-    print("####################################")
+    # print("####################################")
+    # print("\n\n\n\n\n")
+    # print(respostaDevolver)
+    # print("\n\n\n\n\n")
+    # print("####################################")
     return Response(respostaDevolver.data)
 
 
 
 
 @api_view(['GET']) 
-def getUtilizador(request, idUtilizador):
+def getUtilizador(request, idUtilizador, format=None):
     utilizadores = Utilizador.objects.get(id=idUtilizador) # um objeto
     respostaDevolver = UtilizadorSerializer(utilizadores, many=False) # many --> Se for um objeto a serializar é False, retorna um só objeto
                                                                      # . Se for mais que um objeto é True.
@@ -66,25 +67,25 @@ def getUtilizador(request, idUtilizador):
 
 ###############################
 @api_view(['GET'])
-def getConsumidores(request):
+def getConsumidores(request, format=None):
     consumidores = Consumidor.objects.all()
     respostaDevolver = ConsumidorSerializer(consumidores, many=True)
     return Response(respostaDevolver.data)
 
 @api_view(['GET'])
-def getConsumidor(request, idConsumidor):
+def getConsumidor(request, idConsumidor, format=None):
     consumidor = Consumidor.objects.get(id=idConsumidor)
     respostaDevolver = ConsumidorSerializer(consumidor, many=False)
     return Response(respostaDevolver.data)
 ###################################################3
 @api_view(['GET'])
-def getFornecedores(request):
+def getFornecedores(request, format=None):
     fornecedores = Fornecedor.objects.all()
     respostaDevolver = ForncedorSerializer(fornecedores, many=True)
     return Response(respostaDevolver.data)
 
 @api_view(['GET'])
-def getFornecedor(request, idFornecedor):
+def getFornecedor(request, idFornecedor, format=None):
     fornecedor = Fornecedor.objects.get(id=idFornecedor)
     respostaDevolver = ForncedorSerializer(fornecedor, many=False)
     return Response(respostaDevolver.data)
@@ -92,7 +93,7 @@ def getFornecedor(request, idFornecedor):
 
 
 @api_view(['GET'])
-def getVeiculos(request, idFornecedor, idUnidadeProducao):
+def getVeiculos(request, idFornecedor, idUnidadeProducao, format=None):
 
     fornecedor = Fornecedor.objects.get(id=idFornecedor)
     unidadeProducao = fornecedor.unidades_producao.get(pk=idUnidadeProducao)
@@ -101,7 +102,7 @@ def getVeiculos(request, idFornecedor, idUnidadeProducao):
     return Response(respostaDevolver.data)
 
 @api_view(['GET'])
-def getVeiculo(request, idVeiculo, idFornecedor, idUnidadeProducao):
+def getVeiculo(request, idVeiculo, idFornecedor, idUnidadeProducao, format=None):
     fornecedor = Fornecedor.objects.get(id=idFornecedor)
     unidadeProducao = fornecedor.unidades_producao.get(pk=idUnidadeProducao)
     veiculo = unidadeProducao.veiculo_set.get(id=idVeiculo)
@@ -112,7 +113,7 @@ def getVeiculo(request, idVeiculo, idFornecedor, idUnidadeProducao):
 
 
 @api_view(['GET'])
-def getUPs(request, idFornecedor):
+def getUPs(request, idFornecedor, format=None):
 
     fornecedor = Fornecedor.objects.get(id=idFornecedor)
     unidadesProducao = fornecedor.unidades_producao.all()
@@ -120,7 +121,7 @@ def getUPs(request, idFornecedor):
     return Response(respostaDevolver.data)
 
 @api_view(['GET'])
-def getUP(request, idFornecedor, idUnidadeProducao):
+def getUP(request, idFornecedor, idUnidadeProducao, format=None):
     fornecedor = Fornecedor.objects.get(id=idFornecedor)
     unidadeProducao = fornecedor.unidades_producao.get(pk=idUnidadeProducao)
     respostaDevolver = UnidadeProducaoSerializer(unidadeProducao, many=False)
