@@ -28,7 +28,7 @@
                                         <input type="{{ field.widget.input_type }}" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}">
                                       </div>
                                         {% endfor %}
-                                    <button type="submit" class="btn btn-primary id='botaoEditarPeril' ">Adicionar</button>
+                                        <input type="submit" id="login" value="Adicionar">
                                 </form>
                             </div>
                             <a href="{% url 'loja-perfil' request.user.username %}" class="layout__boxTitle">

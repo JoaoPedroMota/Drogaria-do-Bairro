@@ -228,6 +228,7 @@ class Veiculo(models.Model):
     
     
     
+    
 class UnidadeProducao(models.Model):
     """_summary_
     Args:
@@ -284,6 +285,9 @@ class UnidadeProducao(models.Model):
         
     def __str__(self):
         return self.nome
+    class Meta:
+        verbose_name_plural = "Unidades de Producao"
+        verbose_name = "Unidade de Producao"
 
 
 class Fornecedor(models.Model):
@@ -291,6 +295,9 @@ class Fornecedor(models.Model):
     #lista_produtos
     #lista_veiculos
     descricao = models.TextField(blank=True, null=True, max_length=500)
+    class Meta:
+        verbose_name_plural = "Fornecedores"
+        verbose_name = "Fornecedor"    
     def __str__(self):
         return self.utilizador.nome
     
@@ -306,5 +313,3 @@ class Fornecedor(models.Model):
                 raise ValueError('Esta unidade de produção não pertence a este fornecedor')
         except UnidadeProducao.DoesNotExist:
             raise ValueError('Não encontrei nenhuma unidade de produção com base no id dado')
-        
-
