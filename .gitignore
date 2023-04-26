@@ -29,7 +29,7 @@ pip-delete-this-directory.txt
 *.pot
 
 # Local database
-*.sqlite3
+#*.sqlite3
 
 # IDE
 .idea/
