@@ -307,4 +307,51 @@ class Fornecedor(models.Model):
         except UnidadeProducao.DoesNotExist:
             raise ValueError('Não encontrei nenhuma unidade de produção com base no id dado')
         
+class Produto(models.Model):
+
+    UNIDADES_MEDIDA_CHOICES = (
+        ('kg', 'Quilograma'),
+        ('g', 'Grama'),
+        ('l', 'litro'),
+        ('un', 'Unidade'),
+    )
+    nome = models.CharField(max_length=100)
+    descricao = models.TextField()
+    categoria = models.TextField()
+    #categoria = models.ForeignKey("Categoria", on_delete=models.CASCADE)
+    preco = models.DecimalField(max_digits=7, decimal_places=2)
+    unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES)
+    data_validade = models.DateField()
+    data_producao = models.DateField()
+    unidade_producao = models.ForeignKey(UnidadeProducao, on_delete=models.CASCADE)
+    marca = models.TextField()
+    #marca = models.ForeignKey("Marca", on_delete=models.CASCADE)    
+    def __str__(self):
+        return self.nome
+
+class Categoria(models.Model):
+    nome = models.CharField(max_length=100)
+    #descricao = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.nome
+
+
+class Subcategoria(models.Model):
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='subcategorias')
+    nome = models.CharField(max_length=100)
+    #descricao = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.nome
+
+class Marca(models.Model):
+    nome = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.nome
+    
+# loja/migrations/000X_auto_add_slug_to_produto.py
+
+
 
