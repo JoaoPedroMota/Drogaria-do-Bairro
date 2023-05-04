@@ -84,7 +84,7 @@ class Utilizador(AbstractUser):
         null=True,
         blank=False,
         validators=[ASCIIUsernameValidator()],
-        help_text='Obrigatório: Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ são permitidos.',
+        help_text='Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ ',
         error_messages={
             'unique': 'Já existe um utilizador com esse nome de utilizador.',
         },
@@ -186,12 +186,17 @@ class Veiculo(models.Model):
     unidadeProducao = models.ForeignKey("UnidadeProducao", null=True, blank=False, on_delete=models.CASCADE)
     tipo_veiculo = models.CharField(max_length=5, choices=TIPO_VEICULO, default='', null=True, blank=False)
     estado_veiculo = models.CharField(max_length=5, choices=ESTADO_VEICULO, default='D', null=True, blank=False)
+
+    updated = models.DateTimeField(auto_now=True, null=True, blank=False)
+    created = models.DateTimeField(auto_now_add=True, null=True, blank=False)
+
     @property
     def estado(self):
         return self.estado_veiculo
     
     def __str__(self):
         return self.nome
+    
     
     
     
@@ -231,6 +236,10 @@ class UnidadeProducao(models.Model):
     # freguesia = models.CharField(max_length=100, null=True, blank=False)
     morada = models.CharField(max_length=200, null=True, blank=False)
     tipo_unidade = models.CharField(max_length=5, choices=TIPO_UNIDADE, default='', null=True, blank=False)
+
+    updated = models.DateTimeField(auto_now=True, null=True, blank=False)
+    created = models.DateTimeField(auto_now_add=True, null=True, blank=False)
+
     # lista produtos
     def get_all_veiculos(self):
         return Veiculo.objects.filter(unidadeProducao=self)
@@ -247,6 +256,9 @@ class UnidadeProducao(models.Model):
         
     def __str__(self):
         return self.nome
+    class Meta:
+        verbose_name_plural = "Unidades de Producao"
+        verbose_name = "Unidade de Producao"
 
 
 class Fornecedor(models.Model):
@@ -254,6 +266,9 @@ class Fornecedor(models.Model):
     #lista_produtos
     #lista_veiculos
     descricao = models.TextField(blank=True, null=True, max_length=500)
+    class Meta:
+        verbose_name_plural = "Fornecedores"
+        verbose_name = "Fornecedor"    
     def __str__(self):
         return self.utilizador.nome
     
@@ -269,6 +284,7 @@ class Fornecedor(models.Model):
                 raise ValueError('Esta unidade de produção não pertence a este fornecedor')
         except UnidadeProducao.DoesNotExist:
             raise ValueError('Não encontrei nenhuma unidade de produção com base no id dado')
+
         
         
         
@@ -280,5 +296,4 @@ class Fornecedor(models.Model):
 #     """
 #     nome = models.CharField(max_length=200, null=False, blank=False)
 #     pai = models.ForeignKey('self', on_delete=models.PROTECT, related_name='categoria_pai')
-        
 

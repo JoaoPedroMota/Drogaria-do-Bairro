@@ -1,4 +1,4 @@
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo
 from django.contrib import messages
@@ -6,12 +6,19 @@ from django.contrib.auth import authenticate, login, logout
 from .forms import UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
+from .forms import ConfirmacaoForm
+
 
 # Create your views here.
 def loja(request):
     context = {}
     return render(request, 'loja/loja.html', context)
-
+def contacts(request):
+    context = {}
+    return render(request, 'loja/contacts.html', context)
+def about(request):
+    context = {}
+    return render(request, 'loja/about.html', context)
 def carrinho(request):
     context = {}
     return render(request, 'loja/carrinho.html', context)
@@ -19,12 +26,19 @@ def carrinho(request):
 def checkout(request):
     context = {}
     return render(request, 'loja/checkout.html', context)
+def news(request):
+    context = {}
+    return render(request, 'loja/news.html', context)
 
+
+def shop(request):
+    context = {}
+    return render(request, 'loja/shop.html', context)
 
 def loginUtilizador(request):
     pagina='login'
     if request.user.is_authenticated:
-        print("entrei")
+      
         return redirect('loja-home')
     if request.method == 'POST':
         email = request.GET.get('email')
@@ -35,6 +49,7 @@ def loginUtilizador(request):
             messages.error(request,"Este email não corresponde a nenhum utilizador registado")
         utilizador = authenticate(request, email=email, password=password)
         if utilizador is not None:
+            
             login(request, utilizador)
             return redirect('loja-home')
         else:
@@ -64,6 +79,8 @@ def registerUtilizador(request):
             
         else:
             messages.error(request,'Ocorreu um erro durante o processo de registo.')
+            form = formulario  # reatribui o formulário com erros
+
     context = {'pagina': pagina, 'form': form}
     return render(request,'loja/login_register.html', context)
 
@@ -79,7 +96,7 @@ def formFornecedor(request):
             return redirect('loja-home')
         else:
             messages.error(request,'Ocorreu um erro durante o processo de registo')
-    context = {'formulario':form}
+    context = {'form':form}
     return render(request,'loja/register_fornecedor.html' ,context)
 
 def logutUtilizador(request):
@@ -108,12 +125,14 @@ def editarPerfil(request):
         utilizador.username = username  
         
         if form.is_valid():
+
             utilizador = form.save(commit=False)
             utilizador.username = username.lower()
             utilizador.cidade = utilizador.cidade.upper()
             utilizador.save()
-            return redirect('loja-home')
-            
+            messages.success(request, 'Perfil atualizado com sucesso.')
+            link = reverse('loja-perfil', args=[request.user.username])
+            return redirect(link)
     
     context = {'form':form, 'pagina':pagina}
     return render(request, 'loja/editarUtilizador.html', context)
@@ -195,6 +214,20 @@ def unidadeProducao(request, userName, id):
 
 
 
+
+def removerUnidadeProducao(request, userName, id):
+    # Busca a unidade de produção pelo id passado na URL
+    unidade_producao = UnidadeProducao.objects.get(pk=id)
+    
+    # Verifica se a unidade de produção pertence ao fornecedor logado
+    if request.user == unidade_producao.fornecedor.utilizador:
+        # Remove a unidade de produção
+        unidade_producao.delete()
+    
+    # Redireciona para a página de perfil do fornecedor
+    return redirect('loja-perfil', userName=request.user.username)
+
+
 @login_required(login_url='loja-login')
 def criarVeiculo(request, userName, id):
     pagina = 'criarVeiculo'
@@ -221,3 +254,24 @@ def criarVeiculo(request, userName, id):
     
     context = {'form':formulario, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
     return render(request, 'loja/criarVeiculo.html', context)
+
+def removerVeiculo(request, userName, id):
+    veiculo = Veiculo.objects.get(id=id)
+    veiculo.delete()
+    return redirect(request.META['HTTP_REFERER'])
+
+def remover_veiculo(request, id):
+    veiculo = get_object_or_404(Veiculo, pk=id)
+    if request.method == 'POST':
+        form = ConfirmacaoForm(request.POST)
+        if form.is_valid():
+            if form.cleaned_data['nome_veiculo'] != veiculo.nome:
+                form.add_error(None, f'O nome do veículo a ser removido é {veiculo.nome}')
+            else:
+                veiculo.delete()
+                messages.success(request, 'Veículo removido com sucesso.')
+                return redirect('loja-unidadeProducao', request.user.username, veiculo.unidade_producao.id)
+    else:
+        form = ConfirmacaoForm()
+    return render(request, 'loja/removerVeiculo.html', {'form': form, 'veiculo': veiculo})
+

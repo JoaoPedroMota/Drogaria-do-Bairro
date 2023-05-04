@@ -1,30 +1,87 @@
 {% extends 'main.html' %}
+{% load static %}
 {% block content %}
-<div class="container">
-    <a href="{{request.META.HTTP_REFERER}}" class="layout__boxTitle">
-        <div class="layout__boxTitle">
-          <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
-            <title>arrow-left</title>
-            <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
-          </svg>
-          <h6>Voltar</h6>
-        </div>
-      </a>
-    <div class="form__group">
-        <p>Tem a certeza de que pretende apagar
-            {% if pagina == 'apagar-conta' %}
-                a conta 
-            {% endif %}
-            "{{objeto}}"?</p>
-    </div>
-    <form class='form' method="DELETE" action="">
-        {% csrf_token %}
-        <div class="for__group">
-            <input class="btn btn--main" id="bt_apagar_conta" type="submit" value="Confirmar" />
-        </div>
+<style>
+  h2{
+      font-size: 35px !important;
+      color:#F28123;
+  }
+</style>
+<div class="breadcrumb-section breadcrumb-bg">
+  <div class="container">
+      <div class="row">
+          <div class="col-lg-8 offset-lg-2 text-center">
+              <div class="breadcrumb-text">
+                 
+                
+              <div class="form__group">
+                  <h1>Tem a certeza de que pretende apagar
+                      {% if pagina == 'apagar-conta' %}
+                          a conta 
+                      {% endif %}
+                      ?</h1>
+                  <h2>"{{objeto}}"</h2>
+              </div>
+              <form class='form' method="POST" action="">
+                  {% csrf_token %}
+                  <div class="for__group">
+                      <input class="btn btn--main" id="bt_apagar_conta" type="submit" value="Confirmar" />
+                  </div>
+            
+              </form>
+              <a href="{{request.META.HTTP_REFERER}}" class="layout__boxTitle">
+                <div class="layout__boxTitle">
+                  <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+                    <title>arrow-left</title>
+                    <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
+                  </svg>
+                  <h6>Voltar</h6>
+                </div>
+              </a>
+              
+      </div>
+      </div>
+  </div>
+</div>
+<!-- end breadcrumb section -->
 
-    </form>
+
+
+         
+  </div>
+</div>
+<!-- end cart -->
+
+<!-- logo carousel -->
+<div class="logo-carousel-section">
+  <div class="container">
+      <div class="row">
+          <div class="col-lg-12">
+              <div class="logo-carousel-inner">
+                  <div class="single-logo-item">
+                      <img src="{%static 'website/assets/img/company-logos/1.png' %}" alt="">
+                  </div>
+                  <div class="single-logo-item">
+                      <img src="{%static 'website/assets/img/company-logos/2.png' %}" alt="">
+                  </div>
+                  <div class="single-logo-item">
+                      <img src="{%static 'website/assets/img/company-logos/3.png' %}" alt="">
+                  </div>
+                  <div class="single-logo-item">
+                      <img src="{%static 'website/assets/img/company-logos/4.png' %}" alt="">
+                  </div>
+                  <div class="single-logo-item">
+                      <img src="{%static 'website/assets/img/company-logos/5.png' %}" alt="">
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
 </div>
 
 
+
 {% endblock content %}
+
+
+

@@ -1,73 +1,167 @@
-<div>
-    {% extends 'main.html' %}
-    {% block content %}
+{% extends 'main.html' %}
+{% load static %}
+{% block content%}
+
+<style>
+    h2{
+        font-size: 25px !important;
+        color:#F28123;
+    }
+    h3{
+        font-size: 25px !important;
+        color:#fff;
+    }
+    p{
+        font-size: 13px !important;
+        color: #fff;
+    }
+    table{
+        border: 1px solid;
+    }
+    #customers {
+  font-family: Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+    }
+
+    #customers td, #customers th {
+    border: 1px solid #ddd;
+    padding: 8px;
+    }
+
+    #customers tr:nth-child(even){background-color: #f2f2f2;}
+
+    #customers tr:hover {background-color: #ddd;}
+
+    #customers th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #07212e;
+    color: white;
+    }
+</style>
+    <!-- breadcrumb-section -->
+<div class="breadcrumb-section breadcrumb-bg">
     <div class="container">
-        <div id="infoGeralPerfil">
-            <div id="imagemPerfil">
-                <img class="imagens" id='imagem-perfil-perfil' src="{{utilizadorView.imagem_perfil.url}}"
-                    style="width:50px;height: 50px;border-radius: 100%;" />
-            </div>
-            <h5>{{utilizadorView.nome}}</h5>
-            <p>@{{utilizadorView.username}}</p>
-            {% if request.user == utilizadorView %}
-            <form action="{% url 'loja-editarPerfil' %}" method="" class="form-wrapper">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-primary" id="botaoEditarPeril">Editar Perfil</button>
-            </form>
-            {% endif %}
-        </div>
-        {% if request.user.is_fornecedor %}
-        <div id="Fornecedor">
-            <div id="infoGeralFornecedor">
-                {% if numero_up > 0 %}
-                <div id="numeroUPfornecedor">
-                    <p>Número de unidades de produção: {{numero_up}}.</p>
-                </div>
-                <div id="divTabelaPerfilFornecedor">
-                    <table id="TabelaUPfornecedores">
-                        <tr>
-                            <th>Id Interno</th>
-                            <th>Nome</th>
-                            <th>País</th>
-                            <th>Cidade</th>
-                            <th>Morada</th>
-                            <th>Tipo de Unidade</th>
-                            <th id="semBorda">Link</th>
-                        </tr>
-                        {% for up in unidadesProducao %}
-                        <tr>
-                            <td>{{ up.id }}</td>
-                            <td>{{ up.nome }}</td>
-                            <td>{{ up.get_pais_display }}</td>
-                            <td>{{ up.cidade }}</td>
-                            <td>{{ up.morada }}</td>
-                            <td>{{ up.get_tipo_unidade_display }}</td>
-                            <td><a href="{% url 'loja-unidadeProducao' userName=request.user.username id=up.id %}">Expandir</a></td>
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2 text-center">
+                <div class="breadcrumb-text">
+                   
+                    <p>O seu perfil</p>
+                    <br>
+                    <div id="imagemPerfil">
+                        <img class="imagens" id='imagem-perfil-perfil' src="{{utilizadorView.imagem_perfil.url}}"
+                            style="width:150px;height: 150px;border-radius: 100%;" />
+                    </div>
+                    <h1>Bem Vindo</h1>
 
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </div>
-                {% else %}
-                <p>Ainda não tem unidades de produção associadas. Crie uma com o botão abaixo! </p>
-                {% endif %}
-            </div>
-            <div id="botaoAdicionarUP">
-                <form action="{% url 'loja-criarUP' request.user.username %}" method="" class="form-wrapper">
+                    <h2>{{utilizadorView.nome}}</h2>
+                    <br>
+                    {% if request.user == utilizadorView %}
+                    <form action="{% url 'loja-editarPerfil' %}" method="" >
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-primary" id="botaoCriarUP">Adicionar Unidade Produção</button>
-                </form>
+                    <br>
+                    <input type="submit" id="login" value="EDITAR PERFIL">
+                    </form>
+                    {% endif %}
+                    <br>
+                </div>
+                {% if request.user.is_fornecedor %}
+                <div id="Fornecedor">
+                    <table id="infoGeralFornecedor">
+                        {% if numero_up > 0 %}
+                        <div id="numeroUPfornecedor">
+                            <h3>Unidades de produção: {{numero_up}}.</h3>
+                        </div>
+                        <div id="divTabelaPerfilFornecedor">
+                            <table id="customers">
+                                <tr>
+                                    <th>Id Interno</th>
+                                    <th>Nome</th>
+                                    <th>País</th>
+                                    <th>Cidade</th>
+                                    <th>Morada</th>
+                                    <th>Tipo de Unidade</th>
+                                    <th id="semBorda">Link</th>
+                                </tr>
+                                {% for up in unidadesProducao %}
+                                <tr>
+                                    <td>{{ up.id }}</td>
+                                    <td>{{ up.nome }}</td>
+                                    <td>{{ up.get_pais_display }}</td>
+                                    <td>{{ up.cidade }}</td>
+                                    <td>{{ up.morada }}</td>
+                                    <td>{{ up.get_tipo_unidade_display }}</td>
+                                    <td><a href="{% url 'loja-unidadeProducao' userName=request.user.username id=up.id %}">Expandir</a></td>
+        
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                        {% else %}
+                        <p>Ainda não tem unidades de produção associadas. Crie uma com o botão abaixo! </p>
+                        {% endif %}
+                    </table>
+                    <br>
+                    <div id="botaoAdicionarUP">
+                        <form action="{% url 'loja-criarUP' request.user.username %}" method="" class="form-wrapper">
+                            {% csrf_token %}
+                            <input type="submit" id="login" value="ADICIONAR UNIDADES DE PRODUÇÃO">
+                        </form>
+                    </div>
+                </div>
+        
+                {% elif request.user.is_consumidor %}
+                <div id="Consumidor">
+                    <!-- ESPAÇO PARA COISAS DE UM CONSUMIDOR -->
+                </div>
+        
+                {% endif %}
+    
+                </div>
+            </div>
             </div>
         </div>
-
-        {% elif request.user.is_consumidor %}
-        <div id="Consumidor">
-            <!-- ESPAÇO PARA COISAS DE UM CONSUMIDOR -->
-        </div>
-
-        {% endif %}
-
-
-        {% endblock %}
-
     </div>
+</div>
+<!-- end breadcrumb section -->
+
+
+           
+    </div>
+</div>
+<!-- end cart -->
+
+<!-- logo carousel -->
+<div class="logo-carousel-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="logo-carousel-inner">
+                    <div class="single-logo-item">
+                        <img src="{%static 'website/assets/img/company-logos/1.png' %}" alt="">
+                    </div>
+                    <div class="single-logo-item">
+                        <img src="{%static 'website/assets/img/company-logos/2.png' %}" alt="">
+                    </div>
+                    <div class="single-logo-item">
+                        <img src="{%static 'website/assets/img/company-logos/3.png' %}" alt="">
+                    </div>
+                    <div class="single-logo-item">
+                        <img src="{%static 'website/assets/img/company-logos/4.png' %}" alt="">
+                    </div>
+                    <div class="single-logo-item">
+                        <img src="{%static 'website/assets/img/company-logos/5.png' %}" alt="">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+    {% endblock %}

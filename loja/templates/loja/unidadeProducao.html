@@ -1,54 +1,161 @@
 {% extends 'main.html' %}
+{% load static %}
 {% block content %}
-<div id="UnidadeProducao">
-    <a href="{% url 'loja-perfil' request.user.username %}" class="layout__boxTitle">
-        <div  class="container">
-            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
-            <title>arrow-left</title>
-            <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
-            </svg>
-            <h6>Voltar</h6>
-        </div>
-    </a>
-    <div id="infoGeralUnidadeProducao">
-        <h4>Unidade de Produção: {{unidadeProducao.nome}}</h4>
-        {% if num_veiculos > 0 %}
-        <div id="'VEICULOS">
-        <div id="numeroVeiculos">
-            <p>Número de veículos desta unidade de produção: {{num_veiculos}}.</p>
-        </div>
-        <h6>Veículos:</h6>
-        <div id="divTabelaVeiculos">
-            <table id="TabelaVeiculo">
-                <tr>
-                    <th>Id Interno</th>
-                    <th>Nome</th>
-                    <th>Tipo Veículo</th>
-                    <th>Estado</th>
-                </tr>
-                {% for veiculo in veiculos %}
-                <tr>
-                    <td>{{ veiculo.id }}</td>
-                    <td>{{ veiculo.nome }}</td>
-                    <td>{{ veiculo.get_tipo_veiculo_display }}</td>
-                    <td>{{ veiculo.get_estado_veiculo_display }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-    </div>
-        {% else %}
-        <p>Ainda não tem veículos nesta unidade de produção. Crie um com o botão abaixo! </p>
-        {% endif %}
-    </div>
-    <div id="botaoAdicionarVeiculos">
-        <form action="{% url 'loja-criarVeiculo' userName=request.user.username id=unidadeProducao.id %}" method="" class="form-wrapper">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-primary" id="botaoCriarUP">Adicionar Veículo</button>
-        </form>
-    </div>
-</div>
 
+<style>
+    h2{
+        font-size: 25px !important;
+        color:#F28123;
+    }
+    h3{
+        font-size: 25px !important;
+        color:#fff;
+    }
+    p{
+        font-size: 13px !important;
+        color: #fff;
+    }
+    table{
+        border: 1px solid;
+    }
+    #customers {
+  font-family: Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+    }
+
+    #customers td, #customers th {
+    border: 1px solid #ddd;
+    padding: 8px;
+    }
+
+    #customers tr:nth-child(even){background-color: #f2f2f2;}
+
+    #customers tr:hover {background-color: #ddd;}
+
+    #customers th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #07212e;
+    color: white;
+    }
+</style>
+	<!-- breadcrumb-section -->
+	<div class="breadcrumb-section breadcrumb-bg">
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-8 offset-lg-2 text-center">
+					<div class="breadcrumb-text">
+						<div id="UnidadeProducao">
+                           
+                            <div id="infoGeralUnidadeProducao">
+                                <h2>Unidade de Produção: </h2>
+                                <h3>{{unidadeProducao.nome}}</h3>
+                                <hr>
+                                <br>
+                        
+                            
+                        
+                                {% if num_veiculos > 0 %}
+                                <div id="numeroVeiculos">
+                                    <p>Número de veículos desta unidade de produção: {{num_veiculos}}.</p>
+                                    <br>
+                                </div>
+                                <div id="divTabelaVeiculos">
+                                    <table id="customers">
+                                        <tr>
+                                            <th>Id Interno</th>
+                                            <th>Nome</th>
+                                            <th>Tipo Veículo</th>
+                                            <th>Estado</th>
+                                            <th>Remover</th>
+                                        </tr>
+                                        {% for veiculo in veiculos %}
+                                        <tr>
+                                            <td>{{ veiculo.id }}</td>
+                                            <td>{{ veiculo.nome }}</td>
+                                            <td>{{ veiculo.get_tipo_veiculo_display }}</td>
+                                            <td>{{ veiculo.get_estado_veiculo_display }}</td>
+                                            <td>
+                                                <form action="{% url 'loja-removerVeiculo' userName=request.user.username id=veiculo.id %}" method="post">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja remover o veículo {{ veiculo.nome }}?')">Remover</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        
+                                        {% endfor %}
+                                        
+                                    </table>
+                                </div>
+                                {% else %}
+                                <h5>Ainda não tem veículos nesta unidade de produção </h5>
+
+                              
+                                {% endif %}
+                                <br>
+
+                            </div>
+                            <div id="botaoAdicionarVeiculos">
+                                <form action="{% url 'loja-criarVeiculo' userName=request.user.username id=unidadeProducao.id %}" method="" class="form-wrapper">
+                                    {% csrf_token %}
+                                    <input type="submit" id="login" value="ADICIONAR VEÍCULO">
+                                </form>
+                                
+                            </div>
+                            <div id="botaoRemoverUnidadeProducao" style="margin-top: 15px;">
+                                <form action="{% url 'loja-removerUnidadeProducao' userName=request.user.username id=unidadeProducao.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="submit" id="login" onclick="return confirm('Tem certeza que deseja remover a unidade de produção {{ unidadeProducao.nome }}?')" value="Remover Unidade Producao">
+                                </form>
+                            </div>
+                            <br>
+                            <a href="{% url 'loja-perfil' request.user.username %}" class="layout__boxTitle">
+                                <div  class="container">
+                                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+                                    <title>arrow-left</title>
+                                    <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
+                                    </svg>
+                                    <h6>Voltar</h6>
+                                </div>
+                            </a>
+                        </div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+
+	
+
+	<!-- logo carousel -->
+	<div class="logo-carousel-section">
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="logo-carousel-inner">
+						<div class="single-logo-item">
+							<img src="{%static 'website/assets/img/company-logos/1.png' %}" alt="">
+						</div>
+						<div class="single-logo-item">
+							<img src="{%static 'website/assets/img/company-logos/2.png' %}" alt="">
+						</div>
+						<div class="single-logo-item">
+							<img src="{%static 'website/assets/img/company-logos/3.png' %}" alt="">
+						</div>
+						<div class="single-logo-item">
+							<img src="{%static 'website/assets/img/company-logos/4.png' %}" alt="">
+						</div>
+						<div class="single-logo-item">
+							<img src="{%static 'website/assets/img/company-logos/5.png' %}" alt="">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
 
 

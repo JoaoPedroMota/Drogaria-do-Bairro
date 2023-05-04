@@ -1,8 +1,13 @@
 from django.urls import path
 from . import views
+from .views import removerUnidadeProducao, removerVeiculo
 
 urlpatterns = [
     path('', views.loja, name='loja-home'),
+    path('about/', views.about, name='about'),
+    path('contacts/', views.contacts, name='contacts'),
+    path('shop/', views.shop, name='shop'),
+    path('news/', views.news, name='news'),
     path('carrinho/', views.carrinho, name='loja-carrinho'),
     path('checkout/', views.checkout, name='loja-checkout'),
     path('login/', views.loginUtilizador, name='loja-login'),
@@ -15,6 +20,8 @@ urlpatterns = [
     path('perfil/<str:userName>/criarUP/', views.criarUP, name='loja-criarUP'),
     path('perfil/<str:userName>/unidadeProducao/<str:id>/', views.unidadeProducao, name='loja-unidadeProducao'),
     path('perfil/<str:userName>/unidadeProducao/<str:id>/criarVeiculo/', views.criarVeiculo, name="loja-criarVeiculo"),
+    path('removerVeiculo/<str:userName>/<int:id>/', removerVeiculo, name='loja-removerVeiculo'),
+    path('<str:userName>/unidadeProducao/<int:id>/remover', removerUnidadeProducao, name='loja-removerUnidadeProducao'),
 ]
 
 

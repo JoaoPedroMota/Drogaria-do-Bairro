@@ -1,49 +1,106 @@
 {% load static %}
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <a class="navbar-brand" href="{% url 'loja-home' %}">Drogaria do Bairro</a>
 
-  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav mr-auto">
-      <li class="nav-item active">
-        <a class="nav-link" href="{% url 'loja-home' %}">Home <span class="sr-only">(current)</span></a>
-      </li>
+<style>
+ 
+.main-menu ul li:hover > ul {
+  display: block;
+}
 
+.main-menu ul ul {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+}
 
-      <!-- logado -->
-    {% if request.user.is_authenticated %}
-    </ul>
-    <div class="ml-auto" id="aMinhaNavBarEspacoUser">
-      <div class="dropdown">
-        <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown"
-          aria-haspopup="true" aria-expanded="false">
-          <img class="imagens" id='imagem-perfil' src="{{request.user.imagem_perfil.url}}"
-            style="width:50px;height: 50px;border-radius: 100%;" />
-          <span>@{{request.user.username}}</span>
-        </a>
-        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink">
-          <a class="dropdown-item" href="{% url 'loja-perfil' request.user.username  %}">Perfil</a>
-          <!-- Adicionar links futuros em cima do Logout -->
+.main-menu ul ul li {
+  float: none;
+  width: 100%;
+}
 
+.main-menu ul ul a {
+  padding: 10px;
+}
+</style>
 
+<div class="top-header-area" id="sticker">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 col-sm-12 text-center">
+        <div class="main-menu-wrap">
+          <!-- logo -->
+          <div class="site-logo">
+            <a href="/">
+              <img src="{%static 'website/assets/img/logo.png' %}" alt="logotipo do website">
+            </a>
+          </div>
+          <!-- logo -->
 
-
-
-
-          <a class="dropdown-item" href="{% url 'loja-logout' %}">Logout</a>
+          <!-- menu start -->
+          <nav class="main-menu">
+            <ul>
+              <li class="current-list-item"><a href="/">Casa</a>
+                
+              </li>
+              <li><a href="/about">Sobre Nós</a></li>
+              
+              <li><a href="/news">Jornal</a>
+              </li>
+              <li><a href="/contacts">Contactos</a></li>
+              {% if not request.user.is_authenticated %}
+              <li class="nav-item active">
+                <a href="{% url 'loja-login' %}">Entrar </a>
+              </li>
+              {% endif %}
+              {% if request.user.is_authenticated %}
+              <li><a href="/shop">Produtos</a></li>
+              <li><a href="#">@{{request.user.username}}</a>
+                <ul>
+                  <li><a class="dropdown-item" href="{% url 'loja-perfil' request.user.username  %}">Perfil</a></li>
+                  <li><a class="dropdown-item" href="{% url 'loja-logout' %}">Logout</a></li>
+                </ul>
+              </li>
+              <li><img class="imagens" id='imagem-perfil' src="{{request.user.imagem_perfil.url}}"
+                style="width:50px;height: 40px;border-radius: 100%;" /></li>
+              {% endif %}
+              <li>
+                <div class="header-icons">
+                  <a class="shopping-cart" href="/carrinho"><i class="fas fa-shopping-cart"></i></a>
+                  <a class="mobile-hide search-bar-icon" href="#"><i class="fas fa-search"></i></a>
+                </div>
+              </li>
+              
+            </ul>
+          </nav>
+          <a class="mobile-show search-bar-icon" href="#"><i class="fas fa-search"></i></a>
+          <div class="mobile-menu"></div>
+          <!-- menu end -->
         </div>
       </div>
     </div>
-    <!-- Não Logado -->
-    {% else %}
-
-
-    <li class="nav-item active">
-      <a class="nav-link" href="{% url 'loja-login' %}">Login <span class="sr-only">(current)</span></a>
-    </li>
-    </ul>
-    {% endif %}
-
-
   </div>
+</div>
+<!-- end header -->
+
+<!-- search area -->
+<div class="search-area">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12">
+        <span class="close-btn"><i class="fas fa-window-close"></i></span>
+        <div class="search-bar">
+          <div class="search-bar-tablecell">
+            <h3>Search For:</h3>
+            <input type="text" placeholder="Keywords">
+            <button type="submit">Search <i class="fas fa-search"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </nav>
+
