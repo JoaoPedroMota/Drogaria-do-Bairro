@@ -1,6 +1,6 @@
 from django.forms import ModelForm
 from django import forms
-from .models import Utilizador, Fornecedor, UnidadeProducao, Veiculo
+from .models import Utilizador, Fornecedor, UnidadeProducao, Veiculo, Produto
 from django.contrib.auth.forms import UserCreationForm
 
 class UtilizadorFormulario(UserCreationForm):
@@ -37,3 +37,14 @@ class criarVeiculoFormulario(ModelForm):
 
 class ConfirmacaoForm(forms.Form):
     nome_veiculo = forms.CharField()
+
+class ProdutoForm(forms.ModelForm):
+    data_validade = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    data_producao = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    categoria = forms.CharField(max_length=100, required=True)
+    marca = forms.CharField(max_length=50)
+    class Meta:
+        model = Produto
+        fields = ['nome', 'descricao', 'categoria', 'preco', 'unidade_medida', 'data_validade', 'data_producao', 'unidade_producao', 'marca']
+        
+
