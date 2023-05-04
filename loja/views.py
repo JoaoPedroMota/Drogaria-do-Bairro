@@ -47,7 +47,7 @@ def registerUtilizador(request):
     form = UtilizadorFormulario()
     
     if request.method == 'POST':
-        formulario = UtilizadorFormulario(request.PUT, request.FILES)
+        formulario = UtilizadorFormulario(request.POST, request.FILES)
         if formulario.is_valid():
             utilizador = formulario.save(commit=False)
             utilizador.username = utilizador.username.lower()

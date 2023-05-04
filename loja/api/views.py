@@ -1,19 +1,32 @@
-#from django.http import JsonResponse
+### APP loja #####
+### models.py ###
+from loja.models import Utilizador, Consumidor, Fornecedor, UnidadeProducao, Veiculo
+#### DJANGO ######
+from django.http import Http404
+from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
+from django.contrib.auth.hashers import check_password
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
+##### REST FRAMEWORK #####
+from rest_framework import permissions
+from rest_framework.serializers import CharField
+from rest_framework.views import APIView
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from loja.models import Utilizador, Consumidor, Fornecedor, UnidadeProducao, Veiculo
-from rest_framework import status
-### serializers ###
+#### DENTRO DA APP #####
+### serializers.py ###
 from .serializers import UtilizadorSerializer, ConsumidorSerializer, ForncedorSerializer, UnidadeProducaoSerializer, VeiculoSerializer
-
+### permissions.py ###
+from .permissions import IsOwnerOrReadOnly
 
 
 @api_view(['GET'])  # Exemplo para as próximas views: @api_view(['GET', 'PUT' 'POST'])
 def getRotas(request, format=None):
     """Todas as rotas que a API fornece
-
     Args:
-        request (_type_): pedido http. O ficheiro urls chama a função e passa automaticamente a variável
+    request: pedido http. O ficheiro urls chama a função e passa automaticamente a variável
     """
     # rotas = [
     #     ############# GETS ####################
@@ -23,7 +36,7 @@ def getRotas(request, format=None):
     rotas = {
             'GET': [
                     '/api/utilizadores/', 
-                    '/api/utilizadores/:id/',
+                    '/api/utilizadores/:username/',
                     'api/fornecedores/',
                     'api/fornecedores/:id/',
                     'api/consumidores/',
@@ -36,34 +49,63 @@ def getRotas(request, format=None):
             }
     return Response(rotas)
 
+#################################################
+@method_decorator(csrf_protect, name='dispatch')
+class UtilizadoresList(APIView):
+    """
+    Devolve todos os utilizadores presentes na BD ou cria um novo utilizador
+    """
+    def get(self, request, format=None):
+        utilizadores = Utilizador.objects.all()
+        serializar = UtilizadorSerializer(utilizadores, many=True)
+        return Response(serializar.data)
+    def post(self, request, format=None):
+        utilizador = UtilizadorSerializer(data=request.data)
+        if utilizador.is_valid():
+            utilizador.save()
+            return Response(utilizador.data, status=status.HTTP_201_CREATED)
+        return Response(utilizador.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET']) 
-def getUtilizadores(request, format=None):
-    utilizadores = Utilizador.objects.all() # lista de objetos. uma queryset
-    respostaDevolver = UtilizadorSerializer(utilizadores, many=True) # many --> Se for um objeto a serializar é False. Se for mais que um é True.
-    # FIXME retirar comentários para entender o que é o UtilizadorSerializer devolve.
-    # print("####################################")
-    # print("\n\n\n\n\n")
-    # print(respostaDevolver)
-    # print("\n\n\n\n\n")
-    # print("####################################")
-    return Response(respostaDevolver.data)
+
+@method_decorator(csrf_protect, name='dispatch')
+class UtilizadoresDetail(APIView):
+    """
+    Devolve, atualiza ou apaga uma instância de Utilizador
+    """
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    def get_object(self, identifier):
+        try:
+            return Utilizador.objects.get(username=identifier)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get(self, request, idUtilizador, format=None):
+        utilizador = self.get_object(idUtilizador)
+        serializar = UtilizadorSerializer(utilizador, many=False)
+        return Response(serializar.data)
+    
+    def put(self, request, idUtilizador, format=None):
+        utilizador = self.get_object(idUtilizador)
+        deserializar = UtilizadorSerializer(utilizador, data = request.data)
+        if deserializar.is_valid():
+            deserializar.save()
+            return Response(deserializar.data)
+        return Response(deserializar.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self,request, idUtilizador, format=None):
+        # if 'password' not in request.data:
+        #     return Response("Password Required", status=status.HTTP_400_BAD_REQUEST)
+        # password = request.data['password']
+        utilizador = self.get_object(idUtilizador)
+        # if not check_password(password, utilizador.password):
+        #     return Response("Password is incorrect", status=status.HTTP_401_UNAUTHORIZED)
+        utilizador.delete()
+        if "@" in idUtilizador:
+            mensagem = f"Utilizador com o email '{utilizador.email}' foi apagado com sucesso!"
+        else:
+             mensagem = f"Utilizador com o username '{utilizador.username}' foi apagado com sucesso!"
+        return Response(mensagem,status=status.HTTP_204_NO_CONTENT)
 
 
-
-
-@api_view(['GET']) 
-def getUtilizador(request, idUtilizador, format=None):
-    utilizadores = Utilizador.objects.get(id=idUtilizador) # um objeto
-    respostaDevolver = UtilizadorSerializer(utilizadores, many=False) # many --> Se for um objeto a serializar é False, retorna um só objeto
-                                                                     # . Se for mais que um objeto é True.
-    # FIXME retirar comentários para entender o que é o UtilizadorSerializer devolve.
-    # print("####################################")
-    # print("\n\n\n\n\n")
-    # print(respostaDevolver)
-    # print("\n\n\n\n\n")
-    # print("####################################")
-    return Response(respostaDevolver.data)
 
 ###############################
 @api_view(['GET'])
@@ -72,12 +114,13 @@ def getConsumidores(request, format=None):
     respostaDevolver = ConsumidorSerializer(consumidores, many=True)
     return Response(respostaDevolver.data)
 
+
 @api_view(['GET'])
 def getConsumidor(request, idConsumidor, format=None):
     consumidor = Consumidor.objects.get(id=idConsumidor)
     respostaDevolver = ConsumidorSerializer(consumidor, many=False)
     return Response(respostaDevolver.data)
-###################################################3
+###############################
 @api_view(['GET'])
 def getFornecedores(request, format=None):
     fornecedores = Fornecedor.objects.all()
