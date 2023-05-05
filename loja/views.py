@@ -87,11 +87,11 @@ def registerUtilizador(request):
 def formFornecedor(request):
     form = FornecedorFormulario()
     if request.method == 'POST':
-        formulario = FornecedorFormulario(request.PUT)
+        formulario = FornecedorFormulario(request.POST)
         if formulario.is_valid():
             Fornecedor.objects.create(
                 utilizador = request.user,
-                descricao = request.PUT.get('descricao')
+                descricao = request.POST.get('descricao')
             )
             return redirect('loja-home')
         else:
@@ -110,22 +110,19 @@ def editarPerfil(request):
     pagina = 'editarPerfil'
     utilizador = request.user
     form = EditarPerfil(instance=utilizador)
-    if request.method == 'PUT':
-        form = EditarPerfil(request.PUT, request.FILES,instance = utilizador)
-        #fields = []
-        username = request.PUT.get('username')
-        utilizador.first_name = request.PUT.get('first_name')
-        utilizador.last_name = request.PUT.get('last_name')
+    if request.method == 'POST':
+        form = EditarPerfil(request.POST, request.FILES,instance = utilizador)
+        username = request.POST.get('username')
+        utilizador.first_name = request.POST.get('first_name')
+        utilizador.last_name = request.POST.get('last_name')
         utilizador.nome = utilizador.first_name + ' ' + utilizador.last_name
-        utilizador.email = request.PUT.get('email')
-        utilizador.pais = request.PUT.get('pais')
-        utilizador.cidade = request.PUT.get('cidade')
-        utilizador.telemovel = request.PUT.get('telemovel')
-        utilizador.imagem_perfil = request.PUT.get('imagem_perfil')
+        utilizador.email = request.POST.get('email')
+        utilizador.pais = request.POST.get('pais')
+        utilizador.cidade = request.POST.get('cidade')
+        utilizador.telemovel = request.POST.get('telemovel')
+        utilizador.imagem_perfil = request.POST.get('imagem_perfil')
         utilizador.username = username  
-        
         if form.is_valid():
-
             utilizador = form.save(commit=False)
             utilizador.username = username.lower()
             utilizador.cidade = utilizador.cidade.upper()
@@ -133,7 +130,6 @@ def editarPerfil(request):
             messages.success(request, 'Perfil atualizado com sucesso.')
             link = reverse('loja-perfil', args=[request.user.username])
             return redirect(link)
-    
     context = {'form':form, 'pagina':pagina}
     return render(request, 'loja/editarUtilizador.html', context)
 
@@ -146,7 +142,7 @@ def apagarConta(request,pk):
     
     if request.user != utilizador:
         return HttpResponse('Você não deveria estar aqui!')
-    if request.method == 'DELETE':
+    if request.method == 'POST':
         logout(request)
         utilizador.delete()
         return redirect('loja-home')
@@ -176,15 +172,15 @@ def criarUP(request, userName):
     formulario = criarUnidadeProducaoFormulario()
     if request.user.is_fornecedor():
         if request.method == 'POST':
-            formulario = criarUnidadeProducaoFormulario(request.PUT)
+            formulario = criarUnidadeProducaoFormulario(request.POST)
             if formulario.is_valid():
                 UnidadeProducao.objects.create(
                     fornecedor = fornecedor_id,
-                    tipo_unidade = request.PUT.get('tipo_unidade'),
-                    nome = request.PUT.get('nome'),
-                    pais = request.PUT.get('pais'),
-                    cidade = request.PUT.get('cidade'),
-                    morada = request.PUT.get('morada')
+                    tipo_unidade = request.POST.get('tipo_unidade'),
+                    nome = request.POST.get('nome'),
+                    pais = request.POST.get('pais'),
+                    cidade = request.POST.get('cidade'),
+                    morada = request.POST.get('morada')
                 )
                 link = reverse('loja-perfil', args=[request.user.username])
                 return redirect(link)
@@ -237,12 +233,12 @@ def criarVeiculo(request, userName, id):
     formulario = criarVeiculoFormulario()
     if request.user.is_fornecedor():
         if request.method == 'POST':
-            formulario = criarVeiculoFormulario(request.PUT)
+            formulario = criarVeiculoFormulario(request.POST)
             if formulario.is_valid():
                 Veiculo.objects.create(
                     unidadeProducao = unidadeProducao,
-                    tipo_veiculo = request.PUT.get('tipo_veiculo'),
-                    nome = request.PUT.get('nome'),
+                    tipo_veiculo = request.POST.get('tipo_veiculo'),
+                    nome = request.POST.get('nome'),
                     estado_veiculo = Veiculo.disponivel
                 )
                 link = reverse('loja-unidadeProducao', args=[userName, id])
