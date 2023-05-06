@@ -69,6 +69,7 @@
                                             <th>Nome</th>
                                             <th>Tipo Veículo</th>
                                             <th>Estado</th>
+                                            <th>Editar</th>
                                             <th>Remover</th>
                                         </tr>
                                         {% for veiculo in veiculos %}
@@ -77,6 +78,12 @@
                                             <td>{{ veiculo.nome }}</td>
                                             <td>{{ veiculo.get_tipo_veiculo_display }}</td>
                                             <td>{{ veiculo.get_estado_veiculo_display }}</td>
+                                            <td>
+                                                <form action="{% url 'loja-editarVeiculo' userName=request.user.username id=unidadeProducao.id idVeiculo=veiculo.id %}" method="post">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-info btn-sm">Editar</button>
+                                                </form>
+                                            </td>
                                             <td>
                                                 <form action="{% url 'loja-removerVeiculo' userName=request.user.username id=veiculo.id %}" method="post">
                                                     {% csrf_token %}

@@ -3,7 +3,7 @@ from django.urls import reverse
 from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario
+from .forms import UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, editarVeiculoFormulario
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
@@ -254,6 +254,37 @@ def criarVeiculo(request, userName, id):
     
     context = {'form':formulario, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
     return render(request, 'loja/criarVeiculo.html', context)
+
+@login_required(login_url='loja-login')
+def editarVeiculo(request, userName, id, idVeiculo):
+    pagina = 'editarVeiculo'
+    utilizador = Utilizador.objects.get(username=userName)
+    fornecedor= utilizador.fornecedor
+    unidadeProducao = fornecedor.unidades_producao.get(pk=id)
+    veiculo = Veiculo.objects.get(pk=idVeiculo)
+    form = editarVeiculoFormulario(instance=veiculo)
+    if request.user.is_fornecedor():
+        if request.method == 'POST':
+            formulario = editarVeiculoFormulario(request.POST, instance = veiculo)
+            if formulario.is_valid():
+                veiculo.nome = request.POST.get('nome')
+                veiculo.estado_veiculo = request.POST.get('estado_veiculo')
+                veiculo.save()
+                # Veiculo.objects.save(
+                #     unidadeProducao = unidadeProducao,
+                #     tipo_veiculo = veiculo.tipo_veiculo,
+                #     nome = request.POST.get('nome'),
+                #     estado_veiculo = request.POST.get('estado_veiculo')
+                # )
+                link = reverse('loja-unidadeProducao', args=[userName, id])
+                return redirect(link)
+            else:
+                messages.error(request,'Ocorreu um erro durante o processo de edição de um veiculo')
+    else:
+        return HttpResponseForbidden()
+    
+    context = {'form':formulario, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
+    return render(request, 'loja/editarVeiculo.html', context)
 
 def removerVeiculo(request, userName, id):
     veiculo = Veiculo.objects.get(id=id)

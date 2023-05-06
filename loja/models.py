@@ -225,8 +225,11 @@ class Veiculo(models.Model):
     
     def __str__(self):
         return self.nome
-    
-    
+
+    class Meta:
+        verbose_name = 'Veiculo'
+        verbose_name_plural = 'Veiculos'
+        ordering = ['nome']
     
 class UnidadeProducao(models.Model):
     """_summary_
