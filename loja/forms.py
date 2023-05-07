@@ -40,5 +40,10 @@ class editarVeiculoFormulario(ModelForm):
         model=Veiculo
         fields = ['nome', 'estado_veiculo']
 
+class editarUnidadeProducaoFormulario(ModelForm):
+    class Meta:
+        model=UnidadeProducao
+        fields = ['nome', 'pais','cidade','morada', 'tipo_unidade']
+
 class ConfirmacaoForm(forms.Form):
     nome_veiculo = forms.CharField()

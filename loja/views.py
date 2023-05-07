@@ -3,7 +3,7 @@ from django.urls import reverse
 from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, editarVeiculoFormulario
+from .forms import UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, editarVeiculoFormulario, editarUnidadeProducaoFormulario
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
@@ -212,7 +212,33 @@ def unidadeProducao(request, userName, id):
     context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':unidadeProducao}
     return render(request, 'loja/unidadeProducao.html', context)
 
-
+@login_required(login_url='loja-login')
+def editarUnidadeProducao(request, userName, id):
+    pagina = 'editarUnidadeProducao'
+    utilizador = Utilizador.objects.get(username=userName)
+    fornecedor= utilizador.fornecedor
+    unidadeProducao = fornecedor.unidades_producao.get(pk=id)
+    #veiculo = Veiculo.objects.get(pk=idVeiculo)
+    form = editarUnidadeProducaoFormulario(instance=UnidadeProducao)
+    if request.user.is_fornecedor():
+        if request.method == 'POST':
+            formulario = editarUnidadeProducaoFormulario(request.POST)
+            if formulario.is_valid():
+                unidadeProducao.nome = request.POST.get('nome')
+                unidadeProducao.pais = request.POST.get('pais')
+                unidadeProducao.cidade = request.POST.get('cidade')
+                unidadeProducao.morada = request.POST.get('morada')
+                unidadeProducao.tipo_unidade = request.POST.get('tipo_unidade')
+                unidadeProducao.save()
+                link = reverse('loja-perfil', args=[userName])
+                return redirect(link)
+            else:
+                messages.error(request,'Ocorreu um erro durante o processo de edição de uma unidade de produção')
+    else:
+        return HttpResponseForbidden()
+    
+    context = {'form':formulario, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
+    return render(request, 'loja/editarUnidadeProducao.html', context)
 
 
 def removerUnidadeProducao(request, userName, id):

@@ -288,6 +288,11 @@ class UnidadeProducao(models.Model):
     def __str__(self):
         return self.nome
 
+    class Meta:
+        verbose_name = 'UnidadeProducao'
+        verbose_name_plural = 'UnidadesProducao'
+        ordering = ['nome']
+
 
 class Fornecedor(models.Model):
     utilizador = models.OneToOneField(Utilizador, on_delete=models.CASCADE, null=False, related_name='fornecedor')
