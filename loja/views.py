@@ -155,7 +155,7 @@ def perfil(request, userName):
     utilizadorPerfil = Utilizador.objects.get(username=userName)
     pagina = 'perfil'
     context={'pagina':pagina, 'utilizadorView': utilizadorPerfil}
-    if utilizadorPerfil.is_fornecedor():
+    if utilizadorPerfil.is_fornecedor:
         fornecedor = utilizadorPerfil.fornecedor
         unidadesProducao = fornecedor.unidades_producao.all()
         numero_up = unidadesProducao.count()
