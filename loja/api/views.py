@@ -37,14 +37,14 @@ def getRotas(request, format=None):
             'GET': [
                     '/api/utilizadores/', 
                     '/api/utilizadores/:username/',
-                    'api/fornecedores/',
-                    'api/fornecedores/:id/',
-                    'api/consumidores/',
-                    'api/consumidores/:id/',
-                    'api/fornecedores/:id/unidadesProducao/',
-                    'api/fornecedores/:id/unidadesProducao/:id/',
-                    'api/fornecedores/:id/unidadesProducao/:id/veiculos/',
-                    'api/fornecedores/:id/unidadesProducao/:id/veiculos/:id',
+                    '/api/fornecedores/',
+                    '/api/fornecedores/:id/',
+                    '/api/consumidores/',
+                    '/api/consumidores/:id/',
+                    '/api/fornecedores/:id/unidadesProducao/',
+                    '/api/fornecedores/:id/unidadesProducao/:id/',
+                    '/api/fornecedores/:id/unidadesProducao/:id/veiculos/',
+                    '/api/fornecedores/:id/unidadesProducao/:id/veiculos/:id',
                     ]
             }
     return Response(rotas)
@@ -60,9 +60,16 @@ class UtilizadoresList(APIView):
         serializar = UtilizadorSerializer(utilizadores, many=True)
         return Response(serializar.data)
     def post(self, request, format=None):
+        request.data['username'] = request.data['username'].lower()
         utilizador = UtilizadorSerializer(data=request.data)
         if utilizador.is_valid():
-            utilizador.save()
+            utilizador_temp = utilizador.save()
+            if utilizador_temp.tipo_utilizador == "C":
+                Consumidor.objects.create(utilizador=utilizador_temp)
+                print("Sou consumidor")
+            else:
+                Fornecedor.objects.create(utilizador=utilizador_temp)
+                print("Sou fornecedor")
             return Response(utilizador.data, status=status.HTTP_201_CREATED)
         return Response(utilizador.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -107,31 +114,94 @@ class UtilizadoresDetail(APIView):
 
 
 
+
+
+class UnidadeProducaoList(APIView):
+    def get(self, request, fornecedor_id, formato=None):
+        unidades_producao = UnidadeProducao.objects.filter(fornecedor = fornecedor_id)
+        ups= UnidadeProducaoSerializer(unidades_producao, many=True)
+        return Response(ups.data)
+    def post(self, request, fornecedor_id, formato=None):
+        fornecedor = Fornecedor.object.get(id=fornecedor_id)
+        if request.user.is_consumidor:
+            return Response("Não pode criar uma unidade de produção. Não é um fornecedor!")
+        if request.user.fornecedor != fornecedor:
+            return Response("Só pode criar unidades de produção para si e não para os outros")
+        request.data['fornecedor'] = fornecedor
+        unidade_producao = UnidadeProducaoSerializer(data=request.data)
+        if unidade_producao.is_valid():
+            up_guardada = unidade_producao.save()
+            return Response(up_guardada.data, status_code=status.HTTP_201_CREATED)
+        return Response(unidade_producao.erros, status_code=status.HTTP_400_BAD_REQUEST)
+    
+
+
+
+
+
+
+
+
+
+
+
 ###############################
-@api_view(['GET'])
-def getConsumidores(request, format=None):
-    consumidores = Consumidor.objects.all()
-    respostaDevolver = ConsumidorSerializer(consumidores, many=True)
-    return Response(respostaDevolver.data)
+class ConsumidoresList(APIView):
+    """
+    Devolve todos os consumidores presentes na BD
+    """
+    def get(self, request, format=None):
+        consumidores = Consumidor.objects.all()
+        serializar = ConsumidorSerializer(consumidores, many=True)
+        return Response(serializar.data)
+
+@method_decorator(csrf_protect, name='dispatch')
+class ConsumidoresDetail(APIView):
+    """
+    Devolve  uma instância de Consumidor
+    """
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    def get_object(self, identifier):
+        try:
+            return Consumidor.objects.get(pk=identifier)
+        except Consumidor.DoesNotExist:
+            raise Http404
+    def get(self, request, idConsumidor, format=None):
+        consumidor = self.get_object(idConsumidor)
+        serializar = ConsumidorSerializer(consumidor, many=False)
+        return Response(serializar.data)
 
 
-@api_view(['GET'])
-def getConsumidor(request, idConsumidor, format=None):
-    consumidor = Consumidor.objects.get(id=idConsumidor)
-    respostaDevolver = ConsumidorSerializer(consumidor, many=False)
-    return Response(respostaDevolver.data)
-###############################
-@api_view(['GET'])
-def getFornecedores(request, format=None):
-    fornecedores = Fornecedor.objects.all()
-    respostaDevolver = ForncedorSerializer(fornecedores, many=True)
-    return Response(respostaDevolver.data)
 
-@api_view(['GET'])
-def getFornecedor(request, idFornecedor, format=None):
-    fornecedor = Fornecedor.objects.get(id=idFornecedor)
-    respostaDevolver = ForncedorSerializer(fornecedor, many=False)
-    return Response(respostaDevolver.data)
+
+
+
+############### FORNECEDORES ################
+class FornecedoresList(APIView):
+    """
+    Devolve todos os fornecedores presentes na BD
+    """
+    def get(self, request, format=None):
+        fornecedores = Fornecedor.objects.all()
+        serializar = ForncedorSerializer(fornecedores, many=True)
+        return Response(serializar.data)
+
+@method_decorator(csrf_protect, name='dispatch')
+class FornecedoresDetail(APIView):
+    """
+    Devolve  uma instância de Fornecedor
+    """
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    def get_object(self, identifier):
+        try:
+            return Fornecedor.objects.get(pk=identifier)
+        except Fornecedor.DoesNotExist:
+            raise Http404
+    def get(self, request, idFornecedor, format=None):
+        fornecedor = self.get_object(idFornecedor)
+        serializar = ForncedorSerializer(fornecedor, many=False)
+        return Response(serializar.data)
+
 ################################
 
 

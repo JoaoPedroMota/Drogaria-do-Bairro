@@ -7,6 +7,7 @@ from django.contrib.auth.models import UserManager
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django_countries.fields import CountryField
+from phonenumbers import format_number, PhoneNumberFormat
 # from mptt.models import MPTTModel, TreeForeignKey
 # Create your models here.
 
@@ -110,13 +111,13 @@ class Utilizador(AbstractUser):
 
     # Definindo que os campos personalizados são obrigatórios apenas no momento do registro de usuário
     REQUIRED_FIELDS = ['username']
-    
     objects = CustomUserManager()
     
-    
+    @property
     def is_fornecedor(self):
         return self.tipo_utilizador == Utilizador.FORNECEDOR
     
+    @property
     def is_consumidor(self):
         return self.tipo_utilizador == Utilizador.CONSUMIDOR
     
@@ -134,6 +135,26 @@ class Utilizador(AbstractUser):
         """
         return self.is_admin and self.is_superuser
     
+    def __repr__(self):
+        return f"Utilizador(nome='{self.nome}', email='{self.email}', username='{self.username}', pais='{self.pais}', cidade='{self.cidade}', telemovel='{self.telemovel}', tipo_utilizador='{self.tipo_utilizador}', imagem_perfil='{self.imagem_perfil}', is_staff={self.is_staff}, is_admin={self.is_admin}, updated='{self.updated}', created='{self.created}')"
+    
+    @property
+    def representacao(self):
+        numero_formatado = format_number(self.telemovel,PhoneNumberFormat.INTERNATIONAL )
+        texto= f"\n\
+                Nome:{self.nome}\n\
+                Email:{self.email}\n\
+                Username:{self.username}\n\
+                País:{self.pais}\n\
+                Cidade:{self.cidade}\n\
+                Telemóvel:{numero_formatado}\n\
+                "
+        if self.tipo_utilizador == 'C':
+            texto+= "Tipo Utilizador: Consumidor"
+        else:
+            texto+= "Tipo Utilizador: Fornecedor"
+        return texto
+    
     class Meta:
         verbose_name = 'Utilizador'
         verbose_name_plural = 'Utilizadores'
@@ -145,7 +166,7 @@ class Consumidor(models.Model):
     #carrinho = carrinho atual
     # encomendas = Models.OneToMany
     def __str__(self):
-        return self.utilizador.nome
+        return self.utilizador.username
     class Meta:
         verbose_name = 'Consumidor'
         verbose_name_plural = 'Consumidores'
@@ -270,7 +291,7 @@ class Fornecedor(models.Model):
         verbose_name_plural = "Fornecedores"
         verbose_name = "Fornecedor"    
     def __str__(self):
-        return self.utilizador.nome
+        return self.utilizador.username
     
     def get_all_unidadesProducao(self):
         return UnidadeProducao.objects.filter(fornecedor=self)

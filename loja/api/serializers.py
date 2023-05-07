@@ -57,11 +57,19 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
 
     def create(self, validated_data):
         if 'password' not in validated_data:
-            raise ValidationError("Password is required")
+            raise ValidationError("password is required")
         if 'tipo_utilizador' not in validated_data:
             raise ValidationError("tipo_utilizador is required")
-
-        validated_data['username'] = validated_data['username'].lower()
+        if "email" not in validated_data:
+            raise ValidationError("email is required")
+        if "username" not in validated_data:
+            raise ValidationError("username is required")
+        if "pais" not in validated_data:
+            raise ValidationError("pais is required")
+        if 'cidade' not in validated_data:
+            raise ValidationError("cidade is required")
+        if "telemovel" not in validated_data:
+            raise ValidationError("telemovel is required")
         validated_data['nome'] = f"{validated_data['first_name']} {validated_data['last_name']}"
         validated_data['cidade'] = validated_data['cidade'].upper()
         validated_data['password'] = make_password(validated_data['password'])
@@ -100,6 +108,7 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
     
 
 class ConsumidorSerializer(ModelSerializer):
+    utilizador = CharField(source="utilizador.username", read_only=True)
     class Meta:
         model = Consumidor
         fields = '__all__'
@@ -107,20 +116,17 @@ class ConsumidorSerializer(ModelSerializer):
         
         
 class ForncedorSerializer(ModelSerializer):
+    utilizador = CharField(source="utilizador.username", read_only=True)
     class Meta:
         model = Fornecedor
         fields = ['id','utilizador', 'descricao']
         
-        
-class UnidadeProducaoSerializer(ModelSerializer):
-    tipo_unidade_api = SerializerMethodField()
-    class Meta:
-        model = UnidadeProducao
-        fields = ['id','nome', 'fornecedor', 'pais', 'cidade', 'morada', 'tipo_unidade_api']
-    def get_tipo_unidade_api(self, objeto):
-        return dict(UnidadeProducao.TIPO_UNIDADE).get(objeto.tipo_unidade)
-    
-    
+
+
+
+
+
+
 class VeiculoSerializer(ModelSerializer):
     tipo_veiculo_api = SerializerMethodField()
     estado_veiculo_api = SerializerMethodField()
@@ -131,3 +137,17 @@ class VeiculoSerializer(ModelSerializer):
         return dict(Veiculo.TIPO_VEICULO).get(objeto.tipo_veiculo)
     def get_estado_veiculo_api(self, objeto):
         return dict(Veiculo.ESTADO_VEICULO).get(objeto.estado_veiculo)
+    
+    
+    
+
+class UnidadeProducaoSerializer(ModelSerializer):
+    tipo_unidade_api = SerializerMethodField()
+    veiculos = VeiculoSerializer(many=True, read_only=True)
+    class Meta:
+        model = UnidadeProducao
+        fields = ['id','nome', 'fornecedor', 'pais', 'cidade', 'morada', 'tipo_unidade_api','veiculos',]
+    def get_tipo_unidade_api(self, objeto):
+        return dict(UnidadeProducao.TIPO_UNIDADE).get(objeto.tipo_unidade)
+    
+    

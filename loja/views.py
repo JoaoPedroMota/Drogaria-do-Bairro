@@ -38,11 +38,10 @@ def shop(request):
 def loginUtilizador(request):
     pagina='login'
     if request.user.is_authenticated:
-      
         return redirect('loja-home')
     if request.method == 'POST':
-        email = request.GET.get('email')
-        password = request.GET.get('password')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
         try:
             utilizador = Utilizador.objects.get(email=email)
         except:
