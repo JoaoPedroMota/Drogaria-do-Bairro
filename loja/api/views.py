@@ -117,12 +117,12 @@ class UtilizadoresDetail(APIView):
 
 
 class UnidadeProducaoList(APIView):
-    def get(self, request, fornecedor_id, formato=None):
-        unidades_producao = UnidadeProducao.objects.filter(fornecedor = fornecedor_id)
+    def get(self, request, idFornecedor, format=None):
+        unidades_producao = UnidadeProducao.objects.filter(fornecedor = idFornecedor)
         ups= UnidadeProducaoSerializer(unidades_producao, many=True)
         return Response(ups.data)
-    def post(self, request, fornecedor_id, formato=None):
-        fornecedor = Fornecedor.object.get(id=fornecedor_id)
+    def post(self, request, idFornecedor, formato=None):
+        fornecedor = Fornecedor.objects.get(id=idFornecedor)
         if request.user.is_consumidor:
             return Response("Não pode criar uma unidade de produção. Não é um fornecedor!")
         if request.user.fornecedor != fornecedor:

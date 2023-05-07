@@ -169,7 +169,7 @@ def criarUP(request, userName):
     fornecedor_id = utilizador.fornecedor
     pagina = 'criarUP'
     formulario = criarUnidadeProducaoFormulario()
-    if request.user.is_fornecedor():
+    if request.user.is_fornecedor:
         if request.method == 'POST':
             formulario = criarUnidadeProducaoFormulario(request.POST)
             if formulario.is_valid():
