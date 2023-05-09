@@ -1,7 +1,12 @@
 from rest_framework.serializers import ModelSerializer, Field, SerializerMethodField, ValidationError
-
+from rest_framework.fields import ImageField
 #### MODELOS ####
 from loja.models import Utilizador, Consumidor, UnidadeProducao, Fornecedor, Veiculo
+
+
+def helloWorld():
+    return 'Hello World'
+
 #######
 from django_countries.fields import CountryField
 from django_countries.serializers import CountryFieldMixin
@@ -54,7 +59,7 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
     tipo_utilizador = TipoUtilizadorField()
     password = CharField(write_only=True, required=False)
     nome = CharField(read_only=True)
-
+    #imagem_perfil = ImageField(required=False)
     def create(self, validated_data):
         if 'password' not in validated_data:
             raise ValidationError("password is required")
@@ -104,6 +109,7 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
     class Meta:
         model = Utilizador
         fields = ['username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador']
+        #fields = ['username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
         extra_kwargs = {'password': {'required': True}}
     
 

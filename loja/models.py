@@ -8,6 +8,8 @@ from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django_countries.fields import CountryField
 from phonenumbers import format_number, PhoneNumberFormat
+from functools import partial
+
 # from mptt.models import MPTTModel, TreeForeignKey
 # Create your models here.
 
@@ -67,7 +69,15 @@ class Utilizador(AbstractUser):
         
     
     """
-    
+    def validar_extensao_imagens(value):
+        ext = value.name.split('.')[-1].lower()
+        allowed_extensions = ['jpg','png','svg','gif']
+        if ext not in allowed_extensions:
+            raise ValidationError((f'Tipo de ficheiro inválido. Extensões válidas: {allowed_extensions}'))
+    def validar_tamanho_imagens(value):
+        max_size = 2 * 1024 * 1024
+        if value.size > max_size:
+            raise ValidationError((f'Ficheiro grande de mais. Tamanho máximo 2MB'))
     # Definindo as opções para o campo tipo_utilizador
     CONSUMIDOR = 'C'
     FORNECEDOR = 'F'
@@ -95,8 +105,7 @@ class Utilizador(AbstractUser):
     #morada = models.CharField(max_length=200, null=True, blank=False)
     telemovel = PhoneNumberField(null=True, blank=True, unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
     tipo_utilizador = models.CharField(max_length=1, choices=TIPO_UTILIZADOR, default='', null=True)
-    imagem_perfil = models.ImageField(null=True, default="avatar.svg")
-    
+    imagem_perfil = models.ImageField(null=True, default="avatar.svg", validators=[validar_extensao_imagens, validar_tamanho_imagens])
     # Campos padrão
     is_staff = models.BooleanField(default=False, help_text='Designa se este utilizador pode aceder à área de administração do site.')
     is_admin = models.BooleanField(default=False, help_text='Designa se este utilizador tem permissão para realizar ações de administrador.')
@@ -204,7 +213,7 @@ class Veiculo(models.Model):
         
     ]
     nome = models.CharField(max_length=200, null=True, blank=False)
-    unidadeProducao = models.ForeignKey("UnidadeProducao", null=True, blank=False, on_delete=models.CASCADE)
+    unidadeProducao = models.ForeignKey("UnidadeProducao", null=True, blank=False, on_delete=models.CASCADE, related_name='veiculos')
     tipo_veiculo = models.CharField(max_length=5, choices=TIPO_VEICULO, default='', null=True, blank=False)
     estado_veiculo = models.CharField(max_length=5, choices=ESTADO_VEICULO, default='D', null=True, blank=False)
 
@@ -307,62 +316,4 @@ class Fornecedor(models.Model):
             raise ValueError('Não encontrei nenhuma unidade de produção com base no id dado')
 
 
-        
-        
-        
-# class Categoria(models.Model):
-#     """Define catorias para os produtos, com uma hierarquia.
-
-#     Args:
-#         models (_type_): _description_
-#     """
-#     nome = models.CharField(max_length=200, null=False, blank=False)
-#     pai = models.ForeignKey('self', on_delete=models.PROTECT, related_name='categoria_pai')
-
-        
-class Produto(models.Model):
-
-    UNIDADES_MEDIDA_CHOICES = (
-        ('kg', 'Quilograma'),
-        ('g', 'Grama'),
-        ('l', 'litro'),
-        ('un', 'Unidade'),
-    )
-    nome = models.CharField(max_length=100)
-    descricao = models.TextField()
-    categoria = models.TextField()
-    #categoria = models.ForeignKey("Categoria", on_delete=models.CASCADE)
-    preco = models.DecimalField(max_digits=7, decimal_places=2)
-    unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES)
-    data_validade = models.DateField()
-    data_producao = models.DateField()
-    unidade_producao = models.ForeignKey(UnidadeProducao, on_delete=models.CASCADE)
-    marca = models.TextField()
-    #marca = models.ForeignKey("Marca", on_delete=models.CASCADE)    
-    def __str__(self):
-        return self.nome
-
-class Categoria(models.Model):
-    nome = models.CharField(max_length=100)
-    #descricao = models.TextField(blank=True)
-
-    def __str__(self):
-        return self.nome
-
-
-class Subcategoria(models.Model):
-    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='subcategorias')
-    nome = models.CharField(max_length=100)
-    #descricao = models.TextField(blank=True)
-
-    def __str__(self):
-        return self.nome
-
-class Marca(models.Model):
-    nome = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.nome
     
-# loja/migrations/000X_auto_add_slug_to_produto.py
-
