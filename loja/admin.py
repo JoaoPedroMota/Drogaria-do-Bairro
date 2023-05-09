@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Utilizador, Consumidor, Fornecedor
+from .models import Utilizador, Consumidor, Fornecedor, Veiculo, UnidadeProducao
 #Register your models here.
 
 class MyModel(admin.ModelAdmin):
@@ -15,3 +15,5 @@ class MyModel(admin.ModelAdmin):
 admin.site.register(Utilizador, MyModel)
 admin.site.register(Consumidor, MyModel)
 admin.site.register(Fornecedor, MyModel)
+admin.site.register(Veiculo, MyModel)
+admin.site.register(UnidadeProducao, MyModel)

@@ -7,73 +7,45 @@ from django.contrib.auth.models import UserManager
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django_countries.fields import CountryField
+from phonenumbers import format_number, PhoneNumberFormat
+# from mptt.models import MPTTModel, TreeForeignKey
 # Create your models here.
 
 
 class CustomUserManager(UserManager):
     """
-    Classe que define um gerenciador personalizado de usuários. Ela estende a classe UserManager
-    do Django e adiciona comportamentos personalizados para a criação de usuários comuns e 
-    superusuários.
+    Classe que define um gestor personalizado de utilizadores. Estende a classe UserManager
+    do Django e adiciona comportamentos personalizados para a criação de superusers.
 
     Atributos:
         Nenhum atributo adicional além dos herdados da classe UserManager.
 
     Métodos:
-        create_user(email, password=None, **extra_fields): Cria e salva um usuário comum com
-            o email e senha fornecidos e quaisquer campos extras especificados em extra_fields.
-            Se a senha não for fornecida, uma senha aleatória será gerada. Se is_staff e 
-            is_admin não estiverem definidos em extra_fields, eles serão definidos como False.
-            Retorna o usuário criado.
-
-        create_superuser(password=None, **extra_fields): Cria e salva um superusuário com a 
-            senha fornecida e quaisquer campos extras especificados em extra_fields. Se a senha 
-            não for fornecida, uma senha aleatória será gerada. Se is_staff, is_admin e 
-            is_superuser não estiverem definidos em extra_fields, eles serão definidos como True.
-            Retorna o superusuário criado.
+        create_superuser(password=None, **outros_campos): Cria e salva um superuser com a 
+            password fornecida. Se a password não for fornecida, uma aleatória será criada. 
+            Se is_staff, is_admin e is_superuser não estiverem definidos em outros_campos, eles serão definidos como True.
+            Retorna o superuser criado.
     Comentário:
     POR FAVOR NÃO MEXER NESTA CLASSE. EVITAR AO MÁXIMO!!!!!!!!
     """
-
-    def create_user(self, email, password=None, **extra_fields):
+    def create_superuser(self, password=None, **outros_campos):
         """
-        Cria e salva um usuário comum com o email e senha fornecidos e quaisquer campos extras 
-        especificados em extra_fields. Se a senha não for fornecida, uma senha aleatória será 
-        gerada. Se is_staff e is_admin não estiverem definidos em extra_fields, eles serão 
-        definidos como False.
-
-        Args:
-            email (str): O email do usuário a ser criado.
-            password (str): A senha do usuário a ser criado. Se não for fornecida, uma senha 
-                aleatória será gerada.
-            **extra_fields: Campos extras para adicionar ao usuário.
-
-        Returns:
-            O usuário comum criado.
-        """
-        extra_fields.setdefault('is_staff', False)
-        extra_fields.setdefault('is_admin', False)
-        return super().create_user(email, password=password, **extra_fields)
-
-    def create_superuser(self, password=None, **extra_fields):
-        """
-        Cria e salva um superusuário com a senha fornecida e quaisquer campos extras especificados 
-        em extra_fields. Se a senha não for fornecida, uma senha aleatória será gerada. Se is_staff,
-        is_admin e is_superuser não estiverem definidos em extra_fields, eles serão definidos como 
+        Cria e salva um utilizador super com direitos de admin e password fornecida.
+        Se a password não for fornecida, uma aleatória será criada. Se is_staff,
+        is_admin e is_superuser não estiverem definidos em outros_campos, eles serão definidos como 
         True.
 
         Args:
-            password (str): A senha do superusuário a ser criado. Se não for fornecida, uma senha 
-                aleatória será gerada.
-            **extra_fields: Campos extras para adicionar ao superusuário.
-
+            password (str): A senha do superuser a ser criado. Se não for fornecida, uma aleatória será gerada.
+            **outros_campos: Campos extras para adicionar ao superuser.
         Returns:
-            O superusuário criado.
+            O superuser criado.
         """
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_admin', True)
-        extra_fields.setdefault('is_superuser', True)
-        return super().create_superuser(password=password, **extra_fields)
+        outros_campos.setdefault('is_superuser', True)
+        outros_campos.setdefault('is_staff', True)
+
+        outros_campos.setdefault('is_admin', True)
+        return super().create_superuser(password=password, **outros_campos)
 
 
 class Utilizador(AbstractUser):
@@ -139,13 +111,13 @@ class Utilizador(AbstractUser):
 
     # Definindo que os campos personalizados são obrigatórios apenas no momento do registro de usuário
     REQUIRED_FIELDS = ['username']
-    
     objects = CustomUserManager()
     
-    
+    @property
     def is_fornecedor(self):
         return self.tipo_utilizador == Utilizador.FORNECEDOR
     
+    @property
     def is_consumidor(self):
         return self.tipo_utilizador == Utilizador.CONSUMIDOR
     
@@ -163,10 +135,30 @@ class Utilizador(AbstractUser):
         """
         return self.is_admin and self.is_superuser
     
+    def __repr__(self):
+        return f"Utilizador(nome='{self.nome}', email='{self.email}', username='{self.username}', pais='{self.pais}', cidade='{self.cidade}', telemovel='{self.telemovel}', tipo_utilizador='{self.tipo_utilizador}', imagem_perfil='{self.imagem_perfil}', is_staff={self.is_staff}, is_admin={self.is_admin}, updated='{self.updated}', created='{self.created}')"
+    
+    @property
+    def representacao(self):
+        numero_formatado = format_number(self.telemovel,PhoneNumberFormat.INTERNATIONAL )
+        texto= f"\n\
+                Nome:{self.nome}\n\
+                Email:{self.email}\n\
+                Username:{self.username}\n\
+                País:{self.pais}\n\
+                Cidade:{self.cidade}\n\
+                Telemóvel:{numero_formatado}\n\
+                "
+        if self.tipo_utilizador == 'C':
+            texto+= "Tipo Utilizador: Consumidor"
+        else:
+            texto+= "Tipo Utilizador: Fornecedor"
+        return texto
+    
     class Meta:
         verbose_name = 'Utilizador'
         verbose_name_plural = 'Utilizadores'
-        ordering = ['username', '-created', '-updated']
+        ordering = ['id','username','telemovel' ,'-created', '-updated']
     
     
 class Consumidor(models.Model):
@@ -174,7 +166,7 @@ class Consumidor(models.Model):
     #carrinho = carrinho atual
     # encomendas = Models.OneToMany
     def __str__(self):
-        return self.utilizador.nome
+        return self.utilizador.username
     class Meta:
         verbose_name = 'Consumidor'
         verbose_name_plural = 'Consumidores'
@@ -230,6 +222,7 @@ class Veiculo(models.Model):
         verbose_name = 'Veiculo'
         verbose_name_plural = 'Veiculos'
         ordering = ['nome']
+    
     
 class UnidadeProducao(models.Model):
     """_summary_
@@ -287,6 +280,9 @@ class UnidadeProducao(models.Model):
         
     def __str__(self):
         return self.nome
+    class Meta:
+        verbose_name_plural = "Unidades de Producao"
+        verbose_name = "Unidade de Producao"
 
     class Meta:
         verbose_name = 'UnidadeProducao'
@@ -299,8 +295,11 @@ class Fornecedor(models.Model):
     #lista_produtos
     #lista_veiculos
     descricao = models.TextField(blank=True, null=True, max_length=500)
+    class Meta:
+        verbose_name_plural = "Fornecedores"
+        verbose_name = "Fornecedor"    
     def __str__(self):
-        return self.utilizador.nome
+        return self.utilizador.username
     
     def get_all_unidadesProducao(self):
         return UnidadeProducao.objects.filter(fornecedor=self)
@@ -314,5 +313,64 @@ class Fornecedor(models.Model):
                 raise ValueError('Esta unidade de produção não pertence a este fornecedor')
         except UnidadeProducao.DoesNotExist:
             raise ValueError('Não encontrei nenhuma unidade de produção com base no id dado')
+
+
         
+        
+        
+# class Categoria(models.Model):
+#     """Define catorias para os produtos, com uma hierarquia.
+
+#     Args:
+#         models (_type_): _description_
+#     """
+#     nome = models.CharField(max_length=200, null=False, blank=False)
+#     pai = models.ForeignKey('self', on_delete=models.PROTECT, related_name='categoria_pai')
+
+        
+class Produto(models.Model):
+
+    UNIDADES_MEDIDA_CHOICES = (
+        ('kg', 'Quilograma'),
+        ('g', 'Grama'),
+        ('l', 'litro'),
+        ('un', 'Unidade'),
+    )
+    nome = models.CharField(max_length=100)
+    descricao = models.TextField()
+    categoria = models.TextField()
+    #categoria = models.ForeignKey("Categoria", on_delete=models.CASCADE)
+    preco = models.DecimalField(max_digits=7, decimal_places=2)
+    unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES)
+    data_validade = models.DateField()
+    data_producao = models.DateField()
+    unidade_producao = models.ForeignKey(UnidadeProducao, on_delete=models.CASCADE)
+    marca = models.TextField()
+    #marca = models.ForeignKey("Marca", on_delete=models.CASCADE)    
+    def __str__(self):
+        return self.nome
+
+class Categoria(models.Model):
+    nome = models.CharField(max_length=100)
+    #descricao = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.nome
+
+
+class Subcategoria(models.Model):
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='subcategorias')
+    nome = models.CharField(max_length=100)
+    #descricao = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.nome
+
+class Marca(models.Model):
+    nome = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.nome
+    
+# loja/migrations/000X_auto_add_slug_to_produto.py
 

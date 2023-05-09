@@ -38,7 +38,6 @@ def shop(request):
 def loginUtilizador(request):
     pagina='login'
     if request.user.is_authenticated:
-      
         return redirect('loja-home')
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -112,7 +111,6 @@ def editarPerfil(request):
     form = EditarPerfil(instance=utilizador)
     if request.method == 'POST':
         form = EditarPerfil(request.POST, request.FILES,instance = utilizador)
-        #fields = []
         username = request.POST.get('username')
         utilizador.first_name = request.POST.get('first_name')
         utilizador.last_name = request.POST.get('last_name')
@@ -123,9 +121,7 @@ def editarPerfil(request):
         utilizador.telemovel = request.POST.get('telemovel')
         utilizador.imagem_perfil = request.POST.get('imagem_perfil')
         utilizador.username = username  
-        
         if form.is_valid():
-
             utilizador = form.save(commit=False)
             utilizador.username = username.lower()
             utilizador.cidade = utilizador.cidade.upper()
@@ -133,7 +129,6 @@ def editarPerfil(request):
             messages.success(request, 'Perfil atualizado com sucesso.')
             link = reverse('loja-perfil', args=[request.user.username])
             return redirect(link)
-    
     context = {'form':form, 'pagina':pagina}
     return render(request, 'loja/editarUtilizador.html', context)
 
@@ -160,7 +155,7 @@ def perfil(request, userName):
     utilizadorPerfil = Utilizador.objects.get(username=userName)
     pagina = 'perfil'
     context={'pagina':pagina, 'utilizadorView': utilizadorPerfil}
-    if utilizadorPerfil.is_fornecedor():
+    if utilizadorPerfil.is_fornecedor:
         fornecedor = utilizadorPerfil.fornecedor
         unidadesProducao = fornecedor.unidades_producao.all()
         numero_up = unidadesProducao.count()
@@ -174,7 +169,7 @@ def criarUP(request, userName):
     fornecedor_id = utilizador.fornecedor
     pagina = 'criarUP'
     formulario = criarUnidadeProducaoFormulario()
-    if request.user.is_fornecedor():
+    if request.user.is_fornecedor:
         if request.method == 'POST':
             formulario = criarUnidadeProducaoFormulario(request.POST)
             if formulario.is_valid():
@@ -331,4 +326,38 @@ def remover_veiculo(request, id):
     else:
         form = ConfirmacaoForm()
     return render(request, 'loja/removerVeiculo.html', {'form': form, 'veiculo': veiculo})
+
+
+
+#esta aqui mas depois tem que ir para o cimo
+from django.shortcuts import render, redirect
+from .models import UnidadeProducao, Produto, Categoria, Marca
+from .forms import ProdutoForm
+
+def criar_produto(request, userName, id):
+    unidade = UnidadeProducao.objects.get(pk=id)
+    if request.method == 'POST':
+        form = ProdutoForm(request.POST)
+        if form.is_valid():
+            produto = form.save(commit=False)
+            categoria_nome = form.cleaned_data['categoria']
+            categoria, _ = Categoria.objects.get_or_create(nome=categoria_nome)
+            produto.categoria = categoria
+            marca_nome = form.cleaned_data['marca']
+            marca, _ = Marca.objects.get_or_create(nome=marca_nome)
+            produto.marca = marca
+            produto.unidade_producao = unidade
+            produto.save()
+            messages.success(request, 'Produto criado com sucesso!')
+            return redirect('loja-unidadeProducao', userName=userName, id=id)
+    else:
+        form = ProdutoForm()
+    return render(request, 'loja/criar_produto.html', {'form': form})
+
+#ainda nao estah a ser usado
+def ver_produtos(request):
+    produtos = Produto.objects.all()
+    context = {'produtos': produtos}
+    return render(request, 'ver_produtos.html', context)
+
 

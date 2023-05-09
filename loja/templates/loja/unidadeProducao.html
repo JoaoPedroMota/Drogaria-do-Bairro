@@ -55,7 +55,8 @@
                                 <hr>
                                 <br>
                         
-                            
+                                <a href="{% url 'loja-criarProduto' userName=request.user.username id=unidadeProducao.id %}" class="btn btn-primary">Criar Produto</a>
+
                         
                                 {% if num_veiculos > 0 %}
                                 <div id="numeroVeiculos">
@@ -114,7 +115,7 @@
                             <div id="botaoRemoverUnidadeProducao" style="margin-top: 15px;">
                                 <form action="{% url 'loja-removerUnidadeProducao' userName=request.user.username id=unidadeProducao.id %}" method="post">
                                     {% csrf_token %}
-                                    <input type="submit" id="login" onclick="return confirm('Tem certeza que deseja remover a unidade de produção {{ unidadeProducao.nome }}?')" value="botaoRemoverUnidadeProducao">
+                                    <input type="submit" id="login" onclick="return confirm('Tem certeza que deseja remover a unidade de produção {{ unidadeProducao.nome }}?')" value="Remover Unidade Producao">
                                 </form>
                             </div>
                             <br>
@@ -167,6 +168,3 @@
 
 
 {% endblock content%}
-
-
-
