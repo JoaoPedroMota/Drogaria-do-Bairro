@@ -23,13 +23,24 @@
                             <div >
                                 <form action="" method="POST" class="form-wrapper" enctype="multipart/form-data">
                                     {% csrf_token %}
+                                    
                                     {% for field in form %}
-                                    <div class="form-group">
-                                        <input type="{{ field.widget.input_type }}" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}">
+                                      <div class="form-group">
+                                        {% if field.field.widget.input_type == 'select' %}
+                                          <select id="{{ field.id_for_label }}" name="{{ field.name }}">
+                                            {% for choice_value, choice_label in field.field.choices %}
+                                              <option value="{{ choice_value }}">{{ choice_label }}</option>
+                                            {% endfor %}
+                                          </select>
+                                        {% else %}
+                                          <input type="{{ field.field.widget.input_type }}" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}">
+                                        {% endif %}
                                       </div>
-                                        {% endfor %}
-                                        <input type="submit" id="login" value="Adicionar">
-                                </form>
+                                    {% endfor %}
+                                    
+                                    <input type="submit" id="login" value="Adicionar">
+                                  </form>
+                                  
                             </div>
                             <a href="{% url 'loja-perfil' request.user.username %}" class="layout__boxTitle">
                                 <div  class="container">

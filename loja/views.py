@@ -243,7 +243,7 @@ def unidadeProducao(request, userName, id):
     fornecedor = utilizador.fornecedor
     #fornecedor.unidades_producao.all()
     unidadeProducao = fornecedor.unidades_producao.get(pk=id)
-    veiculos = unidadeProducao.veiculo_set.all()
+    veiculos = unidadeProducao.veiculos.all()
     
     num_veiculos = veiculos.count()
     
