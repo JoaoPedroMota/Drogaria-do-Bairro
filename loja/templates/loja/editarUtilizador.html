@@ -16,17 +16,26 @@
                     <div>
                         <form action="" method="POST" class="form-wrapper" enctype="multipart/form-data">
                             {% csrf_token %}
-
+                            
                             {% for field in form %}
-                            <input type="{{ field.field.widget.input_type }}"
-                                name="{{ field.name }}"
-                                value="{{ field.value }}"
-                                placeholder="{{ field.name }}"
-                                {% if field.required %}required{% endif %}
-                                {% if field.id %}id="{{ field.id }}"{% endif %}>
-                        {% endfor %}
-                        <input type="submit" id="login" value="GUARDAR">
-                        </form>
+                              {% if field.field.widget.input_type == 'select' %}
+                                <select name="{{ field.name }}" {% if field.required %}required{% endif %}>
+                                  {% for choice in field.field.choices %}
+                                    <option value="{{ choice.0 }}" {% if choice.0 == field.value %}selected{% endif %}>{{ choice.1 }}</option>
+                                  {% endfor %}
+                                </select>
+                              {% else %}
+                                <input type="{{ field.field.widget.input_type }}"
+                                       name="{{ field.name }}"
+                                       value="{{ field.value }}"
+                                       placeholder="{{ field.label }}"
+                                       {% if field.required %}required{% endif %}
+                                       {% if field.id %}id="{{ field.id }}"{% endif %}>
+                              {% endif %}
+                            {% endfor %}
+                            
+                            <input type="submit" id="login" value="GUARDAR">
+                          </form>
                         
                         
                     </div>
