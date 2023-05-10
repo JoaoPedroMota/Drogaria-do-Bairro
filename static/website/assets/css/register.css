@@ -146,8 +146,8 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
   input:not([type="submit"]), select {
     font-size: 0.9em;
     color: black !important;
+    font-weight: bold;
     
-    font-weight: 100;
     width: 94.5%;
     display: block;
     border: none;
@@ -187,8 +187,10 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
   }
   
   ::-webkit-input-placeholder {
+
     color: black  ;
-    font-weight: 100;
+    font-weight: bold;
+   
   }
   
   :-moz-placeholder {
