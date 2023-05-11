@@ -295,7 +295,7 @@ class Fornecedor(models.Model):
     utilizador = models.OneToOneField(Utilizador, on_delete=models.CASCADE, null=False, related_name='fornecedor')
     #lista_produtos
     #lista_veiculos
-    descricao = models.TextField(blank=True, null=True, max_length=500)
+    #descricao = models.TextField(blank=True, null=True, max_length=500)
     class Meta:
         verbose_name_plural = "Fornecedores"
         verbose_name = "Fornecedor"    
@@ -315,5 +315,19 @@ class Fornecedor(models.Model):
         except UnidadeProducao.DoesNotExist:
             raise ValueError('Não encontrei nenhuma unidade de produção com base no id dado')
 
-
+class Carrinho(models.Model):
+    consumidor = models.OneToOneField(Consumidor, null=False, on_delete=models.CASCADE, related_name='carrinho')
+    class Meta:
+        verbose_name = "Carrinho"
+        verbose_name_plural ="Carrinhos"
     
+
+
+
+class ProdutosCarrinho(models.Model):
+    carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='itens_carrinho')
+    #produtos = models.ForeignKey(Produtos, on_delete=models.SET_NULL, null=True, blank = True)
+    class Meta:
+        verbose_name = "Produtos num Carrinho"
+        verbose_name_plural = "Produtos num Carrinho"
+        

@@ -3,10 +3,6 @@ from rest_framework.fields import ImageField
 #### MODELOS ####
 from loja.models import Utilizador, Consumidor, UnidadeProducao, Fornecedor, Veiculo
 
-
-def helloWorld():
-    return 'Hello World'
-
 #######
 from django_countries.fields import CountryField
 from django_countries.serializers import CountryFieldMixin
@@ -125,7 +121,7 @@ class ForncedorSerializer(ModelSerializer):
     utilizador = CharField(source="utilizador.username", read_only=True)
     class Meta:
         model = Fornecedor
-        fields = ['id','utilizador', 'descricao']
+        fields = ['id','utilizador']
         
 
 
