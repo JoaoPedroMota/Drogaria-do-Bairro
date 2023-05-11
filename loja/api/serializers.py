@@ -22,6 +22,23 @@ class TipoUtilizadorField(Field):
         raise ValidationError("Invalid tipo_utilizador description.")
 
 
+class TipoUnidadeProducaoField(Field):
+    def to_representation(self, value):
+        return dict(UnidadeProducao.TIPO_UNIDADE).get(value)
+
+    def to_internal_value(self, data):
+        for key, value in dict(UnidadeProducao.TIPO_UNIDADE).items(): #separa as chaves dos valores do dicionário que está a ser criado ({'C':'CONSUMIDOR', 'F':'FORNECEDOR'})
+            if key == data or value==data: #se a informação passada estiver na chave ou no valor, retorna a chave correspondente a esse valor ou chave
+                return key
+        raise ValidationError(f"tipo_unidade inválida.Valor inserido não corresponde a nenhuma chave ou descrição.Valores possíveis:{dict(UnidadeProducao.TIPO_UNIDADE)}")
+
+
+
+
+
+
+
+
 class campoPaisSerializador(Field):
     """
     Para ser possivel serializar o campo País na classe utilizador
@@ -144,11 +161,12 @@ class VeiculoSerializer(ModelSerializer):
     
 
 class UnidadeProducaoSerializer(ModelSerializer):
-    tipo_unidade_api = SerializerMethodField()
+    pais = campoPaisSerializador()
+    tipo_unidade = TipoUnidadeProducaoField()
     veiculos = VeiculoSerializer(many=True, read_only=True)
     class Meta:
         model = UnidadeProducao
-        fields = ['id','nome', 'fornecedor', 'pais', 'cidade', 'morada', 'tipo_unidade_api','veiculos',]
+        fields = ['id','nome', 'fornecedor', 'pais', 'cidade', 'morada', 'tipo_unidade','veiculos',]
     def get_tipo_unidade_api(self, objeto):
         return dict(UnidadeProducao.TIPO_UNIDADE).get(objeto.tipo_unidade)
     

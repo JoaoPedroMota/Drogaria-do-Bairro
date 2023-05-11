@@ -27,7 +27,7 @@
                                         </div>
                                         <input type="submit" id="login" value="SIGNIN">
                                     </form>
-                                        <p>Ainda não tens uma conta  <a href="/register"> Regista-te agora agora!</a></p>
+                                    <p>Ainda não tens uma conta <a href="/register" class="link-registo">Regista-te agora!</a></p>
                                     </div>
                                 </div>          
                             </div>
@@ -35,6 +35,12 @@
             </div>
         </div>
 </div>
+<style>
+    .link-registo {
+        color: blue !important;
+        text-decoration: underline;
+    }
+</style>
 {% else %}
 <!-- REGISTO -->
 <style>
@@ -75,33 +81,38 @@
                 <p class="subtitle">Encomenda connosco</p>
                 <p class="subtitle">Regista-te</p>
                 <hr>
-                
-                
-             
-                <form action="" method="POST"  enctype="multipart/form-data">
+                <form action="" method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     {% for field in form %}
                     <div class="form-group row">
-                        <div class="col-md-4">
-                            {% comment %} {{ field.label_tag }} {% endcomment %}
-                        </div>
-                        <div class="col-md-4">
-                            <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.label }}" class=" {% if field.errors %}is-invalid{% endif %}" value="{{ field.value|default:'' }}">
-                            {% if field.help_text %}
-                               
-                            {% endif %}
-                            {% for error in field.errors %}
-                                        <div class="invalid-feedback d-block">{{ error }}</div>
+                      <div class="col-md-4">
+                       
+                      </div>
+                      <div class="col-md-4">
+                        {% if field.field.widget.input_type == 'select' %}
+                          <!-- Render select input -->
+                          <select name="{{ field.name }}">
+                            {% for option in field.field.widget.choices %}
+                            <option value="{{ option.0 }}" {% if option.0 == field.value %}selected{% endif %}>{{ option.1 }}</option>
                             {% endfor %}
-                        </div>
-                        
+                          </select>
+                        {% else %}
+                          <!-- Render other input types -->
+                          <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.label }}" class="{% if field.errors %}is-invalid{% endif %}" value="{{ field.value|default:'' }}">
+                        {% endif %}
+                        {% for error in field.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                      </div>
                     </div>
                     {% endfor %}
-                    
+                  
                     <hr>
                     <input type="submit" id="login" value="SIGNUP">
-                </form>
-                    <p class='link'>Já tens conta   <a href="/login" class='link'> Entra agora!</a></p>
+                  </form>
+                  <p class="link">Já tens conta <a href="/login" class="link">Entra agora!</a></p>
+                  
+                
               
             </div>
             </div>

@@ -143,10 +143,11 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
     padding: 3em;
   }
   
-  input:not([type="submit"]){
+  input:not([type="submit"]), select {
     font-size: 0.9em;
-    color: #fff;
-    font-weight: 100;
+    color: black !important;
+    font-weight: bold;
+    
     width: 94.5%;
     display: block;
     border: none;
@@ -159,8 +160,9 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
     background-position: -800px 0;
     background-size: 100%;
     background-repeat: no-repeat;
-    color: #fff;
-    font-family: 'Roboto', sans-serif;
+   
+    font-family: "Open Sans", sans-serif;
+    background-color: 	#ff9035;
   }
   
   input.email, input.text.w3lpass {
@@ -185,8 +187,10 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
   }
   
   ::-webkit-input-placeholder {
-    color: #fff;
-    font-weight: 100;
+
+    color: black  ;
+    font-weight: bold;
+   
   }
   
   :-moz-placeholder {

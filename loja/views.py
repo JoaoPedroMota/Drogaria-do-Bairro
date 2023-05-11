@@ -3,11 +3,29 @@ from django.urls import reverse
 from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import UtilizadorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario#,FornecedorFormulario
+from .forms import PasswordConfirmForm, UtilizadorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario#, FornecedorFormulario
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
-
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import check_password
+from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from django.contrib.auth import logout
+@login_required(login_url='loja-login')
+def apagarConta(request,pk):
+    utilizador = Utilizador.objects.get(pk=pk)
+    
+    if request.user != utilizador:
+        return HttpResponse('Você não deveria estar aqui!')
+    if request.method == 'POST':
+        logout(request)
+        utilizador.delete()
+        return redirect('loja-home')
+    context={'objeto':utilizador, 'pagina':'apagar-conta'}
+    return render(request,'loja/delete.html', context)
+        
+from django.contrib.auth import authenticate
 
 # Create your views here.
 def loja(request):
@@ -34,6 +52,27 @@ def news(request):
 def shop(request):
     context = {}
     return render(request, 'loja/shop.html', context)
+
+
+def confirm_password_view(request):
+    if request.method == 'POST':
+        form = PasswordConfirmForm(request.POST)
+        if form.is_valid():
+            password = form.cleaned_data['password']
+            confirm_password = form.cleaned_data['confirm_password']
+            username = request.user.username
+            user = authenticate(username=username, password=password)
+
+            if user is not None:
+                pass
+            else:
+                # Password doesn't match, show an error message
+                form.add_error('password', 'Incorrect password.')
+    else:
+        form = PasswordConfirmForm()
+    
+    context = {'form': form}
+    return render(request, 'password_confirm.html', context)
 
 def loginUtilizador(request):
     pagina='login'
@@ -73,6 +112,7 @@ def registerUtilizador(request):
                 consumidor = Consumidor.objects.create(utilizador=utilizador)
                 return redirect('loja-home')
             else:
+                fornecedor = Fornecedor.objects.create(utilizador=utilizador)
                 return redirect('loja-home')
 
             
@@ -133,20 +173,25 @@ def editarPerfil(request):
     return render(request, 'loja/editarUtilizador.html', context)
 
 
-
-
 @login_required(login_url='loja-login')
-def apagarConta(request,pk):
+def apagarConta(request, pk):
     utilizador = Utilizador.objects.get(pk=pk)
-    
+
     if request.user != utilizador:
         return HttpResponse('Você não deveria estar aqui!')
+
     if request.method == 'POST':
-        logout(request)
-        utilizador.delete()
-        return redirect('loja-home')
-    context={'objeto':utilizador, 'pagina':'apagar-conta'}
-    return render(request,'loja/delete.html', context)
+        password = request.POST.get('password')
+        if check_password(password, utilizador.password):
+            logout(request)
+            utilizador.delete()
+            return redirect('loja-home')
+        else:
+            messages.error(request, 'Senha incorreta. A conta não foi excluída.')
+
+    context = {'objeto': utilizador, 'pagina': 'apagar-conta'}
+    return render(request, 'loja/delete.html', context)
+
         
         
 
