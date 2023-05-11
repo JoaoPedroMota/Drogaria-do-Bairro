@@ -317,17 +317,18 @@ class Fornecedor(models.Model):
 
 class Carrinho(models.Model):
     consumidor = models.OneToOneField(Consumidor, null=False, on_delete=models.CASCADE, related_name='carrinho')
+    
     class Meta:
         verbose_name = "Carrinho"
         verbose_name_plural ="Carrinhos"
-    
+
 
 
 
 class ProdutosCarrinho(models.Model):
     carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='itens_carrinho')
-    #produtos = models.ForeignKey(Produtos, on_delete=models.SET_NULL, null=True, blank = True)
+    #produtos = models.ForeignKey(ProdutosUnidadeProducao, on_delete=models.SET_NULL, null=True, blank = True)
+    
     class Meta:
         verbose_name = "Produtos num Carrinho"
         verbose_name_plural = "Produtos num Carrinho"
-        
