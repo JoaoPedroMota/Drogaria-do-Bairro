@@ -10,10 +10,8 @@ class UtilizadorFormulario(UserCreationForm):
         
         
         
-# class FornecedorFormulario(ModelForm):
-#     class Meta:
-#         model = Fornecedor
-#         fields = ['descricao']
+class FornecedorFormulario(ModelForm):
+    pass
         
         
         
@@ -51,5 +49,4 @@ class PasswordConfirmForm(forms.Form):
 #     class Meta:
 #         model = Produto
 #         fields = ['nome', 'descricao', 'categoria', 'preco', 'unidade_medida', 'data_validade', 'data_producao', 'unidade_producao', 'marca']
-        
 

@@ -3,7 +3,7 @@ from django.urls import reverse
 from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import PasswordConfirmForm, UtilizadorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario#, FornecedorFormulario
+from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
@@ -112,8 +112,7 @@ def registerUtilizador(request):
                 consumidor = Consumidor.objects.create(utilizador=utilizador)
                 return redirect('loja-home')
             else:
-                fornecedor = Fornecedor.objects.create(utilizador=utilizador)
-                return redirect('loja-home')
+                return redirect('loja-form-forcedor')
 
             
         else:
@@ -123,20 +122,20 @@ def registerUtilizador(request):
     context = {'pagina': pagina, 'form': form}
     return render(request,'loja/login_register.html', context)
 
-# def formFornecedor(request):
-#     form = FornecedorFormulario()
-#     if request.method == 'POST':
-#         formulario = FornecedorFormulario(request.POST)
-#         if formulario.is_valid():
-#             Fornecedor.objects.create(
-#                 utilizador = request.user,
-#                 descricao = request.POST.get('descricao')
-#             )
-#             return redirect('loja-home')
-#         else:
-#             messages.error(request,'Ocorreu um erro durante o processo de registo')
-#     context = {'form':form}
-#     return render(request,'loja/register_fornecedor.html' ,context)
+def formFornecedor(request):
+    form = FornecedorFormulario()
+    if request.method == 'POST':
+        formulario = FornecedorFormulario(request.POST)
+        if formulario.is_valid():
+            Fornecedor.objects.create(
+                utilizador = request.user,
+                descricao = request.POST.get('descricao')
+            )
+            return redirect('loja-home')
+        else:
+            messages.error(request,'Ocorreu um erro durante o processo de registo')
+    context = {'form':form}
+    return render(request,'loja/register_fornecedor.html' ,context)
 
 def logutUtilizador(request):
     logout(request)
@@ -192,7 +191,6 @@ def apagarConta(request, pk):
     context = {'objeto': utilizador, 'pagina': 'apagar-conta'}
     return render(request, 'loja/delete.html', context)
 
-        
         
 
 @login_required(login_url='loja-login')
@@ -275,7 +273,7 @@ def criarVeiculo(request, userName, id):
     fornecedor= utilizador.fornecedor
     unidadeProducao = fornecedor.unidades_producao.get(pk=id)
     formulario = criarVeiculoFormulario()
-    if request.user.is_fornecedor:
+    if request.user.is_fornecedor():
         if request.method == 'POST':
             formulario = criarVeiculoFormulario(request.POST)
             if formulario.is_valid():
