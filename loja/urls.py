@@ -1,8 +1,9 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 from .views import removerUnidadeProducao, removerVeiculo, criar_produto, ver_produtos
 
 urlpatterns = [
+    path('api/', include('loja.api.urls')),
     path('', views.loja, name='loja-home'),
     path('about/', views.about, name='about'),
     path('contacts/', views.contacts, name='contacts'),

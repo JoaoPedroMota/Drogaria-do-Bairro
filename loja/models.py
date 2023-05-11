@@ -218,6 +218,9 @@ class Veiculo(models.Model):
     def __str__(self):
         return self.nome
 
+    def __repr__(self):
+        return f"Veiculo(nome='{self.nome}', unidadeProducao='{self.unidadeProducao}', tipo_veiculo='{self.tipo_veiculo}', estado_veiculo='{self.estado_veiculo}')"
+
     class Meta:
         verbose_name = 'Veiculo'
         verbose_name_plural = 'Veiculos'

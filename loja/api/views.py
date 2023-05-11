@@ -163,11 +163,12 @@ class ConsumidoresDetail(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     def get_object(self, identifier):
         try:
-            return Consumidor.objects.get(pk=identifier)
+            utilizador_temp = Utilizador.objects.get(username=identifier)
+            return Consumidor.objects.get(utilizador=utilizador_temp)
         except Consumidor.DoesNotExist:
             raise Http404
-    def get(self, request, idConsumidor, format=None):
-        consumidor = self.get_object(idConsumidor)
+    def get(self, request, username, format=None):
+        consumidor = self.get_object(username)
         serializar = ConsumidorSerializer(consumidor, many=False)
         return Response(serializar.data)
 
@@ -194,11 +195,12 @@ class FornecedoresDetail(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     def get_object(self, identifier):
         try:
-            return Fornecedor.objects.get(pk=identifier)
+            utilizador_temp = Utilizador.objects.get(username=identifier)
+            return Fornecedor.objects.get(utilizador=utilizador_temp)
         except Fornecedor.DoesNotExist:
             raise Http404
-    def get(self, request, idFornecedor, format=None):
-        fornecedor = self.get_object(idFornecedor)
+    def get(self, request, username, format=None):
+        fornecedor = self.get_object(username)
         serializar = ForncedorSerializer(fornecedor, many=False)
         return Response(serializar.data)
 
@@ -206,11 +208,12 @@ class FornecedoresDetail(APIView):
 
 
 @api_view(['GET'])
-def getVeiculos(request, idFornecedor, idUnidadeProducao, format=None):
-
-    fornecedor = Fornecedor.objects.get(id=idFornecedor)
+def getVeiculos(request, username, idUnidadeProducao, format=None):
+    utilizador_temp = Utilizador.objects.get(username=username)
+    fornecedor = Fornecedor.objects.get(utilizador=utilizador_temp)
     unidadeProducao = fornecedor.unidades_producao.get(pk=idUnidadeProducao)
     veiculos = unidadeProducao.veiculo_set.all()
+    print(veiculos)
     respostaDevolver = VeiculoSerializer(veiculos, many=True)
     return Response(respostaDevolver.data)
 

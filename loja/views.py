@@ -7,6 +7,8 @@ from .forms import UtilizadorFormulario, FornecedorFormulario, EditarPerfil, cri
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
+import requests
+from django.db.models import QuerySet
 
 
 # Create your views here.
@@ -193,19 +195,75 @@ def criarUP(request, userName):
 
 
 
+# def unidadeProducao(request, userName, id):
+#     context = {}
+#     utilizador = Utilizador.objects.get(username=userName)
+#     fornecedor = utilizador.fornecedor
+#     #fornecedor.unidades_producao.all()
+#     unidadeProducao = fornecedor.unidades_producao.get(pk=id)
+#     veiculos = unidadeProducao.veiculo_set.all()
+#     print("\n\n\n\n",repr(veiculos))
+#     num_veiculos = veiculos.count()
+    
+    
+#     context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':unidadeProducao}
+#     return render(request, 'loja/unidadeProducao.html', context)
+
+#######################ZONA DE TESTE######################################################
+
 def unidadeProducao(request, userName, id):
     context = {}
-    utilizador = Utilizador.objects.get(username=userName)
-    fornecedor = utilizador.fornecedor
-    #fornecedor.unidades_producao.all()
-    unidadeProducao = fornecedor.unidades_producao.get(pk=id)
-    veiculos = unidadeProducao.veiculo_set.all()
+    # utilizador = Utilizador.objects.get(username=userName)
+    # fornecedor = utilizador.fornecedor
+    # #fornecedor.unidades_producao.all()
+    # unidadeProducao = fornecedor.unidades_producao.get(pk=id)
+    # veiculos = unidadeProducao.veiculo_set.all()
     
-    num_veiculos = veiculos.count()
+    # num_veiculos = veiculos.count()
+    #url = 'http://127.0.0.1:8000/api/fornecedores/'+str(userName)
+    #url = 'http://127.0.0.1:8000/api/utilizadores/'
     
+    #response = requests.get(url)
     
-    context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':unidadeProducao}
+    #if response.status_code == 200:
+    #    data = response.json()
+    #    print("FJAOIWJFOIJAWIOFJIOAWJF",id)
+        # Process the data as needed
+        #return data
+    #else:
+        #print('Error:', response.status_code)
+        #print('Response:', response.content)
+    #    return None
+    #("informaçao que fui buscar: ",data)              
+    #print(data[0]['id'])
+    #idFornecedor = data['id']
+
+    url2 = 'http://127.0.0.1:8000/api/fornecedores/'+str(userName)+'/unidadesProducao/'+str(id)+'/veiculos/'
+    #path('fornecedores/<str:idFornecedor>/unidadesProducao/<str:idUnidadeProducao>/veiculos/', views.getVeiculos),
+    response2 = requests.get(url2)
+    if response2.status_code == 200:
+        data2 = response2.json()
+        # Process the data as needed
+        #return data
+    else:
+        #print('Error:', response2.status_code)
+        #print('Response:', response2.content)
+        return None
+
+    print("informaçao que fui buscar 2: ",data2)
+    num_veiculos = len(data2)
+    print("num_veiculos",num_veiculos)
+    veiculos = data2
+    print("veiculos",veiculos)
+
+    # queryset = QuerySet(model=veiculos, query=None, using='default')
+    # queryset._result_cache = veiculos
+    # print("\nprint the QUERYSET ",queryset)
+
+    context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id}
     return render(request, 'loja/unidadeProducao.html', context)
+
+#######################ZONA DE TESTE######################################################
 
 @login_required(login_url='loja-login')
 def editarUnidadeProducao(request, userName, id):
@@ -284,7 +342,7 @@ def editarVeiculo(request, userName, id, idVeiculo):
     unidadeProducao = fornecedor.unidades_producao.get(pk=id)
     veiculo = Veiculo.objects.get(pk=idVeiculo)
     form = editarVeiculoFormulario(instance=veiculo)
-    if request.user.is_fornecedor():
+    if request.user.is_fornecedor:
         if request.method == 'POST':
             formulario = editarVeiculoFormulario(request.POST, instance = veiculo)
             if formulario.is_valid():
