@@ -297,7 +297,7 @@ class Fornecedor(models.Model):
     utilizador = models.OneToOneField(Utilizador, on_delete=models.CASCADE, null=False, related_name='fornecedor')
     #lista_produtos
     #lista_veiculos
-    descricao = models.TextField(blank=True, null=True, max_length=500)
+    #descricao = models.TextField(blank=True, null=True, max_length=500)
     class Meta:
         verbose_name_plural = "Fornecedores"
         verbose_name = "Fornecedor"    

@@ -273,7 +273,7 @@ def editarUnidadeProducao(request, userName, id):
     unidadeProducao = fornecedor.unidades_producao.get(pk=id)
     #veiculo = Veiculo.objects.get(pk=idVeiculo)
     form = editarUnidadeProducaoFormulario(instance=UnidadeProducao)
-    if request.user.is_fornecedor():
+    if request.user.is_fornecedor:
         if request.method == 'POST':
             formulario = editarUnidadeProducaoFormulario(request.POST)
             if formulario.is_valid():

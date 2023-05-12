@@ -11,9 +11,10 @@ class UtilizadorFormulario(UserCreationForm):
         
         
 class FornecedorFormulario(ModelForm):
-    class Meta:
-        model = Fornecedor
-        fields = ['descricao']
+    pass
+    # class Meta:
+    #     model = Fornecedor
+    #     fields = ['descricao']
         
         
         

@@ -119,7 +119,7 @@ class ForncedorSerializer(ModelSerializer):
     utilizador = CharField(source="utilizador.username", read_only=True)
     class Meta:
         model = Fornecedor
-        fields = ['id','utilizador', 'descricao']
+        fields = ['id','utilizador',]
         
 
 
