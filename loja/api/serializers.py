@@ -3,10 +3,6 @@ from rest_framework.fields import ImageField
 #### MODELOS ####
 from loja.models import Utilizador, Consumidor, UnidadeProducao, Fornecedor, Veiculo
 
-
-def helloWorld():
-    return 'Hello World'
-
 #######
 from django_countries.fields import CountryField
 from django_countries.serializers import CountryFieldMixin
@@ -24,6 +20,39 @@ class TipoUtilizadorField(Field):
             if key == data or value==data: #se a informação passada estiver na chave ou no valor, retorna a chave correspondente a esse valor ou chave
                 return key
         raise ValidationError("Invalid tipo_utilizador description.")
+
+
+class TipoUnidadeProducaoField(Field):
+    def to_representation(self, value):
+        return dict(UnidadeProducao.TIPO_UNIDADE).get(value)
+
+    def to_internal_value(self, data):
+        for key, value in dict(UnidadeProducao.TIPO_UNIDADE).items(): #separa as chaves dos valores do dicionário que está a ser criado ({'C':'CONSUMIDOR', 'F':'FORNECEDOR'})
+            if key == data or value==data: #se a informação passada estiver na chave ou no valor, retorna a chave correspondente a esse valor ou chave
+                return key
+        raise ValidationError(f"tipo_unidade inválida.Valor inserido não corresponde a nenhuma chave ou descrição.Valores possíveis:{dict(UnidadeProducao.TIPO_UNIDADE)}")
+
+
+
+class TipoVeiculoField(Field):
+    def to_representation(self, value):
+        return dict(Veiculo.TIPO_VEICULO).get(value)
+
+    def to_internal_value(self, data):
+        for key, value in dict(Veiculo.TIPO_VEICULO).items(): #separa as chaves dos valores do dicionário que está a ser criado ({'C':'CONSUMIDOR', 'F':'FORNECEDOR'})
+            if key == data or value==data: #se a informação passada estiver na chave ou no valor, retorna a chave correspondente a esse valor ou chave
+                return key
+        raise ValidationError(f"tipo_veiculo inválido.Valor inserido não corresponde a nenhuma chave ou descrição.Valores possíveis:{dict(Veiculo.TIPO_VEICULO)}")
+
+class EstadoVeiculoField(Field):
+    def to_representation(self, value):
+        return dict(Veiculo.ESTADO_VEICULO).get(value)
+    def to_internal_value(self, data):
+        for key, value in dict(Veiculo.ESTADO_VEICULO).items():
+            if key==data or value==data:
+                return key
+        raise ValidationError(f"estado_veiculo inválido. Valor inserido não corresponde a nenhuma chave ou descrição. Valores possíveis:{dict(Veiculo.ESTADO_VEICULO)}")
+
 
 
 class campoPaisSerializador(Field):
@@ -125,7 +154,7 @@ class ForncedorSerializer(ModelSerializer):
     utilizador = CharField(source="utilizador.username", read_only=True)
     class Meta:
         model = Fornecedor
-        fields = ['id','utilizador', 'descricao']
+        fields = ['id','utilizador']
         
 
 
@@ -134,26 +163,35 @@ class ForncedorSerializer(ModelSerializer):
 
 
 class VeiculoSerializer(ModelSerializer):
-    tipo_veiculo_api = SerializerMethodField()
-    estado_veiculo_api = SerializerMethodField()
+    tipo_veiculo = TipoVeiculoField()
+    estado_veiculo= EstadoVeiculoField()
     class Meta:
         model = Veiculo
-        fields = ['id','nome', 'unidadeProducao', 'tipo_veiculo_api', 'estado_veiculo_api']
-    def get_tipo_veiculo_api(self, objeto):
-        return dict(Veiculo.TIPO_VEICULO).get(objeto.tipo_veiculo)
-    def get_estado_veiculo_api(self, objeto):
-        return dict(Veiculo.ESTADO_VEICULO).get(objeto.estado_veiculo)
+        fields = ['id','nome', 'unidadeProducao', 'tipo_veiculo', 'estado_veiculo']
+    def create(self, validated_data):
+        if 'nome' not in validated_data:
+            raise ValidationError("Nome is required")
+        if 'unidadeProducao' not in validated_data:
+            raise ValidationError("Unidade Producao is required")
+        if 'tipo_veiculo' not in validated_data:
+            raise ValidationError("Tipo Veiculo is required")
+        if 'estado_veiculo' in validated_data and ('estado_veiculo'!='D' or 'estado_veiculo'!='Disponível'):
+            raise ValidationError("Ao introduzir um novo veiculo a uma UP, este deve ser sempre introduzido como Disponivel (D)")
+        return super().create(validated_data)
     
     
     
 
 class UnidadeProducaoSerializer(ModelSerializer):
-    tipo_unidade_api = SerializerMethodField()
+    pais = campoPaisSerializador()
+    tipo_unidade = TipoUnidadeProducaoField()
     veiculos = VeiculoSerializer(many=True, read_only=True)
     class Meta:
         model = UnidadeProducao
-        fields = ['id','nome', 'fornecedor', 'pais', 'cidade', 'morada', 'tipo_unidade_api','veiculos',]
-    def get_tipo_unidade_api(self, objeto):
-        return dict(UnidadeProducao.TIPO_UNIDADE).get(objeto.tipo_unidade)
+        fields = ['id','nome', 'fornecedor', 'pais', 'cidade', 'morada', 'tipo_unidade','veiculos',]
+    ####def create(self, validated_data):
+
+    ####def update(self, validated_data):
+
     
     

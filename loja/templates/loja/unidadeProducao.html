@@ -1,7 +1,7 @@
 {% extends 'main.html' %}
 {% load static %}
 {% block content %}
-
+<link rel="stylesheet" href="{%static 'website/assets/css/responsiveC.css' %}">
 <style>
     h2{
         font-size: 25px !important;
@@ -55,8 +55,11 @@
                                 <hr>
                                 <br>
                         
+<<<<<<< HEAD
                                 <a href="{% url 'loja-criarProduto' userName=request.user.username id=unidadeProducao.id %}" class="btn btn-primary">Criar Produto</a> 
 
+=======
+>>>>>>> e4331d2f1820222e390adceb697c187bd4f3d528
                         
                                 {% if num_veiculos > 0 %}
                                 <div id="numeroVeiculos">
@@ -101,14 +104,14 @@
                             <div id="botaoAdicionarVeiculos">
                                 <form action="{% url 'loja-criarVeiculo' userName=request.user.username id=unidadeProducao.id %}" method="" class="form-wrapper">
                                     {% csrf_token %}
-                                    <input type="submit" id="login" value="ADICIONAR VEÍCULO">
+                                    <input type="submit" id="login" class ="c1" value="ADICIONAR VEÍCULO">
                                 </form>
                                 
                             </div>
                             <div id="botaoRemoverUnidadeProducao" style="margin-top: 15px;">
                                 <form action="{% url 'loja-removerUnidadeProducao' userName=request.user.username id=unidadeProducao.id %}" method="post">
                                     {% csrf_token %}
-                                    <input type="submit" id="login" onclick="return confirm('Tem certeza que deseja remover a unidade de produção {{ unidadeProducao.nome }}?')" value="Remover Unidade Producao">
+                                    <input type="submit" id="login" class ="c2" onclick="return confirm('Tem certeza que deseja remover a unidade de produção {{ unidadeProducao.nome }}?')" value="Remover Unidade Producao">
                                 </form>
                             </div>
                             <br>

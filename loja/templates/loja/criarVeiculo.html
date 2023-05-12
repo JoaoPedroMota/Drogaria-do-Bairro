@@ -1,7 +1,7 @@
 {% extends 'main.html' %}
 {% load static %}
 {% block content %}
-    	
+<link rel="stylesheet" href="{%static 'website/assets/css/responsiveC.css' %}">
 	<!-- breadcrumb-section -->
 	<div class="breadcrumb-section breadcrumb-bg">
 		<div class="container">
@@ -9,24 +9,33 @@
 				<div class="col-lg-8 offset-lg-2 text-center">
 					<div class="breadcrumb-text">
 						<div class="container">
-    <div class="row">
+    <div class="row1">
         <h1>Adicionar um Veículo</h1>
        
     </div>
 
     <br>
-    <div >
+    <div class="formT">
         <form action="" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             {% for field in form %}
-            {{ field.errors }}
-            <input type="{{ field.field.widget.input_type }}"
-                   placeholder="{{ field.label }}"
-                   name="{{ field.name }}"
-                   id="{{ field.id_for_label }}"
-                   {% if field.value %}value="{{ field.value }}"{% endif %}>
-        {% endfor %}
+              {{ field.errors }}
+              {% if field.field.widget.input_type == 'select' %}
+                <select name="{{ field.name }}" id="{{ field.id_for_label }}">
+                  {% for choice_value, choice_label in field.field.choices %}
+                    <option value="{{ choice_value }}" {% if choice_value == field.value %}selected{% endif %}>{{ choice_label }}</option>
+                  {% endfor %}
+                </select>
+              {% else %}
+                <input type="{{ field.field.widget.input_type }}"
+                       placeholder="{{ field.label }}"
+                       name="{{ field.name }}"
+                       id="{{ field.id_for_label }}"
+                       {% if field.value %}value="{{ field.value }}"{% endif %}>
+              {% endif %}
+            {% endfor %}
             <input type="submit" id="login" value="ADICIONAR VEÍCULO">
+          </form>
     </div>
       
     <a href="{% url 'loja-unidadeProducao' userName=request.user.username id=unidadeProducao.id %}" class="layout__boxTitle">

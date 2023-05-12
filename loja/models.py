@@ -300,7 +300,7 @@ class Fornecedor(models.Model):
     utilizador = models.OneToOneField(Utilizador, on_delete=models.CASCADE, null=False, related_name='fornecedor')
     #lista_produtos
     #lista_veiculos
-    descricao = models.TextField(blank=True, null=True, max_length=500)
+    #descricao = models.TextField(blank=True, null=True, max_length=500)
     class Meta:
         verbose_name_plural = "Fornecedores"
         verbose_name = "Fornecedor"    
@@ -320,7 +320,14 @@ class Fornecedor(models.Model):
         except UnidadeProducao.DoesNotExist:
             raise ValueError('Não encontrei nenhuma unidade de produção com base no id dado')
 
+class Carrinho(models.Model):
+    consumidor = models.OneToOneField(Consumidor, null=False, on_delete=models.CASCADE, related_name='carrinho')
+    
+    class Meta:
+        verbose_name = "Carrinho"
+        verbose_name_plural ="Carrinhos"
 
+<<<<<<< HEAD
 ##############################################PRODUTOS#######################################################
 
 
@@ -453,3 +460,15 @@ class CategoriaAtributo(models.Model):
 # frutas = Categoria.objects.create(nome='Frutas', categoria_pai=frutas_e_legumes)
 # # Cria subcategoria "Legumes" com categoria pai "Frutas e Legumes"
 # legumes = Categoria.objects.create(nome='Legumes', categoria_pai=frutas_e_legumes)
+=======
+
+
+
+class ProdutosCarrinho(models.Model):
+    carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='itens_carrinho')
+    #produtos = models.ForeignKey(ProdutosUnidadeProducao, on_delete=models.SET_NULL, null=True, blank = True)
+    
+    class Meta:
+        verbose_name = "Produtos num Carrinho"
+        verbose_name_plural = "Produtos num Carrinho"
+>>>>>>> e4331d2f1820222e390adceb697c187bd4f3d528

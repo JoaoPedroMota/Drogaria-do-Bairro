@@ -18,12 +18,14 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings #imagens de perfil
 from django.conf.urls.static import static #imagens de perfil
+from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('loja.urls')),
     path('api/', include('loja.api.urls')),
     path('login-api/', include('rest_framework.urls')),
+    path('obtain-token-user/', obtain_auth_token, name='obtain_token_user')
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) # imagens de perfil

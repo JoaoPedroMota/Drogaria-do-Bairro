@@ -192,7 +192,6 @@ def apagarConta(request, pk):
     return render(request, 'loja/delete.html', context)
 
         
-        
 
 @login_required(login_url='loja-login')
 def perfil(request, userName):

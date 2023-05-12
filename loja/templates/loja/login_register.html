@@ -63,6 +63,7 @@
        
        
     }
+  
 </style>
 <div class="hero-area hero-bg">
     <div class="container">
@@ -73,13 +74,11 @@
                 <br>
                 <br>
                 <br>
+             
                 
-               
-                <br>
-                <br>
-                <br>
-                <p class="subtitle">Encomenda connosco</p>
-                <p class="subtitle">Regista-te</p>
+                
+                <p class="subtitle" id="subtitle1">Encomenda connosco</p>
+                <p class="subtitle" id="subtitle2">Regista-te</p>
                 <hr>
                 <form action="" method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
@@ -107,7 +106,7 @@
                     </div>
                     {% endfor %}
                   
-                    <hr>
+            
                     <input type="submit" id="login" value="SIGNUP">
                   </form>
                   <p class="link">Já tens conta <a href="/login" class="link">Entra agora!</a></p>

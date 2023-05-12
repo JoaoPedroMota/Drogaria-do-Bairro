@@ -1,0 +1,14 @@
+@media only screen and (max-height: 972px) {
+    .form-wrapper{
+        margin-top: 120px !important;
+    }
+    .form{
+        margin-top: 120px !important;
+    }
+    .c2{
+        margin-top: 120px !important;
+    }
+    .formT{
+        margin-top: 120px !important;
+    }
+}
