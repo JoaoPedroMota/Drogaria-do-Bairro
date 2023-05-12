@@ -296,12 +296,7 @@ def getVeiculos(request, username, idUnidadeProducao, format=None):
     utilizador_temp = Utilizador.objects.get(username=username)
     fornecedor = Fornecedor.objects.get(utilizador=utilizador_temp)
     unidadeProducao = fornecedor.unidades_producao.get(pk=idUnidadeProducao)
-<<<<<<< HEAD
-    veiculos = unidadeProducao.veiculo_set.all()
-    print(veiculos)
-=======
     veiculos = unidadeProducao.veiculos.all()
->>>>>>> main
     respostaDevolver = VeiculoSerializer(veiculos, many=True)
     return Response(respostaDevolver.data)
 
