@@ -1,0 +1,3 @@
+Adicionar esta linha a unidadeProducao.html na linha 57:
+
+<!-- <a href="{% url 'loja-criarProduto' userName=request.user.username id=unidadeProducao.id %}" class="btn btn-primary">Criar Produto</a>

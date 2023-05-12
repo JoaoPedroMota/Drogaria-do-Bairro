@@ -8,6 +8,10 @@ from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django_countries.fields import CountryField
 from phonenumbers import format_number, PhoneNumberFormat
+from functools import partial
+from django.utils import timezone
+
+
 # from mptt.models import MPTTModel, TreeForeignKey
 # Create your models here.
 
@@ -67,7 +71,15 @@ class Utilizador(AbstractUser):
         
     
     """
-    
+    def validar_extensao_imagens(value):
+        ext = value.name.split('.')[-1].lower()
+        allowed_extensions = ['jpg','png','svg','gif']
+        if ext not in allowed_extensions:
+            raise ValidationError((f'Tipo de ficheiro inválido. Extensões válidas: {allowed_extensions}'))
+    def validar_tamanho_imagens(value):
+        max_size = 2 * 1024 * 1024
+        if value.size > max_size:
+            raise ValidationError((f'Ficheiro grande de mais. Tamanho máximo 2MB'))
     # Definindo as opções para o campo tipo_utilizador
     CONSUMIDOR = 'C'
     FORNECEDOR = 'F'
@@ -95,8 +107,7 @@ class Utilizador(AbstractUser):
     #morada = models.CharField(max_length=200, null=True, blank=False)
     telemovel = PhoneNumberField(null=True, blank=True, unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
     tipo_utilizador = models.CharField(max_length=1, choices=TIPO_UTILIZADOR, default='', null=True)
-    imagem_perfil = models.ImageField(null=True, default="avatar.svg")
-    
+    imagem_perfil = models.ImageField(null=True, default="avatar.svg", validators=[validar_extensao_imagens, validar_tamanho_imagens])
     # Campos padrão
     is_staff = models.BooleanField(default=False, help_text='Designa se este utilizador pode aceder à área de administração do site.')
     is_admin = models.BooleanField(default=False, help_text='Designa se este utilizador tem permissão para realizar ações de administrador.')
@@ -204,7 +215,7 @@ class Veiculo(models.Model):
         
     ]
     nome = models.CharField(max_length=200, null=True, blank=False)
-    unidadeProducao = models.ForeignKey("UnidadeProducao", null=True, blank=False, on_delete=models.CASCADE)
+    unidadeProducao = models.ForeignKey("UnidadeProducao", null=True, blank=False, on_delete=models.CASCADE, related_name='veiculos')
     tipo_veiculo = models.CharField(max_length=5, choices=TIPO_VEICULO, default='', null=True, blank=False)
     estado_veiculo = models.CharField(max_length=5, choices=ESTADO_VEICULO, default='D', null=True, blank=False)
 
@@ -216,7 +227,10 @@ class Veiculo(models.Model):
         return self.estado_veiculo
     
     def __str__(self):
-        return self.nome
+        try:
+            return self.nome
+        except AttributeError:
+            return "Veículo sem nome"
 
     def __repr__(self):
         return f"Veiculo(nome='{self.nome}', unidadeProducao='{self.unidadeProducao}', tipo_veiculo='{self.tipo_veiculo}', estado_veiculo='{self.estado_veiculo}')"
@@ -225,6 +239,7 @@ class Veiculo(models.Model):
         verbose_name = 'Veiculo'
         verbose_name_plural = 'Veiculos'
         ordering = ['nome']
+
     
     
 class UnidadeProducao(models.Model):
@@ -317,63 +332,153 @@ class Fornecedor(models.Model):
         except UnidadeProducao.DoesNotExist:
             raise ValueError('Não encontrei nenhuma unidade de produção com base no id dado')
 
+class Carrinho(models.Model):
+    consumidor = models.OneToOneField(Consumidor, null=False, on_delete=models.CASCADE, related_name='carrinho')
+    
+    class Meta:
+        verbose_name = "Carrinho"
+        verbose_name_plural ="Carrinhos"
 
-        
-        
-        
-# class Categoria(models.Model):
-#     """Define catorias para os produtos, com uma hierarquia.
 
-#     Args:
-#         models (_type_): _description_
-#     """
-#     nome = models.CharField(max_length=200, null=False, blank=False)
-#     pai = models.ForeignKey('self', on_delete=models.PROTECT, related_name='categoria_pai')
+##############################################PRODUTOS#######################################################
 
-        
+
+
+class Categoria(models.Model):
+    nome = models.CharField(max_length=100)                                 #default=1,
+    categoria_pai = models.ForeignKey('Categoria', on_delete=models.CASCADE,  null=True, blank=True)
+    def __str__(self):
+        return self.nome
+
+    class Meta:
+        verbose_name_plural = "Categorias"
+        verbose_name = "Categoria"
+        ordering = ['nome']
+
+
+
+
 class Produto(models.Model):
+    nome = models.CharField(max_length=100, unique=True)
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, blank=False, null=True, default=1)
+    class Meta:
+        verbose_name_plural = "Produtos"
+        verbose_name = "Produto"
+    def __str__(self):
+        return self.nome
 
+class ProdutoUnidadeProducao(models.Model):
     UNIDADES_MEDIDA_CHOICES = (
         ('kg', 'Quilograma'),
         ('g', 'Grama'),
-        ('l', 'litro'),
+        ('l', 'Litro'),
+        ('ml', 'Mililitro'),
         ('un', 'Unidade'),
     )
-    nome = models.CharField(max_length=100)
-    descricao = models.TextField()
-    categoria = models.TextField()
-    #categoria = models.ForeignKey("Categoria", on_delete=models.CASCADE)
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='unidades_producao')
+    unidade_producao = models.ForeignKey(UnidadeProducao, on_delete=models.CASCADE, related_name='produtos')
+    descricao = models.TextField(max_length=200, null=True, blank=False)
     preco = models.DecimalField(max_digits=7, decimal_places=2)
     unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES)
-    data_validade = models.DateField()
-    data_producao = models.DateField()
-    unidade_producao = models.ForeignKey(UnidadeProducao, on_delete=models.CASCADE)
-    marca = models.TextField()
-    #marca = models.ForeignKey("Marca", on_delete=models.CASCADE)    
+    data_producao = models.DateField( null=True,blank=False, default=timezone.now)
+    preco_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
+    quantidade_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
+    marca = models.CharField(max_length=100, null=True)
+
+    def get_imagem(self):
+        from .imagem import Imagem
+        return Imagem.objects.get(produto=self)
     def __str__(self):
-        return self.nome
+        return self.produto.nome
 
-class Categoria(models.Model):
-    nome = models.CharField(max_length=100)
-    #descricao = models.TextField(blank=True)
-
-    def __str__(self):
-        return self.nome
-
-
-class Subcategoria(models.Model):
-    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='subcategorias')
-    nome = models.CharField(max_length=100)
-    #descricao = models.TextField(blank=True)
-
-    def __str__(self):
-        return self.nome
-
-class Marca(models.Model):
-    nome = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.nome
+    class Meta:
+        verbose_name_plural = "Produtos por Unidade Producao"
+        verbose_name = "Produto por Unidade Producao"
     
+    def clean(self):
+        super().clean()
+        
+        if self.unidade_medida == 'un':
+            if self.quantidade_por_unidade is None:
+                raise ValidationError('A quantidade por unidade é obrigatória para produtos vendidos à unidade.')
+            if self.preco_por_unidade is None:
+                raise ValidationError('O preço por unidade é obrigatório para produtos vendidos à unidade.')
+        elif self.unidade_medida in ('kg', 'g', 'l', 'ml'):
+            if self.quantidade_por_unidade is not None:
+                raise ValidationError('A quantidade por unidade não é permitida para produtos vendidos por peso ou volume.')
+            if self.preco_por_unidade is not None:
+                raise ValidationError('O preço por unidade não é permitido para produtos vendidos por peso ou volume.')
+        else:
+            if self.unidade_medida is not None or self.quantidade_por_unidade is not None or self.preco_por_unidade is not None:
+                raise ValidationError('Unidade de medida, quantidade por unidade e preço por unidade são obrigatórios para produtos vendidos à unidade.')
+
+# class Imagem(models.Model):
+#     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='imagens_produto')
+#     foto = models.ImageField(upload_to='produtos_imagens/')
+
+#     imagem = models.ImageField(upload_to='produtos/imagens/')
+
+#     def __str__(self):
+#         return f"Imagem do produto {self.produto.nome}"
+
+
+#atributos vao ser diferentes para cada categoria
+class Atributo(models.Model):
+    nome = models.CharField(max_length=100)
+    #por exemplo data-de-validade em vez de Data de Validade
+    slug = models.SlugField(unique=True)
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
+    #true caso tenha opçoes especificas por exemplo tamanho(XS,S,M,L,XL), false caso contrario, peso por exemplo
+    is_variante = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.nome
+
+    class Meta:
+        verbose_name_plural = "Atributos"
+        verbose_name = "Atributo"
+
+from django.core.exceptions import ValidationError
+from django.db import models
+    
+#ligaçao entre a tabela categoria e os atributos
+class CategoriaAtributo(models.Model):
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
+    atributo = models.ForeignKey(Atributo, on_delete=models.CASCADE)
+    valor = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name_plural = "Categoria Atributos"
+        verbose_name = "Categoria Atributo"
+
+
+
+
+
+
+
 # loja/migrations/000X_auto_add_slug_to_produto.py
+
+
+
+#########################################DEFINIR CATEGORIAS PAI##################################
+#from loja.models import Categoria
+
+# # # Cria categoria pai "Alimentos"
+# alimentos = Categoria.objects.create(nome='Alimentos')
+# # Cria subcategoria "Frutas e Legumes" com categoria pai "Alimentos"
+# frutas_e_legumes = Categoria.objects.create(nome='Frutas e Legumes', categoria_pai=alimentos)
+# # Cria subcategoria "Frutas" com categoria pai "Frutas e Legumes"
+# frutas = Categoria.objects.create(nome='Frutas', categoria_pai=frutas_e_legumes)
+# # Cria subcategoria "Legumes" com categoria pai "Frutas e Legumes"
+# legumes = Categoria.objects.create(nome='Legumes', categoria_pai=frutas_e_legumes)
+
+class ProdutosCarrinho(models.Model):
+    carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='itens_carrinho')
+    #produtos = models.ForeignKey(ProdutosUnidadeProducao, on_delete=models.SET_NULL, null=True, blank = True)
+    
+    class Meta:
+        verbose_name = "Produtos num Carrinho"
+        verbose_name_plural = "Produtos num Carrinho"
 

@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
     'loja.apps.LojaConfig',
     ### coisas adicionais
     'django_countries',
@@ -46,7 +45,9 @@ INSTALLED_APPS = [
     'rest_framework', ### para a api
     "corsheaders", #também para a api
     # 'mptt',
-
+    'django_extensions',
+    'django_filters',
+    'rest_framework.authtoken', #Used to enable token authentication
 ]
 
 
@@ -98,10 +99,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Projeto.wsgi.application'
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
-# Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
+#Database
+#https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': BASE_DIR / 'db.sqlite3',
+    # }
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'HOST': '34.0.198.90',
@@ -109,6 +120,9 @@ DATABASES = {
         'NAME': 'drogaria_db',
         'USER': 'user1',
         'PASSWORD': '12345',
+        'OPTIONS':{
+            "options":"-c search_path=public"
+        }
     }
 }
 
@@ -202,3 +216,28 @@ REST_FRAMEWORK = {
 }
 
 
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'rest_framework_json_api.exceptions.exception_handler',
+    'DEFAULT_PARSER_CLASSES': (
+        'rest_framework_json_api.parsers.JSONParser',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_METADATA_CLASS': 'rest_framework_json_api.metadata.JSONAPIMetadata',
+    'DEFAULT_FILTER_BACKENDS': (
+        'rest_framework_json_api.filters.QueryParameterValidationFilter',
+        'rest_framework_json_api.filters.OrderingFilter',
+        'rest_framework_json_api.django_filters.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+    ),
+    'SEARCH_PARAM': 'filter[search]',
+    'TEST_REQUEST_RENDERER_CLASSES': (
+        'rest_framework_json_api.renderers.JSONRenderer',
+    ),
+    'TEST_REQUEST_DEFAULT_FORMAT': 'vnd.api+json'
+}

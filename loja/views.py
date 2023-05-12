@@ -3,13 +3,26 @@ from django.urls import reverse
 from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, editarVeiculoFormulario, editarUnidadeProducaoFormulario
+from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
 import requests
 from django.db.models import QuerySet
+from django.contrib.auth.hashers import check_password
 
+# @login_required(login_url='loja-login')
+# def apagarConta(request,pk):
+#     utilizador = Utilizador.objects.get(pk=pk)
+    
+#     if request.user != utilizador:
+#         return HttpResponse('Você não deveria estar aqui!')
+#     if request.method == 'POST':
+#         logout(request)
+#         utilizador.delete()
+#         return redirect('loja-home')
+#     context={'objeto':utilizador, 'pagina':'apagar-conta'}
+#     return render(request,'loja/delete.html', context)
 
 # Create your views here.
 def loja(request):
@@ -36,6 +49,27 @@ def news(request):
 def shop(request):
     context = {}
     return render(request, 'loja/shop.html', context)
+
+
+def confirm_password_view(request):
+    if request.method == 'POST':
+        form = PasswordConfirmForm(request.POST)
+        if form.is_valid():
+            password = form.cleaned_data['password']
+            confirm_password = form.cleaned_data['confirm_password']
+            username = request.user.username
+            user = authenticate(username=username, password=password)
+
+            if user is not None:
+                pass
+            else:
+                # Password doesn't match, show an error message
+                form.add_error('password', 'Incorrect password.')
+    else:
+        form = PasswordConfirmForm()
+    
+    context = {'form': form}
+    return render(request, 'password_confirm.html', context)
 
 def loginUtilizador(request):
     pagina='login'
@@ -75,7 +109,8 @@ def registerUtilizador(request):
                 consumidor = Consumidor.objects.create(utilizador=utilizador)
                 return redirect('loja-home')
             else:
-                return redirect('loja-form-forcedor')
+                Fornecedor.objects.create(utilizador=utilizador)
+                return redirect('loja-home')
 
             
         else:
@@ -135,21 +170,25 @@ def editarPerfil(request):
     return render(request, 'loja/editarUtilizador.html', context)
 
 
-
-
 @login_required(login_url='loja-login')
-def apagarConta(request,pk):
+def apagarConta(request, pk):
     utilizador = Utilizador.objects.get(pk=pk)
-    
+
     if request.user != utilizador:
         return HttpResponse('Você não deveria estar aqui!')
+
     if request.method == 'POST':
-        logout(request)
-        utilizador.delete()
-        return redirect('loja-home')
-    context={'objeto':utilizador, 'pagina':'apagar-conta'}
-    return render(request,'loja/delete.html', context)
-        
+        password = request.POST.get('password')
+        if check_password(password, utilizador.password):
+            logout(request)
+            utilizador.delete()
+            return redirect('loja-home')
+        else:
+            messages.error(request, 'Senha incorreta. A conta não foi excluída.')
+
+    context = {'objeto': utilizador, 'pagina': 'apagar-conta'}
+    return render(request, 'loja/delete.html', context)
+
         
 
 @login_required(login_url='loja-login')
@@ -314,7 +353,7 @@ def criarVeiculo(request, userName, id):
     fornecedor= utilizador.fornecedor
     unidadeProducao = fornecedor.unidades_producao.get(pk=id)
     formulario = criarVeiculoFormulario()
-    if request.user.is_fornecedor():
+    if request.user.is_fornecedor:
         if request.method == 'POST':
             formulario = criarVeiculoFormulario(request.POST)
             if formulario.is_valid():
@@ -387,13 +426,40 @@ def remover_veiculo(request, id):
 
 
 
-#esta aqui mas depois tem que ir para o cimo
-from django.shortcuts import render, redirect
-from .models import UnidadeProducao, Produto, Categoria, Marca
-from .forms import ProdutoForm
+# #esta aqui mas depois tem que ir para o cimo
+# from django.shortcuts import render, redirect
+# from .models import UnidadeProducao, Produto, Categoria, Marca
+# from .forms import ProdutoForm
+
+# def criar_produto(request, userName, id):
+#     unidade = UnidadeProducao.objects.get(pk=id)
+#     if request.method == 'POST':
+#         form = ProdutoForm(request.POST)
+#         if form.is_valid():
+#             produto = form.save(commit=False)
+#             categoria_nome = form.cleaned_data['categoria']
+#             categoria, _ = Categoria.objects.get_or_create(nome=categoria_nome)
+#             produto.categoria = categoria
+#             marca_nome = form.cleaned_data['marca']
+#             marca, _ = Marca.objects.get_or_create(nome=marca_nome)
+#             produto.marca = marca
+#             produto.unidade_producao = unidade
+#             produto.save()
+#             messages.success(request, 'Produto criado com sucesso!')
+#             return redirect('loja-unidadeProducao', userName=userName, id=id)
+#     else:
+#         form = ProdutoForm()
+#     return render(request, 'loja/criar_produto.html', {'form': form})
+
+# #ainda nao estah a ser usado
+# def ver_produtos(request):
+#     produtos = Produto.objects.all()
+#     context = {'produtos': produtos}
+#     return render(request, 'ver_produtos.html', context)
+
 
 def criar_produto(request, userName, id):
-    unidade = UnidadeProducao.objects.get(pk=id)
+    unidade = get_object_or_404(UnidadeProducao, pk=id)
     if request.method == 'POST':
         form = ProdutoForm(request.POST)
         if form.is_valid():
@@ -401,9 +467,6 @@ def criar_produto(request, userName, id):
             categoria_nome = form.cleaned_data['categoria']
             categoria, _ = Categoria.objects.get_or_create(nome=categoria_nome)
             produto.categoria = categoria
-            marca_nome = form.cleaned_data['marca']
-            marca, _ = Marca.objects.get_or_create(nome=marca_nome)
-            produto.marca = marca
             produto.unidade_producao = unidade
             produto.save()
             messages.success(request, 'Produto criado com sucesso!')
@@ -419,3 +482,11 @@ def ver_produtos(request):
     return render(request, 'ver_produtos.html', context)
 
 
+from django.shortcuts import render
+from .models import Categoria, Produto
+
+
+def lista_produtos_eletronicos(request):
+    eletronicos = Categoria.objects.get(nome='Eletrónicos')
+    produtos = Produto.objects.filter(categoria=eletronicos)
+    return render(request, 'lista_produtos.html', {'produtos': produtos})

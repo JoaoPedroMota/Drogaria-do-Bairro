@@ -143,10 +143,11 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
     padding: 3em;
   }
   
-  input:not([type="submit"]){
+  input:not([type="submit"]), select {
     font-size: 0.9em;
-    color: #fff;
-    font-weight: 100;
+    color: black !important;
+    font-weight: bold;
+    
     width: 94.5%;
     display: block;
     border: none;
@@ -159,8 +160,9 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
     background-position: -800px 0;
     background-size: 100%;
     background-repeat: no-repeat;
-    color: #fff;
-    font-family: 'Roboto', sans-serif;
+   
+    font-family: "Open Sans", sans-serif;
+    background-color: 	#ff9035;
   }
   
   input.email, input.text.w3lpass {
@@ -185,8 +187,10 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
   }
   
   ::-webkit-input-placeholder {
-    color: #fff;
-    font-weight: 100;
+
+    color: black  ;
+    font-weight: bold;
+   
   }
   
   :-moz-placeholder {
@@ -531,23 +535,51 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
       transform: translateY(-700px) rotate(600deg);
     }
   }
-  @media(max-height:971px) {
-      .subtitle{
+  .hero-area.hero-bg {
+    overflow: hidden;
+  }
+  
+  .hero-text {
+    overflow: auto;
+    max-height: 100%;
+  }   
+  .link{
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  @media(max-height:934px) {
+      #subtitle2{
         display: none;
       }
-      form {
-        margin-top:-60px !important;
+      #subtitle1{
+        font-size: 12px;
       }
-      #login{
-       
-        font-size:10px !important;
+      
+      .col-md-4{
+        height: 35px;
+        margin-top: -20px;
       }
-      .form-group input {
-        font-size:12px !important;
-        
-              } 
-       
+      input[type="text"] {
+        height: 35px;
+      }
+      
   }
+  @media(max-height:799px) {
+    #subtitle1{
+      display: none;
+     
+    }
+    form {
+      margin-top: 90px; /* Adjust the margin value to lower the form */
+    }
+    #login {
+      margin-top: 40px; /* Adjust the margin value to lower the submit button */
+    }
+  }
+
+  
+
   /*-- responsive-design --*/
   @media(max-width:1440px) {
     input[type="text"], input[type="email"], input[type="password"] {
