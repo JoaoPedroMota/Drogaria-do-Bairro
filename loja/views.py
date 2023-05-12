@@ -3,7 +3,7 @@ from django.urls import reverse
 from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario
+from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
@@ -112,7 +112,8 @@ def registerUtilizador(request):
                 consumidor = Consumidor.objects.create(utilizador=utilizador)
                 return redirect('loja-home')
             else:
-                return redirect('loja-form-forcedor')
+                Fornecedor.objects.create(utilizador=utilizador)
+                return redirect('loja-home')
 
             
         else:
@@ -273,7 +274,7 @@ def criarVeiculo(request, userName, id):
     fornecedor= utilizador.fornecedor
     unidadeProducao = fornecedor.unidades_producao.get(pk=id)
     formulario = criarVeiculoFormulario()
-    if request.user.is_fornecedor():
+    if request.user.is_fornecedor:
         if request.method == 'POST':
             formulario = criarVeiculoFormulario(request.POST)
             if formulario.is_valid():
@@ -347,3 +348,35 @@ def remover_veiculo(request, id):
 #     return render(request, 'ver_produtos.html', context)
 
 
+def criar_produto(request, userName, id):
+    unidade = get_object_or_404(UnidadeProducao, pk=id)
+    if request.method == 'POST':
+        form = ProdutoForm(request.POST)
+        if form.is_valid():
+            produto = form.save(commit=False)
+            categoria_nome = form.cleaned_data['categoria']
+            categoria, _ = Categoria.objects.get_or_create(nome=categoria_nome)
+            produto.categoria = categoria
+            produto.unidade_producao = unidade
+            produto.save()
+            messages.success(request, 'Produto criado com sucesso!')
+            return redirect('loja-unidadeProducao', userName=userName, id=id)
+    else:
+        form = ProdutoForm()
+    return render(request, 'loja/criar_produto.html', {'form': form})
+
+#ainda nao estah a ser usado
+def ver_produtos(request):
+    produtos = Produto.objects.all()
+    context = {'produtos': produtos}
+    return render(request, 'ver_produtos.html', context)
+
+
+from django.shortcuts import render
+from .models import Categoria, Produto
+
+
+def lista_produtos_eletronicos(request):
+    eletronicos = Categoria.objects.get(nome='Eletrónicos')
+    produtos = Produto.objects.filter(categoria=eletronicos)
+    return render(request, 'lista_produtos.html', {'produtos': produtos})

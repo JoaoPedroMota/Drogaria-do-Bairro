@@ -191,18 +191,35 @@ class UnidadeProducaoList(APIView):
         if request.user.fornecedor != fornecedor:
             return Response("Só pode criar unidades de produção para si e não para os outros")
         request.data['fornecedor'] = fornecedor
-        unidade_producao = UnidadeProducaoSerializer(data=request.data)
-        if unidade_producao.is_valid():
-            up_guardada = unidade_producao.save()
+        deserializer = UnidadeProducaoSerializer(data=request.data)
+        if deserializer.is_valid():
+            up_guardada = deserializer.save()
             return Response(up_guardada.data, status_code=status.HTTP_201_CREATED)
-        return Response(unidade_producao.erros, status_code=status.HTTP_400_BAD_REQUEST)
+        return Response(deserializer.erros, status_code=status.HTTP_400_BAD_REQUEST)
     
 
-
-
-
-
-
+class UnidadeProducaoDetail(APIView):
+    def get_object(self, identifier):
+        try:
+            return UnidadeProducao.objects.get(id=identifier)
+        except UnidadeProducao.DoesNotExist:
+            raise Http404
+    def get(self, request, idFornecedor, idUnidadeProducao,format=None):
+        unidade_producao = self.get_object(idUnidadeProducao)
+        ups= UnidadeProducaoSerializer(unidade_producao, many=False)
+        return Response(ups.data)
+    def put(self, request, idFornecedor, idUnidadeProducao, format=None):
+        fornecedor = Fornecedor.objects.get(id=idFornecedor)
+        if request.user.is_consumidor:
+            return Response("Não pode criar uma unidade de produção. Não é um fornecedor!")
+        if request.user.fornecedor != fornecedor:
+            return Response("Só pode criar unidades de produção para si e não para os outros")
+        up = self.get_object(idUnidadeProducao)
+        deserializer = UnidadeProducaoSerializer(up, data=request.data)
+        if deserializer.is_valid():
+            deserializer.save()
+            return Response(deserializer.data, status=status.HTTP_200_OK)
+        return Response(deserializer.erros,status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -268,8 +285,8 @@ class FornecedoresDetail(APIView):
         fornecedor = self.get_object(idFornecedor)
         serializar = ForncedorSerializer(fornecedor, many=False)
         return Response(serializar.data)
-
-################################
+    
+###################################################################################################3
 
 
 @api_view(['GET'])
@@ -277,7 +294,7 @@ def getVeiculos(request, idFornecedor, idUnidadeProducao, format=None):
 
     fornecedor = Fornecedor.objects.get(id=idFornecedor)
     unidadeProducao = fornecedor.unidades_producao.get(pk=idUnidadeProducao)
-    veiculos = unidadeProducao.veiculo_set.all()
+    veiculos = unidadeProducao.veiculos.all()
     respostaDevolver = VeiculoSerializer(veiculos, many=True)
     return Response(respostaDevolver.data)
 
@@ -285,7 +302,7 @@ def getVeiculos(request, idFornecedor, idUnidadeProducao, format=None):
 def getVeiculo(request, idVeiculo, idFornecedor, idUnidadeProducao, format=None):
     fornecedor = Fornecedor.objects.get(id=idFornecedor)
     unidadeProducao = fornecedor.unidades_producao.get(pk=idUnidadeProducao)
-    veiculo = unidadeProducao.veiculo_set.get(id=idVeiculo)
+    veiculo = unidadeProducao.veiculos.get(id=idVeiculo)
     respostaDevolver = VeiculoSerializer(veiculo, many=False)
     return Response(respostaDevolver.data)
 

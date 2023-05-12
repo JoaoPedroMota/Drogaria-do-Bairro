@@ -99,9 +99,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Projeto.wsgi.application'
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
-# Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
+#Database
+#https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 DATABASES = {
     # 'default': {
     #     'ENGINE': 'django.db.backends.sqlite3',
@@ -114,6 +120,9 @@ DATABASES = {
         'NAME': 'drogaria_db',
         'USER': 'user1',
         'PASSWORD': '12345',
+        'OPTIONS':{
+            "options":"-c search_path=public"
+        }
     }
 }
 

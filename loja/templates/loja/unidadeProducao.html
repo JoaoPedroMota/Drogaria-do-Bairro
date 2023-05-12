@@ -55,6 +55,10 @@
                                 <hr>
                                 <br>
                         
+
+                                <a href="{% url 'loja-criarProduto' userName=request.user.username id=unidadeProducao.id %}" class="btn btn-primary">Criar Produto</a> 
+
+
                         
                                 {% if num_veiculos > 0 %}
                                 <div id="numeroVeiculos">
