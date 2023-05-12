@@ -327,27 +327,28 @@ class Carrinho(models.Model):
         verbose_name = "Carrinho"
         verbose_name_plural ="Carrinhos"
 
-<<<<<<< HEAD
+
 ##############################################PRODUTOS#######################################################
 
 
 
 class Categoria(models.Model):
-    nome = models.CharField(max_length=100)
-    categoria_pai = models.ForeignKey('Categoria', on_delete=models.CASCADE, default=1, null=True, blank=True)
+    nome = models.CharField(max_length=100)                                 #default=1,
+    categoria_pai = models.ForeignKey('Categoria', on_delete=models.CASCADE,  null=True, blank=True)
     def __str__(self):
         return self.nome
 
     class Meta:
         verbose_name_plural = "Categorias"
         verbose_name = "Categoria"
+        ordering = ['nome']
 
 
 
 
 class Produto(models.Model):
     nome = models.CharField(max_length=100, unique=True)
-    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, blank=False, null=True, default=54)
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, blank=False, null=True, default=1)
     class Meta:
         verbose_name_plural = "Produtos"
         verbose_name = "Produto"
@@ -460,9 +461,6 @@ class CategoriaAtributo(models.Model):
 # frutas = Categoria.objects.create(nome='Frutas', categoria_pai=frutas_e_legumes)
 # # Cria subcategoria "Legumes" com categoria pai "Frutas e Legumes"
 # legumes = Categoria.objects.create(nome='Legumes', categoria_pai=frutas_e_legumes)
-=======
-
-
 
 class ProdutosCarrinho(models.Model):
     carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='itens_carrinho')
@@ -471,4 +469,4 @@ class ProdutosCarrinho(models.Model):
     class Meta:
         verbose_name = "Produtos num Carrinho"
         verbose_name_plural = "Produtos num Carrinho"
->>>>>>> e4331d2f1820222e390adceb697c187bd4f3d528
+

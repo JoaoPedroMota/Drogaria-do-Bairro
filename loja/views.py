@@ -112,7 +112,8 @@ def registerUtilizador(request):
                 consumidor = Consumidor.objects.create(utilizador=utilizador)
                 return redirect('loja-home')
             else:
-                return redirect('loja-form-forcedor')
+                Fornecedor.objects.create(utilizador=utilizador)
+                return redirect('loja-home')
 
             
         else:

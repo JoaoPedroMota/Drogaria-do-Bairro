@@ -120,6 +120,9 @@ DATABASES = {
         'NAME': 'drogaria_db',
         'USER': 'user1',
         'PASSWORD': '12345',
+        'OPTIONS':{
+            "options":"-c search_path=public"
+        }
     }
 }
 
