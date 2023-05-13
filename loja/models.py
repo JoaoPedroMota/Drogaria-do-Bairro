@@ -335,6 +335,7 @@ class Fornecedor(models.Model):
 class Carrinho(models.Model):
     consumidor = models.OneToOneField(Consumidor, null=False, on_delete=models.CASCADE, related_name='carrinho')
     
+    
     class Meta:
         verbose_name = "Carrinho"
         verbose_name_plural ="Carrinhos"

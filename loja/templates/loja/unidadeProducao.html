@@ -77,8 +77,8 @@
                                         <tr>
                                             <td>{{ veiculo.id }}</td>
                                             <td>{{ veiculo.nome }}</td>
-                                            <td>{{ veiculo.tipo_veiculo_api }}</td>
-                                            <td>{{ veiculo.estado_veiculo_api }}</td>
+                                            <td>{{ veiculo.tipo_veiculo }}</td>
+                                            <td>{{ veiculo.estado_veiculo }}</td>
                                             <td>
                                                 <form action="{% url 'loja-editarVeiculo' userName=request.user.username id=unidadeProducao idVeiculo=veiculo.id %}" method="post">
                                                     {% csrf_token %}
