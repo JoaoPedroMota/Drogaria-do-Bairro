@@ -10,6 +10,7 @@ from django_countries.fields import CountryField
 from phonenumbers import format_number, PhoneNumberFormat
 from functools import partial
 from django.utils import timezone
+from django.utils.text import slugify
 
 
 # from mptt.models import MPTTModel, TreeForeignKey
@@ -330,13 +331,16 @@ class Fornecedor(models.Model):
 
 
 
+def generate_slug(title):
+    return slugify(title)
 
 
 
 
 
 class Categoria(models.Model):
-    nome = models.CharField(max_length=100, unique=True)                                 #default=1,
+    nome = models.CharField(max_length=100, unique=True) 
+    slug = models.SlugField(unique=True)                               #default=1,
     categoria_pai = models.ForeignKey('Categoria', on_delete=models.SET_NULL,  null=True, blank=True)
     def __str__(self):
         return self.nome
@@ -344,18 +348,27 @@ class Categoria(models.Model):
         verbose_name_plural = "Categorias"
         verbose_name = "Categoria"
         ordering = ['nome']
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = generate_slug(self.nome)
+        super().save(*args, **kwargs)
 
 
 
 
 class Produto(models.Model):
     nome = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, blank=False, null=True, default=1)
     class Meta:
         verbose_name_plural = "Produtos"
         verbose_name = "Produto"
     def __str__(self):
         return self.nome
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = generate_slug(self.nome)
+        super().save(*args, **kwargs)   
 
 class ProdutoUnidadeProducao(models.Model):
     UNIDADES_MEDIDA_CHOICES = (
@@ -427,6 +440,10 @@ class Atributo(models.Model):
     class Meta:
         verbose_name_plural = "Atributos"
         verbose_name = "Atributo"
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = generate_slug(self.nome)
+        super().save(*args, **kwargs)       
 
 from django.core.exceptions import ValidationError
 from django.db import models
