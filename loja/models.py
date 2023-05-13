@@ -331,16 +331,19 @@ class Fornecedor(models.Model):
 
 
 
-def generate_slug(title):
-    return slugify(title)
-
-
+def generate_slug(name):
+    slug = slugify(name)
+    counter = 0
+    while Produto.objects.filter(slug=slug).exists():
+        counter += 1
+        slug = f"{slug}-{counter}"
+    return slug
 
 
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=100, unique=True) 
-    slug = models.SlugField(unique=True)                               #default=1,
+    slug = models.SlugField(null=True, blank=True)                               #default=1,
     categoria_pai = models.ForeignKey('Categoria', on_delete=models.SET_NULL,  null=True, blank=True)
     def __str__(self):
         return self.nome
@@ -358,7 +361,7 @@ class Categoria(models.Model):
 
 class Produto(models.Model):
     nome = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(null=True, blank=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, blank=False, null=True, default=1)
     class Meta:
         verbose_name_plural = "Produtos"
@@ -429,7 +432,7 @@ class ProdutoUnidadeProducao(models.Model):
 class Atributo(models.Model):
     nome = models.CharField(max_length=100)
     #por exemplo data-de-validade em vez de Data de Validade
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(null=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
     #true caso tenha opçoes especificas por exemplo tamanho(XS,S,M,L,XL), false caso contrario, peso por exemplo
     is_variante = models.BooleanField(default=False)
