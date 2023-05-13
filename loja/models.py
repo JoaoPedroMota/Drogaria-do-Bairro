@@ -342,26 +342,33 @@ def generate_slug(name):
 
 
 class Categoria(models.Model):
-    nome = models.CharField(max_length=100, unique=True) 
-    slug = models.SlugField(null=True, blank=True)                               #default=1,
+    nome = models.CharField(max_length=30, unique=True) 
+    #slug = models.SlugField(max_length=50, unique=True)                               #default=1,
     categoria_pai = models.ForeignKey('Categoria', on_delete=models.SET_NULL,  null=True, blank=True)
     def __str__(self):
         return self.nome
+    
+    
+    def __repr__(self):
+        if self.categoria_pai is None:
+            return f'Categoria.objects.create(nome="{self.nome}", categoria_pai = None)'
+        else:
+            return f'Categoria.objects.create(nome="{self.nome}", categoria_pai={self.categoria_pai.id})'
     class Meta:
         verbose_name_plural = "Categorias"
         verbose_name = "Categoria"
-        ordering = ['nome']
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = generate_slug(self.nome)
-        super().save(*args, **kwargs)
+        ordering = [ 'id'   ,'nome']
+    # def save(self, *args, **kwargs):
+    #     if not self.slug:
+    #         self.slug = generate_slug(self.nome)
+    #     super().save(*args, **kwargs)
 
 
 
 
 class Produto(models.Model):
     nome = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(null=True, blank=True)
+    #slug = models.SlugField(null=True, blank=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, blank=False, null=True, default=1)
     class Meta:
         verbose_name_plural = "Produtos"
@@ -381,14 +388,32 @@ class ProdutoUnidadeProducao(models.Model):
         ('ml', 'Mililitro'),
         ('un', 'Unidade'),
     )
+    UNIDADES_MEDIDA_CHOICES_unidade = (
+        ('kg', 'Quilograma'),
+        ('g', 'Grama'),
+        ('l', 'Litro'),
+        ('ml', 'Mililitro'),
+    )
+    
+    
+    ### produto e unidade de produção
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='unidades_producao')
     unidade_producao = models.ForeignKey(UnidadeProducao, on_delete=models.CASCADE, related_name='produtos')
-    descricao = models.TextField(max_length=200, null=True, blank=False)
-    preco = models.DecimalField(max_digits=7, decimal_places=2)
-    unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES)
-    data_producao = models.DateField( null=True,blank=False, default=timezone.now)
-    preco_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
+    stock = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False)
+    descricao = models.TextField(max_length=200, null=True, blank=False)    
+    
+    
+    #cenas a granel
+    unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES, null=False, blank=False)
+    preco_a_granel = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
+    
+    ###cenas à unidade
+    unidade_Medida_Por_Unidade = models.CharField(max_length=2,choices=UNIDADES_MEDIDA_CHOICES_unidade, null=True, blank=True)
     quantidade_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
+    preco_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
+        
+    # outras cenas
+    data_producao = models.DateField( null=True,blank=False, default=timezone.now)
     marca = models.CharField(max_length=100, null=True)
 
     def get_imagem(self):
@@ -403,21 +428,39 @@ class ProdutoUnidadeProducao(models.Model):
     
     def clean(self):
         super().clean()
-        
         if self.unidade_medida == 'un':
+            if self.preco_a_granel is not None:
+                raise ValidationError('O preço a granel não é permitido para produtos vendidos à unidade. Remova a este campo.')
+            if self.unidade_Medida_Por_Unidade is None:
+                raise ValidationError('Tem de introduzir a unidade de media da embalagem/unidade.')
+            
             if self.quantidade_por_unidade is None:
                 raise ValidationError('A quantidade por unidade é obrigatória para produtos vendidos à unidade.')
+            
             if self.preco_por_unidade is None:
                 raise ValidationError('O preço por unidade é obrigatório para produtos vendidos à unidade.')
+            
         elif self.unidade_medida in ('kg', 'g', 'l', 'ml'):
+            if self.unidade_Medida_Por_Unidade is not None:#A unidade de medida por unidade não é permitido para produtos vendidos por peso ou volume.
+                raise ValidationError(f'Selecionou antes {dict(self.UNIDADES_MEDIDA_CHOICES).get(self.unidade_medida)} como unidade de medida deste produto. Este campo serve para indicar qual a unidade de medida de um produto vendido à unidade. Remova a seleção deste campo.')
             if self.quantidade_por_unidade is not None:
-                raise ValidationError('A quantidade por unidade não é permitida para produtos vendidos por peso ou volume.')
+                raise ValidationError('A quantidade por unidade não é permitida para produtos vendidos por peso ou volume. Remova este campo.')
             if self.preco_por_unidade is not None:
-                raise ValidationError('O preço por unidade não é permitido para produtos vendidos por peso ou volume.')
+                raise ValidationError('O preço por unidade não é permitido para produtos vendidos por peso ou volume. Remova este campo.')
         else:
-            if self.unidade_medida is not None or self.quantidade_por_unidade is not None or self.preco_por_unidade is not None:
-                raise ValidationError('Unidade de medida, quantidade por unidade e preço por unidade são obrigatórios para produtos vendidos à unidade.')
-
+            if self.unidade_medida == 'un':
+                if self.unidade_Medida_Por_Unidade is None:
+                    raise ValidationError('A unidade de medida para produtos vendidos à unidade é obrigatória. Preencha o campo: Unidade Medida Por Unidade')
+                if self.quantidade_por_unidade is None:
+                    raise ValidationError('A quantidade para produtos vendidos à unidade é obrigatória. Preencha o campo: Quantidade por unidade')
+                if self.preco_por_unidade is None:
+                    raise ValidationError('O preço por produtos vendidos à unidade é obrigatório. Preencha o campo: Preço por unidade')
+            elif self.unidade_medida in ['kg', 'g', 'l', 'ml']:
+                if self.preco_a_granel is None:
+                   raise ValidationError('O preço a granel é obrigatório para produtos vendidos por peso ou volume. Preencha o campo: Preço a granel.') 
+                
+                
+                
 # class Imagem(models.Model):
 #     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='imagens_produto')
 #     foto = models.ImageField(upload_to='produtos_imagens/')
