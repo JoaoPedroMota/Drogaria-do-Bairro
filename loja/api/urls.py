@@ -16,9 +16,9 @@ urlpatterns = [
     path('fornecedores/<str:idFornecedor>/unidadesProducao/<str:idUnidadeProducao>/veiculos/', views.getVeiculos),
     path('fornecedores/<str:idFornecedor>/unidadesProducao/<str:idUnidadeProducao>/veiculos/<str:idVeiculo>/', views.getVeiculo),
     path('categorias/', views.CategoriaList.as_view()),
-    path('categorias/<str:nome>/', views.CategoriaDetail.as_view()),
+    path('categorias/<str:slug>/', views.CategoriaDetail.as_view()),
     path('produtos/', views.ProdutoList.as_view()),
-    path('produtos/<str:nome>/', views.ProdutoDetail.as_view()),
+    path('produtos/<str:slug>/', views.ProdutoDetail.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json', 'html'])

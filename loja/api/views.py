@@ -307,11 +307,11 @@ class CategoriaDetail(APIView):
     """
     def get_object(self, identifier):
         try:
-            return Categoria.objects.get(nome=identifier)
+            return Categoria.objects.get(slug=identifier)
         except Categoria.DoesNotExist:
             return Http404
-    def get(self, request, nome, format=None):
-        categoria = self.get_object(nome)
+    def get(self, request, slug, format=None):
+        categoria = self.get_object(slug)
         serializar = CategoriaSerializer(categoria, many=False)
         return Response(serializar.data, status=status.HTTP_200_OK)
 ##############################################################
@@ -329,7 +329,7 @@ class ProdutoList(APIView):
         serializar = ProdutoSerializer(produtos, many=True)
         return Response(serializar.data, status=status.HTTP_200_OK)
     def post(self, request, format=None):
-        request.data['nome'] = request.data['nome'].upper()
+        request.data['slug'] = request.data['slug']
         produto = ProdutoSerializer(data=request.data)
         if produto.is_valid():
             produto_temp = produto.save()
@@ -346,8 +346,8 @@ class ProdutoDetail(APIView):
             return Produto.objects.get(nome=identifier)
         except Produto.DoesNotExist:
             return Http404
-    def get(self, request, nome, format=None):
-        produto = self.get_object(nome)
+    def get(self, request, slug, format=None):
+        produto = self.get_object(slug)
         serializar = ProdutoSerializer(produto, many=False)
         return Response(serializar.data, status=status.HTTP_200_OK)
 
