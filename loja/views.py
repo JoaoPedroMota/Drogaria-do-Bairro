@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo
+from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo, Carrinho
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm 
@@ -12,6 +12,11 @@ from django.contrib.auth.hashers import check_password
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth import logout
+from loja.api.serializers import *
+
+
+
+
 @login_required(login_url='loja-login')
 def apagarConta(request,pk):
     utilizador = Utilizador.objects.get(pk=pk)
@@ -110,6 +115,7 @@ def registerUtilizador(request):
             login(request,utilizador)
             if utilizador.tipo_utilizador == "C":
                 consumidor = Consumidor.objects.create(utilizador=utilizador)
+                carrinho = Carrinho.objects.create(consumidor=consumidor)
                 return redirect('loja-home')
             else:
                 Fornecedor.objects.create(utilizador=utilizador)

@@ -165,7 +165,8 @@ class Utilizador(AbstractUser):
         else:
             texto+= "Tipo Utilizador: Fornecedor"
         return texto
-    
+    def __str__(self):
+        return self.username
     class Meta:
         verbose_name = 'Utilizador'
         verbose_name_plural = 'Utilizadores'
@@ -320,24 +321,25 @@ class Fornecedor(models.Model):
         except UnidadeProducao.DoesNotExist:
             raise ValueError('Não encontrei nenhuma unidade de produção com base no id dado')
 
-class Carrinho(models.Model):
-    consumidor = models.OneToOneField(Consumidor, null=False, on_delete=models.CASCADE, related_name='carrinho')
-    
-    class Meta:
-        verbose_name = "Carrinho"
-        verbose_name_plural ="Carrinhos"
+
 
 
 ##############################################PRODUTOS#######################################################
 
 
 
+
+
+
+
+
+
+
 class Categoria(models.Model):
-    nome = models.CharField(max_length=100)                                 #default=1,
-    categoria_pai = models.ForeignKey('Categoria', on_delete=models.CASCADE,  null=True, blank=True)
+    nome = models.CharField(max_length=100, unique=True)                                 #default=1,
+    categoria_pai = models.ForeignKey('Categoria', on_delete=models.SET_NULL,  null=True, blank=True)
     def __str__(self):
         return self.nome
-
     class Meta:
         verbose_name_plural = "Categorias"
         verbose_name = "Categoria"
@@ -348,7 +350,7 @@ class Categoria(models.Model):
 
 class Produto(models.Model):
     nome = models.CharField(max_length=100, unique=True)
-    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, blank=False, null=True, default=1)
+    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, blank=False, null=True, default=1)
     class Meta:
         verbose_name_plural = "Produtos"
         verbose_name = "Produto"
@@ -377,7 +379,7 @@ class ProdutoUnidadeProducao(models.Model):
         from .imagem import Imagem
         return Imagem.objects.get(produto=self)
     def __str__(self):
-        return self.produto.nome
+        return f'Produto: {self.produto.nome} da Unidade de Produção: {self.unidade_producao.nome}'
 
     class Meta:
         verbose_name_plural = "Produtos por Unidade Producao"
@@ -431,7 +433,7 @@ from django.db import models
     
 #ligaçao entre a tabela categoria e os atributos
 class CategoriaAtributo(models.Model):
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
+    # produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
     atributo = models.ForeignKey(Atributo, on_delete=models.CASCADE)
     valor = models.CharField(max_length=100)
@@ -461,12 +463,37 @@ class CategoriaAtributo(models.Model):
 # frutas = Categoria.objects.create(nome='Frutas', categoria_pai=frutas_e_legumes)
 # # Cria subcategoria "Legumes" com categoria pai "Frutas e Legumes"
 # legumes = Categoria.objects.create(nome='Legumes', categoria_pai=frutas_e_legumes)
-
+class Carrinho(models.Model):
+    consumidor = models.OneToOneField(Consumidor, null=False, on_delete=models.CASCADE, related_name='carrinho')
+    
+    def __str__(self):
+        return f'Carrinho de {self.consumidor}'
+    class Meta:
+        verbose_name = "Carrinho"
+        verbose_name_plural ="Carrinhos"
 class ProdutosCarrinho(models.Model):
     carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='itens_carrinho')
-    #produtos = models.ForeignKey(ProdutosUnidadeProducao, on_delete=models.SET_NULL, null=True, blank = True)
-    
+    produto = models.ForeignKey(ProdutoUnidadeProducao, on_delete=models.SET_NULL, null=True, blank = True)
+    quantidade = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank = False, default= 1)
+    def __str__(self):
+        return f'{self.carrinho}. {self.produto}'
     class Meta:
         verbose_name = "Produtos num Carrinho"
         verbose_name_plural = "Produtos num Carrinho"
 
+
+
+
+class Encomenda(models.Model):
+    consumidor = models.ForeignKey(Consumidor, on_delete=models.CASCADE, null=False, related_name="encomendas")
+    class Meta:
+        verbose_name = "Encomenda"
+        verbose_name_plural = "Encomendas"
+
+
+class ProdutosEncomenda(models.Model):
+    encomenda = models.ForeignKey(Encomenda, on_delete=models.CASCADE, null=False, related_name="produtos")
+    produtos = models.ForeignKey(ProdutoUnidadeProducao, on_delete=models.CASCADE, null=False, related_name='Encomendado')
+    class Meta:
+        verbose_name = "Produtos Encomendados"
+        verbose_name_plural = "Produtos Encomendados"
