@@ -11,6 +11,8 @@ from phonenumbers import format_number, PhoneNumberFormat
 from functools import partial
 from django.utils import timezone
 from django.utils.text import slugify
+from django.core.validators import MinValueValidator
+
 
 
 # from mptt.models import MPTTModel, TreeForeignKey
@@ -316,10 +318,7 @@ class Fornecedor(models.Model):
     utilizador = models.OneToOneField(Utilizador, on_delete=models.CASCADE, null=False, related_name='fornecedor')
     #lista_produtos
     #lista_veiculos
-    #descricao = models.TextField(blank=True, null=True, max_length=500)
-    class Meta:
-        verbose_name_plural = "Fornecedores"
-        verbose_name = "Fornecedor"    
+    #descricao = models.TextField(blank=True, null=True, max_length=500)   
     def __str__(self):
         return self.utilizador.username
     
@@ -426,7 +425,7 @@ class ProdutoUnidadeProducao(models.Model):
     ### produto e unidade de produção
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='unidades_producao')
     unidade_producao = models.ForeignKey(UnidadeProducao, on_delete=models.CASCADE, related_name='produtos')
-    stock = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False)
+    stock = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False, validators=[MinValueValidator(0)])
     descricao = models.TextField(max_length=200, null=True, blank=False)    
     
     

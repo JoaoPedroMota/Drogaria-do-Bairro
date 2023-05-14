@@ -187,10 +187,11 @@ class VeiculoSerializer(ModelSerializer):
 class UnidadeProducaoSerializer(ModelSerializer):
     pais = campoPaisSerializador()
     tipo_unidade = TipoUnidadeProducaoField()
-    # veiculos = VeiculoSerializer(many=True, read_only=True)
+    #veiculos = VeiculoSerializer(many=True, read_only=True)
+    fornecedor = FornecedorSerializer(read_only=True)
     class Meta:
         model = UnidadeProducao
-        fields = ['id','nome', 'pais', 'cidade', 'morada', 'tipo_unidade',]#'fornecedor','veiculos',]
+        fields = ['id','nome', 'pais', 'cidade', 'morada', 'tipo_unidade','fornecedor',]
         read_only_fields = ['fornecedor']
     ####def create(self, validated_data):
 
@@ -237,7 +238,7 @@ class ProdutoUnidadeProducaoSerializer(ModelSerializer):
     class Meta:
         model = ProdutoUnidadeProducao
         fields = ["id","produto", "unidade_producao", "stock","descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca"]
-
+        read_only_fields = ['id']
 
 
  

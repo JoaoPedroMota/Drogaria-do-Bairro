@@ -16,7 +16,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
-
+from decimal import Decimal
 #### DENTRO DA APP #####
 ### serializers.py ###
 from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer
@@ -148,7 +148,7 @@ class UnidadeProducaoList(APIView):
     
 
 class UnidadeProducaoDetail(APIView):
-    #permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]#, IsFornecedorOrReadOnly
     def get_object(self, identifier):
         try:
             return UnidadeProducao.objects.get(id=identifier)
@@ -162,14 +162,18 @@ class UnidadeProducaoDetail(APIView):
         fornecedor = Fornecedor.objects.get(id=idFornecedor)
         if request.user.is_consumidor:
             return Response("Não pode criar uma unidade de produção. Não é um fornecedor!")
-        if request.user.fornecedor != fornecedor:
-            return Response("Só pode editar unidades de produção para si e não para os outros")
-        up = self.get_object(idUnidadeProducao)
-        deserializer = UnidadeProducaoSerializer(up, data=request.data)
-        if deserializer.is_valid():
-            deserializer.save()
-            return Response(deserializer.data, status=status.HTTP_200_OK)
-        return Response(deserializer.erros,status=status.HTTP_400_BAD_REQUEST)
+        if request.user.is_fornecedor:
+            if request.user.fornecedor != fornecedor:
+                return Response("Só pode editar unidades de produção para si e não para os outros")
+            up = self.get_object(idUnidadeProducao)
+            deserializer = UnidadeProducaoSerializer(up, data=request.data)
+            if deserializer.is_valid():
+                deserializer.save()
+                return Response(deserializer.data, status=status.HTTP_200_OK)
+            return Response(deserializer.erros,status=status.HTTP_400_BAD_REQUEST)
+
+            
+        
     def delete(self, request, idFornecedor, idUnidadeProducao, format=None):
         Fornecedor = Fornecedor.objects.get(id=idFornecedor)
         if request.user.is_consumidor:
@@ -301,20 +305,57 @@ class ProdutoDetail(APIView):
 
 
 class ProdutoUnidadeProducaoList(APIView):
-    permission_classes = []
-    def get(self, request, idFornecedor, idUnidadeProducao,format=None):
-        fornecedor = Fornecedor.objects.get(idFornecedor=idFornecedor)
+    permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]
+    def get_unidade_producao(self, identifierFornecedor, identifierUP):
+        try:
+            fornecedor = Fornecedor.objects.get(id=identifierFornecedor)
+            try:
+                return UnidadeProducao.objects.get(Q(fornecedor=fornecedor) & Q(id=identifierUP))
+            except UnidadeProducao.DoesNotExist:
+                raise Http404
+        except Fornecedor.DoesNotExist:
+            raise Http404
         
-        proUP = ProdutoUnidadeProducao.objects.all()
-        serializar = ProdutoUnidadeProducaoSerializer.serialize(proUP, many=True)
-        return Response(serializar.data, status_code=status.HTTP_200_OK)
-    def post(self, request, idFornecedor,idUnidadeProducao, format=None):
-        pass
+    def get(self, request, idFornecedor, idUnidadeProducao,format=None):
+        up = self.get_unidade_producao(idFornecedor, idUnidadeProducao)
+        proUP = ProdutoUnidadeProducao.objects.filter(unidade_producao=up)
+        serializar = ProdutoUnidadeProducaoSerializer(proUP, many=True)
+        return Response(serializar.data, status=status.HTTP_200_OK)
+    # def post(self, request, idFornecedor,idUnidadeProducao, format=None):
+    #     fornecedor = Fornecedor.objects.get(id=idFornecedor)
+    #     unidadeProducao = UnidadeProducao.objects.get(id=idUnidadeProducao)
+    #     #fields = ["id","produto", "unidade_producao", "stock","descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca"]
+    #     if request.data['unidade_producao']!=idUnidadeProducao:
+    #         return Response(f'Não pode adicionar produtos a outra unidade de produção que não a atual. Você está na unidade de produção:{unidadeProducao.nome}. Use o id {unidadeProducao.id}')
+        
+    #     produto = Produto.objects.get_or_create(name=request.data['produto'])
+    #     #fields = ["stock","descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca"]
 
 
 
+class ProdutoUnidadeProducaoAll(APIView):
+    """Devolve todos os produtos que estão associados a uma unidade de produção. Mostra os produtos quer estejam
+    disponiveis(com stock) quer não estejam 
 
+    Args:
+        APIView (_type_): _description_
+    """
+    def get(self, request):
+        produtos = ProdutoUnidadeProducao.objects.all()
+        serializer = ProdutoUnidadeProducaoSerializer(produtos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
+class ProdutoUnidadeProducaoEmStock(APIView):
+    """Devolve todos os produtos que estão associados a uma unidade de produção. Mostra os produtos quer estejam
+    disponiveis(com stock) quer não estejam 
+
+    Args:
+        APIView (_type_): _description_
+    """
+    def get(self, request):
+        produtos = ProdutoUnidadeProducao.objects.filter(stock__gt=Decimal(0))
+        serializer = ProdutoUnidadeProducaoSerializer(produtos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 
