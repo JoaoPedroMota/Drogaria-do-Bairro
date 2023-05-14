@@ -98,7 +98,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'Projeto.wsgi.application'
-
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',
@@ -191,20 +190,91 @@ CORS_ALLOW_ALL_ORIGINS = True # cuidado!!!! verificar quando estiver no sercvido
 
 
 
+# Password validation
+# https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+
+# Internationalization
+# https://docs.djangoproject.com/en/4.1/topics/i18n/
+
+LANGUAGE_CODE = 'pt-pt'
+
+TIME_ZONE = 'UTC'
+
+USE_I18N = True
+
+USE_TZ = True
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/4.1/howto/static-files/
+
+STATIC_URL = '/static/'
+MEDIA_URL = '/images/' #imagens e fotos perfil
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static'
+]
+
+
+
+
+MEDIA_ROOT = BASE_DIR / 'static/images' #imagens e fotos perfil
+
+
+
+
+
+
+
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+CORS_ALLOW_ALL_ORIGINS = True # cuidado!!!! verificar quando estiver no sercvidor. ESTA LINHA DEFINE QUEM PODE FAZER PEDIDOS À API
+
+
+
 
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'rest_framework_json_api.exceptions.exception_handler',
-    'DEFAULT_PARSER_CLASSES': (
-        'rest_framework_json_api.parsers.JSONParser',
+    'DEFAULT_PARSER_CLASSES': ( #lidar com os dados que o cliente envia. AQUILO QUE ENTRA NA API (O JSON QUE O CLIETE ENVIOU NO PEDIDO, por exemplo)
+        'rest_framework.parsers.JSONParser', #não apagar!!!!!! não apagr mesmo!
+        'rest_framework_json_api.parsers.JSONParser', # não apagar!!!!!! só apagar em última instância e em caso de desespero!
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
     ),
+    'DEFAULT_RENDERER_CLASSES': [ #lidar com os dados que se envia para o cliente. serve para o cliente poder entender e manipular os dados.
+        'rest_framework.renderers.JSONRenderer', #não apagar!!!!!! não apagar mesmo!
+        'rest_framework.renderers.BrowsableAPIRenderer', #não apagar!!!!!!
+        'rest_framework_json_api.renderers.JSONRenderer', # não apagar!!!!!! só apagar em última instância e em caso de desespero!
+        "rest_framework.renderers.TemplateHTMLRenderer"
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
          'rest_framework.authentication.SessionAuthentication',
+         "rest_framework.authentication.BasicAuthentication",
     ],
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-    ],
+
     'DEFAULT_METADATA_CLASS': 'rest_framework_json_api.metadata.JSONAPIMetadata',
     'DEFAULT_FILTER_BACKENDS': (
         'rest_framework_json_api.filters.QueryParameterValidationFilter',
@@ -216,5 +286,8 @@ REST_FRAMEWORK = {
     'TEST_REQUEST_RENDERER_CLASSES': (
         'rest_framework_json_api.renderers.JSONRenderer',
     ),
-    'TEST_REQUEST_DEFAULT_FORMAT': 'vnd.api+json'
+    'TEST_REQUEST_DEFAULT_FORMAT': 'vnd.api+json',
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.AllowAny",
+    ),
 }

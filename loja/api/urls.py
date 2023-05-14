@@ -12,7 +12,7 @@ urlpatterns = [
     path('fornecedores/', views.FornecedoresList.as_view()),
     path('fornecedores/<str:idFornecedor>/', views.FornecedoresDetail.as_view()),
     path('fornecedores/<str:idFornecedor>/unidadesProducao/', views.UnidadeProducaoList.as_view()),
-    path('fornecedores/<str:idFornecedor>/unidadesProducao/<str:idUnidadeProducao>/', views.getUP),
+    path('fornecedores/<str:idFornecedor>/unidadesProducao/<str:idUnidadeProducao>/', views.UnidadeProducaoDetail.as_view()),
     path('fornecedores/<str:idFornecedor>/unidadesProducao/<str:idUnidadeProducao>/veiculos/', views.getVeiculos),
     path('fornecedores/<str:idFornecedor>/unidadesProducao/<str:idUnidadeProducao>/veiculos/<str:idVeiculo>/', views.getVeiculo),
     path('categorias/', views.CategoriaList.as_view()),

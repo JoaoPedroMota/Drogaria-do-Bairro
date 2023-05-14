@@ -15,6 +15,15 @@ class IsFornecedorOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         if request.user.is_authenticated and request.user.is_fornecedor:
-            print("\nENTREI CARALHO\n")
             return True
+        raise PermissionDenied(detail="Não pode realizar esta ação porque não é um fornecedor")
+    
+    
+    
+class IsFornecedorAndOwnerOrReadOnly(permissions.BasePermission):
+    def has_obj_permission(self,request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        if request.user.is_authenticated and request.user.is_fornecedor:
+            return obj.fornecedor == request.user.fornecedor
         raise PermissionDenied(detail="Não pode realizar esta ação porque não é um fornecedor")
