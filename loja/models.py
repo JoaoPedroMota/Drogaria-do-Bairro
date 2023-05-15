@@ -390,7 +390,7 @@ class Categoria(models.Model):
 
 class Produto(models.Model):
     nome = models.CharField(max_length=100, unique=True)
-    #slug = models.SlugField(null=True, blank=True)
+    slug = models.SlugField(null=True, blank=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, blank=False, null=True, default=1)
     class Meta:
         verbose_name_plural = "Produtos"
