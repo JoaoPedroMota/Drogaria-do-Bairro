@@ -306,6 +306,13 @@ class ProdutoDetail(APIView):
 
 class ProdutoUnidadeProducaoList(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]
+
+    def get_categoria(self, identifier):
+        try:
+            return Categoria.objects.get(nome=identifier)
+        except Categoria.DoesNotExist:
+            raise Http404
+
     def get_unidade_producao(self, identifierFornecedor, identifierUP):
         try:
             fornecedor = Fornecedor.objects.get(id=identifierFornecedor)
@@ -316,21 +323,32 @@ class ProdutoUnidadeProducaoList(APIView):
         except Fornecedor.DoesNotExist:
             raise Http404
         
-    def get(self, request, idFornecedor, idUnidadeProducao,format=None):
+    def get(self, request, idFornecedor, idUnidadeProducao, format=None):
         up = self.get_unidade_producao(idFornecedor, idUnidadeProducao)
         proUP = ProdutoUnidadeProducao.objects.filter(unidade_producao=up)
         serializar = ProdutoUnidadeProducaoSerializer(proUP, many=True)
         return Response(serializar.data, status=status.HTTP_200_OK)
-    # def post(self, request, idFornecedor,idUnidadeProducao, format=None):
-    #     fornecedor = Fornecedor.objects.get(id=idFornecedor)
-    #     unidadeProducao = UnidadeProducao.objects.get(id=idUnidadeProducao)
-    #     #fields = ["id","produto", "unidade_producao", "stock","descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca"]
-    #     if request.data['unidade_producao']!=idUnidadeProducao:
-    #         return Response(f'Não pode adicionar produtos a outra unidade de produção que não a atual. Você está na unidade de produção:{unidadeProducao.nome}. Use o id {unidadeProducao.id}')
-        
-    #     produto = Produto.objects.get_or_create(name=request.data['produto'])
-    #     #fields = ["stock","descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca"]
 
+
+    def post(self, request, idFornecedor,idUnidadeProducao, format=None):
+        fornecedor = Fornecedor.objects.get(id=idFornecedor)
+        unidadeProducao = UnidadeProducao.objects.get(id=idUnidadeProducao)
+        if request.data['unidade_producao'] != idUnidadeProducao:
+            return Response(f'Não pode adicionar produtos a outra unidade de produção que não a atual. Você está na unidade de produção:{unidadeProducao.nome}. Use o id {unidadeProducao.id}')
+        produto_request = request.data['produto']
+        # nome_produto = produto_request['nome']
+        # produto, created = Produto.objects.get_or_create(nome=nome_produto)
+        # if created:
+        #     nome_categoria = produto_request['categoria']['nome']
+        #     categoria = self.get_categoria(nome_categoria)
+        #     produto.categoria = categoria
+        #     produto.save()
+
+        serializar = ProdutoUnidadeProducaoSerializer(data=request.data)
+        if serializar.is_valid():
+            serializar.save()
+            return Response(serializar.data, status=status.HTTP_201_CREATED)
+        return Response(serializar.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProdutoUnidadeProducaoAll(APIView):

@@ -19,7 +19,7 @@ urlpatterns = [
     path('categorias/<str:slug>/', views.CategoriaDetail.as_view()),
     path('produtos/', views.ProdutoList.as_view()),
     path('produtos/<str:slug>/', views.ProdutoDetail.as_view()),
-    path('fornecedores/<str:idFornecedor>/unidadesProducao/<str:idUnidadeProducao>/produtos/', views.ProdutoUnidadeProducaoList.as_view()),
+    path('fornecedores/<int:idFornecedor>/unidadesProducao/<int:idUnidadeProducao>/produtos/', views.ProdutoUnidadeProducaoList.as_view()),
     path('produtos_loja/',views.ProdutoUnidadeProducaoAll.as_view()),
     path('produtos_loja/em_stock/', views.ProdutoUnidadeProducaoEmStock.as_view()),
 ]

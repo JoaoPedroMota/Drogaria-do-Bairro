@@ -367,8 +367,8 @@ class Categoria(models.Model):
     nome = models.CharField(max_length=30, unique=True) 
     #slug = models.SlugField(max_length=50, unique=True)                               #default=1,
     categoria_pai = models.ForeignKey('Categoria', on_delete=models.SET_NULL,  null=True, blank=True)
-    def __str__(self):
-        return self.nome
+    # def __str__(self):
+    #     return self.nome
     
     
     def __repr__(self):
@@ -398,8 +398,8 @@ class Produto(models.Model):
     def __str__(self):
         return self.nome
     def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = generate_slug(self.nome)
+        # if not self.slug:
+        #     self.slug = generate_slug(self.nome)
         super().save(*args, **kwargs)
     class Meta:
         verbose_name = "Produto"

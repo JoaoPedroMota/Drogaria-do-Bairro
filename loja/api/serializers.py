@@ -232,8 +232,8 @@ class CarrinhoSerializer(ModelSerializer):
 
 
 class ProdutoUnidadeProducaoSerializer(ModelSerializer):
-    produto = ProdutoSerializer()
-    unidade_producao = UnidadeProducaoSerializer()
+    # produto = ProdutoSerializer()
+    # unidade_producao = UnidadeProducaoSerializer()
     
     class Meta:
         model = ProdutoUnidadeProducao
