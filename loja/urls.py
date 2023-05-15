@@ -7,7 +7,7 @@ urlpatterns = [
     path('', views.loja, name='loja-home'),
     path('about/', views.about, name='about'),
     path('contacts/', views.contacts, name='contacts'),
-    path('shop/', views.shop, name='shop'),
+  
     path('news/', views.news, name='news'),
     path('carrinho/', views.carrinho, name='loja-carrinho'),
     path('checkout/', views.checkout, name='loja-checkout'),
@@ -26,6 +26,8 @@ urlpatterns = [
     path('perfil/<str:userName>/unidadeProducao/<str:id>/editarUnidadeProducao', views.editarUnidadeProducao, name='loja-editarUnidadeProducao'),
     path('<str:userName>/unidadeProducao/<int:id>/remover', removerUnidadeProducao, name='loja-removerUnidadeProducao'),
     path('criar_produto/<str:userName>/<int:id>', views.criar_produto, name='loja-criarProduto'),
+    path('shop/', views.ver_produtos, name='ver_produtos'),
+
 
 ]
 

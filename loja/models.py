@@ -11,6 +11,8 @@ from phonenumbers import format_number, PhoneNumberFormat
 from functools import partial
 from django.utils import timezone
 from django.utils.text import slugify
+from django.core.validators import MinValueValidator
+
 
 
 # from mptt.models import MPTTModel, TreeForeignKey
@@ -81,6 +83,7 @@ class Utilizador(AbstractUser):
         max_size = 2 * 1024 * 1024
         if value.size > max_size:
             raise ValidationError((f'Ficheiro grande de mais. Tamanho máximo 2MB'))
+    
     # Definindo as opções para o campo tipo_utilizador
     CONSUMIDOR = 'C'
     FORNECEDOR = 'F'
@@ -88,53 +91,23 @@ class Utilizador(AbstractUser):
         (CONSUMIDOR, 'CONSUMIDOR'),
         (FORNECEDOR, 'FORNECEDOR')
     ]
-
+    
     # Campos personalizados
     nome = models.CharField(max_length=200, null=True)
     email = models.EmailField(unique=True, null=True, blank=False, error_messages={'unique': 'Já existe um utilizador com esse e-mail.'})
-    username = models.CharField(
-        max_length=20,
-        unique=True,
-        null=True,
-        blank=False,
-        validators=[ASCIIUsernameValidator()],
-        help_text='Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ ',
-        error_messages={
-            'unique': 'Já existe um utilizador com esse nome de utilizador.',
-        },
-    )
+    username = models.CharField(max_length=20, unique=True, null=True, blank=False, validators=[ASCIIUsernameValidator()], help_text='Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ ', error_messages={ 'unique': 'Já existe um utilizador com esse nome de utilizador.',},)
     pais = CountryField(null=True, blank=False, default='PT')
     cidade = models.CharField(max_length=200, null=True, blank=False) 
     #morada = models.CharField(max_length=200, null=True, blank=False)
     telemovel = PhoneNumberField(null=True, blank=True, unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
     tipo_utilizador = models.CharField(max_length=1, choices=TIPO_UTILIZADOR, default='', null=True)
     imagem_perfil = models.ImageField(null=True, default="avatar.svg", validators=[validar_extensao_imagens, validar_tamanho_imagens])
-    # Campos padrão
+    updated = models.DateTimeField(auto_now=True, null=True, blank=False)
+    created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
+    
+    # Campos padrão para admin
     is_staff = models.BooleanField(default=False, help_text='Designa se este utilizador pode aceder à área de administração do site.')
     is_admin = models.BooleanField(default=False, help_text='Designa se este utilizador tem permissão para realizar ações de administrador.')
-    
-    # Campo personalizado de username
-
-    updated = models.DateTimeField(auto_now=True, null=True, blank=False)
-    created = models.DateTimeField(auto_now_add=True, null=True, blank=False)
-    
-    # Definindo o campo de email como o identificador exclusivo do usuário
-    USERNAME_FIELD = 'email'
-
-    # Definindo que os campos personalizados são obrigatórios apenas no momento do registro de usuário
-    REQUIRED_FIELDS = ['username']
-    objects = CustomUserManager()
-    
-    @property
-    def is_fornecedor(self):
-        return self.tipo_utilizador == Utilizador.FORNECEDOR
-    
-    @property
-    def is_consumidor(self):
-        return self.tipo_utilizador == Utilizador.CONSUMIDOR
-    
-    
-    
     def has_perm(self, perm, obj=None):
         """
         Retorna True se o utilizador tem a permissão especificada. Este método é necessário para compatibilidade com o Django Admin.
@@ -146,10 +119,26 @@ class Utilizador(AbstractUser):
         Retorna True se o utilizador tem permissões para ver o aplicativo 'app_label'. Este método é necessário para compatibilidade com o Django Admin.
         """
         return self.is_admin and self.is_superuser
+    # Campo personalizado de username
+
+
     
+    # Definindo o campo de email como o identificador exclusivo do usuário
+    USERNAME_FIELD = 'email'
+    # Definindo que os campos personalizados são obrigatórios apenas no momento do registro de usuário
+    REQUIRED_FIELDS = ['username']
+    #gerir superusers
+    objects = CustomUserManager()
+    
+    
+    
+    
+    #legibilidade na bd e do objeto
     def __repr__(self):
         return f"Utilizador(nome='{self.nome}', email='{self.email}', username='{self.username}', pais='{self.pais}', cidade='{self.cidade}', telemovel='{self.telemovel}', tipo_utilizador='{self.tipo_utilizador}', imagem_perfil='{self.imagem_perfil}', is_staff={self.is_staff}, is_admin={self.is_admin}, updated='{self.updated}', created='{self.created}')"
-    
+    def __str__(self):
+        return self.username
+    # legibilidade humana para debug e cenas
     @property
     def representacao(self):
         numero_formatado = format_number(self.telemovel,PhoneNumberFormat.INTERNATIONAL )
@@ -166,8 +155,25 @@ class Utilizador(AbstractUser):
         else:
             texto+= "Tipo Utilizador: Fornecedor"
         return texto
-    def __str__(self):
-        return self.username
+    
+    #funcionalidades
+    @property
+    def is_fornecedor(self):
+        return self.tipo_utilizador == Utilizador.FORNECEDOR
+    @property
+    def is_consumidor(self):
+        return self.tipo_utilizador == Utilizador.CONSUMIDOR
+
+    @property
+    def produtosCarrinho(self):
+        if self.is_consumidor():
+            carrinho = self.consumidor.carrinho
+            produtosNoCarrinho = carrinho.produtos_carrinho.all()
+            return produtosNoCarrinho
+        else:
+            raise ValueError("Apenas os utilizadores que são consumidores têm carrinho, e só estes podem aceder aos produtos que têm no carrinho.")
+
+
     class Meta:
         verbose_name = 'Utilizador'
         verbose_name_plural = 'Utilizadores'
@@ -183,6 +189,11 @@ class Consumidor(models.Model):
     class Meta:
         verbose_name = 'Consumidor'
         verbose_name_plural = 'Consumidores'
+        ordering=['id','utilizador']
+    def save(self, *args, **kwargs):
+        if Fornecedor.objects.filter(utilizador=self.utilizador).exists():
+            raise ValueError('O utilizador já está associado a um Fornecedor.')
+        super(Consumidor, self).save(*args, **kwargs)
     
 class Veiculo(models.Model):
     carro = 'C'
@@ -233,6 +244,10 @@ class Veiculo(models.Model):
             return self.nome
         except AttributeError:
             return "Veículo sem nome"
+    class Meta:
+        verbose_name_plural = "Veículos"
+        verbose_name = "Veículo"
+        ordering= ['id','unidadeProducao','nome', 'tipo_veiculo','estado_veiculo','-created','-updated']
 
     def __repr__(self):
         return f"Veiculo(nome='{self.nome}', unidadeProducao='{self.unidadeProducao}', tipo_veiculo='{self.tipo_veiculo}', estado_veiculo='{self.estado_veiculo}')"
@@ -303,6 +318,7 @@ class UnidadeProducao(models.Model):
     class Meta:
         verbose_name_plural = "Unidades de Producao"
         verbose_name = "Unidade de Producao"
+        ordering=['id', 'nome','fornecedor']
 
     class Meta:
         verbose_name = 'UnidadeProducao'
@@ -314,10 +330,7 @@ class Fornecedor(models.Model):
     utilizador = models.OneToOneField(Utilizador, on_delete=models.CASCADE, null=False, related_name='fornecedor')
     #lista_produtos
     #lista_veiculos
-    #descricao = models.TextField(blank=True, null=True, max_length=500)
-    class Meta:
-        verbose_name_plural = "Fornecedores"
-        verbose_name = "Fornecedor"    
+    #descricao = models.TextField(blank=True, null=True, max_length=500)   
     def __str__(self):
         return self.utilizador.username
     
@@ -333,6 +346,15 @@ class Fornecedor(models.Model):
                 raise ValueError('Esta unidade de produção não pertence a este fornecedor')
         except UnidadeProducao.DoesNotExist:
             raise ValueError('Não encontrei nenhuma unidade de produção com base no id dado')
+    def save(self, *args, **kwargs):
+        if Consumidor.objects.filter(utilizador=self.utilizador).exists():
+            raise ValueError('O utilizador já está associado como um Consumidor.')
+        super(Fornecedor, self).save(*args, **kwargs)
+    class Meta:
+        verbose_name_plural = "Fornecedores"
+        verbose_name = "Fornecedor"
+        ordering=['id', 'utilizador']
+        
 
 
 
@@ -356,8 +378,8 @@ class Categoria(models.Model):
     nome = models.CharField(max_length=30, unique=True) 
     #slug = models.SlugField(max_length=50, unique=True)                               #default=1,
     categoria_pai = models.ForeignKey('Categoria', on_delete=models.SET_NULL,  null=True, blank=True)
-    def __str__(self):
-        return self.nome
+    # def __str__(self):
+    #     return self.nome
     
     
     def __repr__(self):
@@ -379,7 +401,7 @@ class Categoria(models.Model):
 
 class Produto(models.Model):
     nome = models.CharField(max_length=100, unique=True)
-    #slug = models.SlugField(null=True, blank=True)
+    slug = models.SlugField(null=True, blank=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, blank=False, null=True, default=1)
     class Meta:
         verbose_name_plural = "Produtos"
@@ -387,9 +409,13 @@ class Produto(models.Model):
     def __str__(self):
         return self.nome
     def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = generate_slug(self.nome)
-        super().save(*args, **kwargs)   
+        # if not self.slug:
+        #     self.slug = generate_slug(self.nome)
+        super().save(*args, **kwargs)
+    class Meta:
+        verbose_name = "Produto"
+        verbose_name_plural = "Produtos"
+        ordering = ("id","nome")
 
 class ProdutoUnidadeProducao(models.Model):
     UNIDADES_MEDIDA_CHOICES = (
@@ -410,7 +436,7 @@ class ProdutoUnidadeProducao(models.Model):
     ### produto e unidade de produção
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='unidades_producao')
     unidade_producao = models.ForeignKey(UnidadeProducao, on_delete=models.CASCADE, related_name='produtos')
-    stock = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False)
+    stock = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False, validators=[MinValueValidator(0)])
     descricao = models.TextField(max_length=200, null=True, blank=False)    
     
     
@@ -436,6 +462,7 @@ class ProdutoUnidadeProducao(models.Model):
     class Meta:
         verbose_name_plural = "Produtos por Unidade Producao"
         verbose_name = "Produto por Unidade Producao"
+        ordering=['id','produto','unidade_producao']
     
     def clean(self):
         super().clean()
@@ -497,6 +524,7 @@ class Atributo(models.Model):
     class Meta:
         verbose_name_plural = "Atributos"
         verbose_name = "Atributo"
+        ordering=['id']
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_slug(self.nome)
@@ -515,6 +543,7 @@ class CategoriaAtributo(models.Model):
     class Meta:
         verbose_name_plural = "Categoria Atributos"
         verbose_name = "Categoria Atributo"
+        ordering= ['id']
 
 
 
@@ -545,8 +574,9 @@ class Carrinho(models.Model):
     class Meta:
         verbose_name = "Carrinho"
         verbose_name_plural ="Carrinhos"
+        ordering=['id']
 class ProdutosCarrinho(models.Model):
-    carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='itens_carrinho')
+    carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='produtos_carrinho')
     produto = models.ForeignKey(ProdutoUnidadeProducao, on_delete=models.SET_NULL, null=True, blank = True)
     quantidade = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank = False, default= 1)
     def __str__(self):
@@ -554,6 +584,7 @@ class ProdutosCarrinho(models.Model):
     class Meta:
         verbose_name = "Produtos num Carrinho"
         verbose_name_plural = "Produtos num Carrinho"
+        ordering = ['id']
 
 
 
@@ -563,6 +594,7 @@ class Encomenda(models.Model):
     class Meta:
         verbose_name = "Encomenda"
         verbose_name_plural = "Encomendas"
+        ordering=['id']
 
 
 class ProdutosEncomenda(models.Model):
@@ -571,3 +603,4 @@ class ProdutosEncomenda(models.Model):
     class Meta:
         verbose_name = "Produtos Encomendados"
         verbose_name_plural = "Produtos Encomendados"
+        ordering = ['id']

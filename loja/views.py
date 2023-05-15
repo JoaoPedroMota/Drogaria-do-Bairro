@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo, Carrinho
+from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo, Carrinho,Categoria, Produto
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario
@@ -44,9 +44,6 @@ def news(request):
     return render(request, 'loja/news.html', context)
 
 
-def shop(request):
-    context = {}
-    return render(request, 'loja/shop.html', context)
 
 
 def confirm_password_view(request):
@@ -475,14 +472,17 @@ def criar_produto(request, userName, id):
     return render(request, 'loja/criar_produto.html', {'form': form})
 
 #ainda nao estah a ser usado
-def ver_produtos(request):
-    produtos = Produto.objects.all()
-    context = {'produtos': produtos}
-    return render(request, 'ver_produtos.html', context)
+# def ver_produtos(request):
+
+#     produtos = Produto.objects.filter(id__in=ProdutoUnidadeProducao.objects.values_list('produto_id', flat=True))
+#     precos = ProdutoUnidadeProducao.objects.filter(id__in=produtos.values_list('id', flat=True)).order_by('id')
+#     context = {
+#         'produtos_precos': zip(produtos, precos),
+#     }
+    
+#     return render(request, 'loja/shop.html', context)
 
 
-from django.shortcuts import render
-from .models import Categoria, Produto
 
 
 def lista_produtos_eletronicos(request):
@@ -490,7 +490,7 @@ def lista_produtos_eletronicos(request):
     produtos = Produto.objects.filter(categoria=eletronicos)
     return render(request, 'lista_produtos.html', {'produtos': produtos})
 
-def lista_produtos(request):
+def ver_produtos(request):
     q = request.GET.get('q') if request.GET.get('q') != None else ''
     url = 'http://127.0.0.1:8000/api/produtos/'
     response = requests.get(url)
@@ -500,12 +500,25 @@ def lista_produtos(request):
     else:
         return None
 
+    url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
+    response2 = requests.get(url2)
+    if response2.status_code == 200:
+        data2 = response2.json()
+    else:
+        return None
+
     FilteredProducts = []
     for product in data:
-        if q.lower() in product['nome'].lower() or q.lower() in product['categoria'].lower():
+        if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
             FilteredProducts.append(product)
 
-    print("produtos",FilteredProducts)  
+    actualFilteredProducts = []
+    for product in FilteredProducts:
+        for shopProduct in data2:
+            if product['id'] == shopProduct['produto']:
+                actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel']})
 
-    context={'Produtos':FilteredProducts}
+    print("produtos_precos",actualFilteredProducts)  
+
+    context={'produtos_precos':actualFilteredProducts}
     return render(request, 'loja/shop.html', context)

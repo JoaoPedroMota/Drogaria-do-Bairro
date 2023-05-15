@@ -12,13 +12,16 @@ urlpatterns = [
     path('fornecedores/', views.FornecedoresList.as_view()),
     path('fornecedores/<str:username>/', views.FornecedoresDetail.as_view()),
     path('fornecedores/<str:idFornecedor>/unidadesProducao/', views.UnidadeProducaoList.as_view()),
-    path('fornecedores/<str:idFornecedor>/unidadesProducao/<str:idUnidadeProducao>/', views.getUP),
+    path('fornecedores/<str:idFornecedor>/unidadesProducao/<str:idUnidadeProducao>/', views.UnidadeProducaoDetail.as_view()),
     path('fornecedores/<str:username>/unidadesProducao/<str:idUnidadeProducao>/veiculos/', views.getVeiculos),
     path('fornecedores/<str:idFornecedor>/unidadesProducao/<str:idUnidadeProducao>/veiculos/<str:idVeiculo>/', views.getVeiculo),
     path('categorias/', views.CategoriaList.as_view()),
     path('categorias/<str:slug>/', views.CategoriaDetail.as_view()),
     path('produtos/', views.ProdutoList.as_view()),
     path('produtos/<str:slug>/', views.ProdutoDetail.as_view()),
+    path('fornecedores/<int:idFornecedor>/unidadesProducao/<int:idUnidadeProducao>/produtos/', views.ProdutoUnidadeProducaoList.as_view()),
+    path('produtos_loja/',views.ProdutoUnidadeProducaoAll.as_view()),
+    path('produtos_loja/em_stock/', views.ProdutoUnidadeProducaoEmStock.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json', 'html'])

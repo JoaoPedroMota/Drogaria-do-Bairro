@@ -1,7 +1,7 @@
 from rest_framework.serializers import ModelSerializer, Field, SerializerMethodField, ValidationError
 from rest_framework.fields import ImageField
 #### MODELOS ####
-from loja.models import Utilizador, Consumidor, UnidadeProducao, Fornecedor, Veiculo, Produto, Categoria
+from loja.models import Utilizador, Consumidor, UnidadeProducao, Fornecedor, Veiculo, Produto, Categoria, Carrinho, ProdutosCarrinho, ProdutoUnidadeProducao
 
 #######
 from django_countries.fields import CountryField
@@ -20,6 +20,35 @@ class TipoUtilizadorField(Field):
             if key == data or value==data: #se a informação passada estiver na chave ou no valor, retorna a chave correspondente a esse valor ou chave
                 return key
         raise ValidationError("Invalid tipo_utilizador description.")
+
+class campoPaisSerializador(Field):
+    """
+    Para ser possivel serializar o campo País na classe utilizador
+    """
+    def to_representation(self, value):
+        if value is not None:
+            #return value.code
+            return countries.name(value.code)
+
+        return None
+
+
+    def to_internal_value(self, data):
+        if data is not None:
+            try:
+                #trys to find by the code
+                country = CountryField().to_python(data)
+                if country not in countries:
+                    # Try to find the country by name
+                    for country_code, country_name in countries:
+                        if data.lower() == country_name.lower():
+                            return CountryField().to_python(country_code)
+                    raise ValidationError("Código de país inválido. Use este link para ver os códigos válidos: https://en.wikipedia.org/wiki/Regional_indicator_symbol")
+                return country
+            except:
+                raise ValidationError("Código de país inválido. Use este link para ver os códigos válidos: https://en.wikipedia.org/wiki/Regional_indicator_symbol")
+        return None
+
 
 
 class TipoUnidadeProducaoField(Field):
@@ -55,40 +84,13 @@ class EstadoVeiculoField(Field):
 
 
 
-class campoPaisSerializador(Field):
-    """
-    Para ser possivel serializar o campo País na classe utilizador
-    """
-    def to_representation(self, value):
-        if value is not None:
-            #return value.code
-            return countries.name(value.code)
-
-        return None
-
-
-    def to_internal_value(self, data):
-        if data is not None:
-            try:
-                #trys to find by the code
-                country = CountryField().to_python(data)
-                if country not in countries:
-                    # Try to find the country by name
-                    for country_code, country_name in countries:
-                        if data.lower() == country_name.lower():
-                            return CountryField().to_python(country_code)
-                    raise ValidationError("Código de país inválido. Use este link para ver os códigos válidos: https://en.wikipedia.org/wiki/Regional_indicator_symbol")
-                return country
-            except:
-                raise ValidationError("Código de país inválido. Use este link para ver os códigos válidos: https://en.wikipedia.org/wiki/Regional_indicator_symbol")
-        return None
 
 class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
     pais = campoPaisSerializador()
     tipo_utilizador = TipoUtilizadorField()
     password = CharField(write_only=True, required=False)
     nome = CharField(read_only=True)
-    #imagem_perfil = ImageField(required=False)
+    imagem_perfil = ImageField(required=False)
     def create(self, validated_data):
         if 'password' not in validated_data:
             raise ValidationError("password is required")
@@ -137,8 +139,8 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
 
     class Meta:
         model = Utilizador
-        fields = ['username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador']
-        #fields = ['username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
+        #fields = ['username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador']
+        fields = ['username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
         extra_kwargs = {'password': {'required': True}}
     
 
@@ -185,10 +187,12 @@ class VeiculoSerializer(ModelSerializer):
 class UnidadeProducaoSerializer(ModelSerializer):
     pais = campoPaisSerializador()
     tipo_unidade = TipoUnidadeProducaoField()
-    veiculos = VeiculoSerializer(many=True, read_only=True)
+    #veiculos = VeiculoSerializer(many=True, read_only=True)
+    fornecedor = FornecedorSerializer(read_only=True)
     class Meta:
         model = UnidadeProducao
-        fields = ['id','nome', 'fornecedor', 'pais', 'cidade', 'morada', 'tipo_unidade','veiculos',]
+        fields = ['id','nome', 'pais', 'cidade', 'morada', 'tipo_unidade','fornecedor',]
+        read_only_fields = ['fornecedor']
     ####def create(self, validated_data):
 
     ####def update(self, validated_data):
@@ -214,3 +218,34 @@ class ProdutoSerializer(ModelSerializer):
     class Meta:
         model = Produto
         fields = ['id','nome', 'categoria']
+        
+        
+        
+        
+class CarrinhoSerializer(ModelSerializer):
+    consumidor = ConsumidorSerializer()
+    class Meta:
+        model = Carrinho
+        fields = ['id','nome', 'consumidor']
+
+
+
+
+class ProdutoUnidadeProducaoSerializer(ModelSerializer):
+    # produto = ProdutoSerializer()
+    # unidade_producao = UnidadeProducaoSerializer()
+    
+    class Meta:
+        model = ProdutoUnidadeProducao
+        fields = ["id","produto", "unidade_producao", "stock","descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca"]
+        read_only_fields = ['id']
+
+
+ 
+        
+class ProdutosCarrinhoSerializer(ModelSerializer):
+    carrinho = CarrinhoSerializer()
+    produto = ProdutoUnidadeProducaoSerializer
+    class Meta:
+        model= ProdutosCarrinho
+        fields= ["carrinho", "produto", "quantidade"]
