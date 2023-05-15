@@ -61,7 +61,7 @@ class ProdutoUnidadeProducaoForm(forms.ModelForm):
     #marca = forms.CharField(max_length=50)
     class Meta:
         model = ProdutoUnidadeProducao
-        fields = ['descricao', 'categoria', 'preco', 'unidade_medida', 'preco_por_unidade','data_producao', 'marca']
+        fields = ['produto', 'unidade_producao', 'descricao','stock' ,'unidade_medida', 'preco_a_granel','unidade_Medida_Por_Unidade', 'quantidade_por_unidade', 'preco_por_unidade','data_producao','marca' ]
         
 
 

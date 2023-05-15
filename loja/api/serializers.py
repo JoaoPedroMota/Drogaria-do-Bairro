@@ -1,7 +1,7 @@
 from rest_framework.serializers import ModelSerializer, Field, SerializerMethodField, ValidationError
 from rest_framework.fields import ImageField
 #### MODELOS ####
-from loja.models import Utilizador, Consumidor, UnidadeProducao, Fornecedor, Veiculo
+from loja.models import Utilizador, Consumidor, UnidadeProducao, Fornecedor, Veiculo, Produto, Categoria
 
 #######
 from django_countries.fields import CountryField
@@ -150,7 +150,7 @@ class ConsumidorSerializer(ModelSerializer):
         
         
         
-class ForncedorSerializer(ModelSerializer):
+class FornecedorSerializer(ModelSerializer):
     utilizador = CharField(source="utilizador.username", read_only=True)
     class Meta:
         model = Fornecedor
@@ -192,6 +192,25 @@ class UnidadeProducaoSerializer(ModelSerializer):
     ####def create(self, validated_data):
 
     ####def update(self, validated_data):
+    
 
-    
-    
+class CategoriaPaiSerializer(ModelSerializer):
+    class Meta:
+        model = Categoria
+        fields = ['id', 'nome']
+
+class CategoriaSerializer(ModelSerializer):
+    categoria_pai = CategoriaPaiSerializer(read_only=True)
+    class Meta:
+        model = Categoria
+        fields = ['id','nome', 'categoria_pai']
+
+class CategoriaProduto(ModelSerializer):
+    class Meta:
+        model = Categoria
+        fields= ['nome']
+class ProdutoSerializer(ModelSerializer):
+    categoria = CategoriaProduto(read_only=True)
+    class Meta:
+        model = Produto
+        fields = ['id','nome', 'categoria']

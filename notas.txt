@@ -1,3 +1,8 @@
 Adicionar esta linha a unidadeProducao.html na linha 57:
 
 <!-- <a href="{% url 'loja-criarProduto' userName=request.user.username id=unidadeProducao.id %}" class="btn btn-primary">Criar Produto</a>
+
+
+base64 enconding -- ascii
+
+https://docs.python.org/3/library/base64.html

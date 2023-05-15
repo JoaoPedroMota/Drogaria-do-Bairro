@@ -1,19 +1,17 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo
+from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo, Carrinho
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario
+from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
 import requests
 from django.db.models import QuerySet
 from django.contrib.auth.hashers import check_password
+from loja.api.serializers import *
 
-# @login_required(login_url='loja-login')
-# def apagarConta(request,pk):
-#     utilizador = Utilizador.objects.get(pk=pk)
     
 #     if request.user != utilizador:
 #         return HttpResponse('Você não deveria estar aqui!')
@@ -107,6 +105,7 @@ def registerUtilizador(request):
             login(request,utilizador)
             if utilizador.tipo_utilizador == "C":
                 consumidor = Consumidor.objects.create(utilizador=utilizador)
+                carrinho = Carrinho.objects.create(consumidor=consumidor)
                 return redirect('loja-home')
             else:
                 Fornecedor.objects.create(utilizador=utilizador)
@@ -490,3 +489,23 @@ def lista_produtos_eletronicos(request):
     eletronicos = Categoria.objects.get(nome='Eletrónicos')
     produtos = Produto.objects.filter(categoria=eletronicos)
     return render(request, 'lista_produtos.html', {'produtos': produtos})
+
+def lista_produtos(request):
+    q = request.GET.get('q') if request.GET.get('q') != None else ''
+    url = 'http://127.0.0.1:8000/api/produtos/'
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+    else:
+        return None
+
+    FilteredProducts = []
+    for product in data:
+        if q.lower() in product['nome'].lower() or q.lower() in product['categoria'].lower():
+            FilteredProducts.append(product)
+
+    print("produtos",FilteredProducts)  
+
+    context={'Produtos':FilteredProducts}
+    return render(request, 'loja/shop.html', context)
