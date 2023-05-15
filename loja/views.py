@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+import requests
 from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo, Carrinho,Categoria, Produto
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -367,12 +368,25 @@ def criar_produto(request, userName, id):
         form = ProdutoForm()
     return render(request, 'loja/criar_produto.html', {'form': form})
 
-#ainda nao estah a ser usado
+
 def ver_produtos(request):
-    produtos = Produto.objects.filter(id__in=ProdutoUnidadeProducao.objects.values_list('produto_id', flat=True))
-    precos = ProdutoUnidadeProducao.objects.filter(id__in=produtos.values_list('id', flat=True)).order_by('id')
+    url = 'http://127.0.0.1:8000/api/produtos/'
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        produtos = data['produtos']
+        produto_ids = [produto['id'] for produto in produtos]
+        precos = ProdutoUnidadeProducao.objects.filter(produto_id__in=produto_ids).order_by('id')
+
+        # Combine products and prices using zip
+        produtos_precos = zip(produtos, precos)
+    else:
+        # Handle the error condition appropriately
+        return None
+
     context = {
-        'produtos_precos': zip(produtos, precos),
+        'produtos_precos': produtos_precos,
     }
     
     return render(request, 'loja/shop.html', context)

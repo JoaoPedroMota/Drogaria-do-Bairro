@@ -427,17 +427,13 @@ class ProdutoUnidadeProducao(models.Model):
     unidade_producao = models.ForeignKey(UnidadeProducao, on_delete=models.CASCADE, related_name='produtos')
     stock = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False, validators=[MinValueValidator(0)])
     descricao = models.TextField(max_length=200, null=True, blank=False)    
-    
-    
     #cenas a granel
     unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES, null=False, blank=False)
     preco_a_granel = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
-    
     ###cenas à unidade
     unidade_Medida_Por_Unidade = models.CharField(max_length=2,choices=UNIDADES_MEDIDA_CHOICES_unidade, null=True, blank=True)
     quantidade_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
-    preco_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
-        
+    preco_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)  
     # outras cenas
     data_producao = models.DateField( null=True,blank=False, default=timezone.now)
     marca = models.CharField(max_length=100, null=True)
