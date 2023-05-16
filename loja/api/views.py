@@ -353,6 +353,30 @@ class ProdutoUnidadeProducaoList(APIView):
         return Response(serializar.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
+class ProdutoUnidadeProducaoDetail(APIView):
+    """_summary_
+
+    Args:
+        APIView (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    def get_object(self, identifier):
+        try:
+            return ProdutoUnidadeProducao.objects.get(pk=identifier)
+        except ProdutoUnidadeProducao.DoesNotExist:
+            raise Http404
+    def get(self, request, idFornecedor, idUnidadeProducao, idProdutoUnidadeProducao, formato=None):
+        produto = self.get_object(idProdutoUnidadeProducao)
+        serializarProduto = ProdutoUnidadeProducaoSerializer(produto, many=False)
+        return Response(serializarProduto.data, status=status.HTTP_200_OK)
+
+
+
+
+
 class ProdutoUnidadeProducaoAll(APIView):
     """Devolve todos os produtos que estão associados a uma unidade de produção. Mostra os produtos quer estejam
     disponiveis(com stock) quer não estejam 
