@@ -399,9 +399,6 @@ class Categoria(models.Model):
     #         self.slug = generate_slug(self.nome)
     #     super().save(*args, **kwargs)
 
-
-
-
 class Produto(models.Model):
     nome = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(null=True, blank=True)

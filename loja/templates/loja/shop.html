@@ -28,21 +28,21 @@
         height: 40px !important;
     }
     .styled-input {
-        background-color: rgba(124, 124, 124, 0.2) !important;
-    }
+        background-color: rgba(103, 103, 103, 0.2) !important;
+        width: 220px !important;
+        height: 40px !important;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+}
+    
     .preco{
         font-size: 30px;
     }
+    
    
 </style>
 <div class="product-section mt-150 mb-150">
-    <form method="GET" action="{% url 'ver_produtos' %}">
-    <h3>Filtre pelo o nome</h3>
-    <input type="text"  class="botao" name="q" placholder="<h3>Filtre pelo o nome</h3>">
-    
-    <input type="submit" id="login" placeholder="aaa"></input>
-    </form>
-    <br>
     <div class="row product-lists">
         {% for produto in produtos_precos %}
         <div class="col-lg-4 col-md-6 text-center {{ produto.categoria }}">
@@ -65,17 +65,17 @@
     
                 <h3>{{ produto.produto }}</h3>
                 {% if produto.tipo == "granel" %}
-                <p>
-                    <span>Por Kilograma</span>
-                    <input type="number" class="styled-input" min="0" max="10" placeholder="Por Kilograma" onchange="atualizarPreco(this, {{ produto.preco }})">
+                <p class="container">
+                    <span>Preço por Kg: {{produto.preco}}</span>
+                    <input type="number" class="styled-input" step="0.5" min="0" max="50" placeholder="1 Kg" onblur="atualizarPreco(this, {{ produto.preco }}); alterarParaMaximo(this)" onchange="atualizarPreco(this, {{ produto.preco }}); alterarParaMaximo(this)">
                     <span class="preco">{{ produto.preco }}€</span>
                 </p>
                 <br>
                 <a href="cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
                 {% else %}
-                <p>
-                    <span>Por Unidade</span>
-                    <input type="number" class="styled-input" min="0" max="10" placeholder="Por Unidade" onchange="atualizarPreco(this, {{ produto.preco }})">
+                <p class="container">
+                    <span>Preço por unidade: {{produto.preco}}€</span>
+                    <input type="number" step="1" class="styled-input" min="0" max="50" placeholder="1 uni"  onblur="atualizarNumero(this); atualizarPreco(this, {{ produto.preco }});" onchange="atualizarPreco(this, {{ produto.preco }}); atualizarNumero(this)">
                     <span class="preco">{{ produto.preco }}€</span>
                 </p>
                 <br>
