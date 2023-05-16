@@ -309,27 +309,29 @@ class ProdutoDetail(APIView):
 class ProdutoUnidadeProducaoList(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]
 
-    def get_categoria(self, identifier):
-        try:
-            return Categoria.objects.get(nome=identifier)
-        except Categoria.DoesNotExist:
-            raise Http404
-
     def get_unidade_producao(self, identifierFornecedor, identifierUP):
         try:
             fornecedor = Fornecedor.objects.get(id=identifierFornecedor)
             try:
-                return UnidadeProducao.objects.get(Q(fornecedor=fornecedor) & Q(id=identifierUP))
+                up= UnidadeProducao.objects.get(Q(fornecedor=fornecedor) & Q(id=identifierUP))
+                try:
+                    return ProdutoUnidadeProducao.objects.filter(unidade_producao=up)
+                except ProdutoUnidadeProducao.DoesNotExist:
+                    raise Http404
             except UnidadeProducao.DoesNotExist:
                 raise Http404
         except Fornecedor.DoesNotExist:
             raise Http404
         
     def get(self, request, idFornecedor, idUnidadeProducao, format=None):
-        up = self.get_unidade_producao(idFornecedor, idUnidadeProducao)
-        proUP = ProdutoUnidadeProducao.objects.filter(unidade_producao=up)
-        serializar = ProdutoUnidadeProducaoSerializer(proUP, many=True)
-        return Response(serializar.data, status=status.HTTP_200_OK)
+        proUP = up = self.get_unidade_producao(idFornecedor, idUnidadeProducao)
+        if proUP.count() == 1:
+            serializar = ProdutoUnidadeProducaoSerializer(proUP, many=False)
+            return Response(serializar.data, status=status.HTTP_200_OK)
+        elif proUP.count() > 1:
+            serializar = ProdutoUnidadeProducaoSerializer(proUP, many=True)
+            return Response(serializar.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 
     def post(self, request, idFornecedor,idUnidadeProducao, format=None):
