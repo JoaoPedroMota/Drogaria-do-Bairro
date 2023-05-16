@@ -12,6 +12,8 @@ from functools import partial
 from django.utils import timezone
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator
+from django_countries.widgets import CountrySelectWidget
+
 
 
 
@@ -291,6 +293,7 @@ class UnidadeProducao(models.Model):
     nome = models.CharField(max_length=200, null=True, blank=False)
     fornecedor = models.ForeignKey("Fornecedor", null=True, blank=False, on_delete=models.CASCADE, related_name="unidades_producao")
     pais = CountryField(null=True, blank=False, default='PT')
+    #pais = CountryField(null=True, blank=False, default='PT', widgets=CountrySelectWidget())
     cidade = models.CharField(max_length=100, null=True, blank=False)
     # freguesia = models.CharField(max_length=100, null=True, blank=False)
     morada = models.CharField(max_length=200, null=True, blank=False)

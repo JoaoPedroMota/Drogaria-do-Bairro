@@ -28,11 +28,17 @@
                                     {% for field in form %}
                                       <div class="form-group">
                                         {% if field.field.widget.input_type == 'select' %}
-                                          <select id="{{ field.id_for_label }}" name="{{ field.name }}">
-                                            {% for choice_value, choice_label in field.field.choices %}
-                                              <option value="{{ choice_value }}">{{ choice_label }}</option>
-                                            {% endfor %}
-                                          </select>
+                                            <select id="{{ field.id_for_label }}" name="{{ field.name }}">
+                                                {% for choice_value, choice_label in field.field.choices %}
+                                                {% if choice_value == 'PT' %}
+                                                    <option value="{{ choice_value }}" selected>{{ choice_label }}</option>
+                                                {% else %}
+                                                    <option value="{{ choice_value }}">{{ choice_label }}</option>
+                                                {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                          
+                                          
                                         {% else %}
                                           <input type="{{ field.field.widget.input_type }}" id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}">
                                         {% endif %}

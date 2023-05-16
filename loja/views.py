@@ -247,6 +247,42 @@ def criarUP(request, userName):
 
 #######################ZONA DE TESTE######################################################
 
+# def ver_produtos(request):
+#     q = request.GET.get('q') if request.GET.get('q') != None else ''
+#     url = 'http://127.0.0.1:8000/api/produtos/'
+#     response = requests.get(url)
+
+#     if response.status_code == 200:
+#         data = response.json()
+#     else:
+#         return None
+
+#     url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
+#     response2 = requests.get(url2)
+#     if response2.status_code == 200:
+#         data2 = response2.json()
+#     else:
+#         return None
+
+#     FilteredProducts = []
+#     for product in data:
+#         if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
+#             FilteredProducts.append(product)
+
+#     actualFilteredProducts = []
+#     for product in FilteredProducts:
+#         for shopProduct in data2:
+#             if product['id'] == shopProduct['produto']:
+#                 if shopProduct['preco_a_granel']==None:
+#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade"})
+#                 else:
+#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel"})
+
+#     context={'produtos_precos':actualFilteredProducts}
+#     return render(request, 'loja/shop.html', context)
+
+
+
 def unidadeProducao(request, userName, id):
     context = {}
     # utilizador = Utilizador.objects.get(username=userName)
@@ -308,11 +344,11 @@ def editarUnidadeProducao(request, userName, id):
     fornecedor= utilizador.fornecedor
     unidadeProducao = fornecedor.unidades_producao.get(pk=id)
     #veiculo = Veiculo.objects.get(pk=idVeiculo)
-    form = editarUnidadeProducaoFormulario(instance=UnidadeProducao)
+    form = editarUnidadeProducaoFormulario(instance=unidadeProducao)
     if request.user.is_fornecedor:
         if request.method == 'POST':
-            formulario = editarUnidadeProducaoFormulario(request.POST)
-            if formulario.is_valid():
+            form = editarUnidadeProducaoFormulario(request.POST, request.FILES,instance = unidadeProducao)
+            if form.is_valid():
                 unidadeProducao.nome = request.POST.get('nome')
                 unidadeProducao.pais = request.POST.get('pais')
                 unidadeProducao.cidade = request.POST.get('cidade')
@@ -326,9 +362,36 @@ def editarUnidadeProducao(request, userName, id):
     else:
         return HttpResponseForbidden()
     
-    context = {'form':formulario, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
+    context = {'form':form, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
     return render(request, 'loja/editarUnidadeProducao.html', context)
 
+# @login_required(login_url='loja-login')
+# def editarPerfil(request):
+#     pagina = 'editarPerfil'
+#     utilizador = request.user
+#     form = EditarPerfil(instance=utilizador)
+#     if request.method == 'POST':
+#         form = EditarPerfil(request.POST, request.FILES,instance = utilizador)
+#         username = request.POST.get('username')
+#         utilizador.first_name = request.POST.get('first_name')
+#         utilizador.last_name = request.POST.get('last_name')
+#         utilizador.nome = utilizador.first_name + ' ' + utilizador.last_name
+#         utilizador.email = request.POST.get('email')
+#         utilizador.pais = request.POST.get('pais')
+#         utilizador.cidade = request.POST.get('cidade')
+#         utilizador.telemovel = request.POST.get('telemovel')
+#         utilizador.imagem_perfil = request.POST.get('imagem_perfil')
+#         utilizador.username = username  
+#         if form.is_valid():
+#             utilizador = form.save(commit=False)
+#             utilizador.username = username.lower()
+#             utilizador.cidade = utilizador.cidade.upper()
+#             utilizador.save()
+#             messages.success(request, 'Perfil atualizado com sucesso.')
+#             link = reverse('loja-perfil', args=[request.user.username])
+#             return redirect(link)
+#     context = {'form':form, 'pagina':pagina}
+#     return render(request, 'loja/editarUtilizador.html', context)
 
 def removerUnidadeProducao(request, userName, id):
     # Busca a unidade de produção pelo id passado na URL
