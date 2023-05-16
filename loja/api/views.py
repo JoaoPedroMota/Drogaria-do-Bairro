@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from decimal import Decimal
 #### DENTRO DA APP #####
 ### serializers.py ###
-from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer
+from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer
 ### permissions.py ###
 from .permissions import IsOwnerOrReadOnly, IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly
 ####
@@ -355,14 +355,10 @@ class ProdutoUnidadeProducaoList(APIView):
 
 
 class ProdutoUnidadeProducaoDetail(APIView):
-    """_summary_
-
-    Args:
-        APIView (_type_): _description_
-
-    Returns:
-        _type_: _description_
     """
+    Um só produto relativo a uma unidade de produção de um dado fornecedor. 
+    """
+    permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]
     def get_object(self, identifier):
         try:
             return ProdutoUnidadeProducao.objects.get(pk=identifier)
@@ -400,6 +396,19 @@ class ProdutoUnidadeProducaoEmStock(APIView):
         produtos = ProdutoUnidadeProducao.objects.filter(stock__gt=Decimal(0))
         serializer = ProdutoUnidadeProducaoSerializer(produtos, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+class SingleProductDetails(APIView):
+    def get_object(self, identifier):
+        try:
+            return ProdutoUnidadeProducao.objects.get(pk=identifier)
+        except ProdutoUnidadeProducao.DoesNotExist:
+            raise Http404
+    def get(self, request, idProduto):
+        produto = self.get_object(idProduto)
+        serializador = SingleProdutoPaginaSerializer(produto, many=False)
+        return Response(serializador.data, status=status.HTTP_200_OK)
 
 
 
