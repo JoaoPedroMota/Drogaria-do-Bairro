@@ -53,11 +53,8 @@
                                 <h2>Unidade de Produção: </h2>
                                 <h3>{{unidadeProducao.nome}}</h3>
                                 <hr>
-                                <br>
-                        
-                                
 
-                        
+
                                 {% if num_veiculos > 0 %}
                                 <div id="numeroVeiculos">
                                     <p>Número de veículos desta unidade de produção: {{num_veiculos}}.</p>
@@ -112,6 +109,21 @@
                                 </form>
                                 
                             </div>
+
+
+                            <br>
+                        
+                            {% if produtos %}
+                                <h4>Produtos associados:</h4>
+                                <ul>
+                                    {% for produto in produtos %}
+                                    <li>{{ produto.nome }}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% else %}
+                                <p>Nenhum produto associado a esta unidade de produção.</p>
+                                {% endif %}
+
                             <div id="botaoRemoverUnidadeProducao" style="margin-top: 15px;">
                                 <form action="{% url 'loja-removerUnidadeProducao' userName=request.user.username id=unidadeProducao %}" method="post">
                                     {% csrf_token %}
