@@ -47,7 +47,7 @@
         {% for produto in produtos_precos %}
         <div class="col-lg-4 col-md-6 text-center {{ produto.categoria }}">
             <div class="single-product-item filtro-item">
-                <a href="single-product.html">
+                <a href="{% url 'loja-single-product' produto_id=produto.id%}">
                     {% if produto.produto == "Morango" %}
                     <img src="{% static 'website/assets/img/products/morango.jpg' %}" alt="Morango">
                     {% elif produto.produto == "Alface" %}

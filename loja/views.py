@@ -480,6 +480,23 @@ def lista_produtos_eletronicos(request):
     produtos = Produto.objects.filter(categoria=eletronicos)
     return render(request, 'lista_produtos.html', {'produtos': produtos})
 
+
+def sP(request,produto_id):
+    produto=[]
+    p=int(produto_id)
+    # url = 'http://127.0.0.1:8000/api/fornecedores/p/unidadesProducao/<int:idUnidadeProducao>/produtos/<int:idProdutoUnidadeProducao>/'
+    # response = requests.get(url)
+    # if response.status_code == 200:
+    #     data = response.json()
+    # else:
+    #     return None
+    url = 'http://127.0.0.1:8000/api/produtos/produto_id'
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+    else:
+        return None
+    
 def ver_produtos(request):
     q = request.GET.get('q') if request.GET.get('q') != None else ''
     url = 'http://127.0.0.1:8000/api/produtos/'
@@ -489,7 +506,8 @@ def ver_produtos(request):
         data = response.json()
     else:
         return None
-
+    for product in data:
+        print(product)
     url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
     response2 = requests.get(url2)
     if response2.status_code == 200:
@@ -507,9 +525,9 @@ def ver_produtos(request):
         for shopProduct in data2:
             if product['id'] == shopProduct['produto']:
                 if shopProduct['preco_a_granel']==None:
-                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade"})
+                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade",'id':shopProduct['id']})
                 else:
-                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel"})
+                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel",'id':shopProduct['id']})
 
     context={'produtos_precos':actualFilteredProducts}
     return render(request, 'loja/shop.html', context)

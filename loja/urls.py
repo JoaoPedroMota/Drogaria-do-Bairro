@@ -27,7 +27,7 @@ urlpatterns = [
     path('<str:userName>/unidadeProducao/<int:id>/remover', removerUnidadeProducao, name='loja-removerUnidadeProducao'),
     path('criar_produto/<str:userName>/<int:id>', views.criar_produto, name='loja-criarProduto'),
     path('shop/', views.ver_produtos, name='ver_produtos'),
-
+    path('shop/<int:produto_id>', views.sP, name='loja-single-product'),
 
 ]
 
