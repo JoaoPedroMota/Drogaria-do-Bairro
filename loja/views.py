@@ -484,19 +484,22 @@ def lista_produtos_eletronicos(request):
 def sP(request,produto_id):
     produto=[]
     p=int(produto_id)
-    # url = 'http://127.0.0.1:8000/api/fornecedores/p/unidadesProducao/<int:idUnidadeProducao>/produtos/<int:idProdutoUnidadeProducao>/'
-    # response = requests.get(url)
-    # if response.status_code == 200:
-    #     data = response.json()
-    # else:
-    #     return None
-    url = 'http://127.0.0.1:8000/api/produtos/produto_id'
+    url = 'http://http://127.0.0.1:8000/api/produtos_loja/produto_id'
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
     else:
         return None
     
+    for product in data:
+        produto.append({'nome':product['produto']["nome"]})
+
+    context={'produtos_precos':produto}
+    return render(request, 'loja/single-product.html', context)
+    
+
+
+
 def ver_produtos(request):
     q = request.GET.get('q') if request.GET.get('q') != None else ''
     url = 'http://127.0.0.1:8000/api/produtos/'
