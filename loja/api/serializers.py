@@ -249,3 +249,31 @@ class ProdutosCarrinhoSerializer(ModelSerializer):
     class Meta:
         model= ProdutosCarrinho
         fields= ["carrinho", "produto", "quantidade"]
+        
+        
+
+class FornecedorNomeUtilizadorSerializer(ModelSerializer):
+    utilizador = CharField(source="utilizador.nome", read_only=True)
+    class Meta:
+        model = Fornecedor
+        fields = ['utilizador']
+
+
+
+class UnidadeProducaoSingleProdutoSerializer(ModelSerializer):
+    fornecedor = FornecedorNomeUtilizadorSerializer(read_only=True)
+    class Meta:
+        model = UnidadeProducao
+        fields = ['id','fornecedor', 'nome', 'morada', 'cidade', 'pais']
+        read_only_fields = ['fornecedor']
+
+
+class SingleProdutoPaginaSerializer(ModelSerializer):      
+    unidade_producao = UnidadeProducaoSingleProdutoSerializer(read_only=True)
+    class Meta:
+        model = ProdutoUnidadeProducao
+        fields = ["id","produto", "unidade_producao", "stock","descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca"]
+        read_only_fields = ['id']
+
+
+

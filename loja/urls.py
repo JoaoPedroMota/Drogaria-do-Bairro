@@ -23,10 +23,11 @@ urlpatterns = [
     path('perfil/<str:userName>/unidadeProducao/<str:id>/criarVeiculo/', views.criarVeiculo, name="loja-criarVeiculo"),
     path('removerVeiculo/<str:userName>/<int:id>/', removerVeiculo, name='loja-removerVeiculo'),
     path('perfil/<str:userName>/unidadeProducao/<str:id>/editarVeiculo/<str:idVeiculo>', views.editarVeiculo, name='loja-editarVeiculo'),
-    path('perfil/<str:userName>/unidadeProducao/<str:id>/editarUnidadeProducao', views.editarUnidadeProducao, name='loja-editarUnidadeProducao'),
+    path('perfil/<str:userName>/unidadeProducao/<str:id>/editarUnidadeProducao/', views.editarUnidadeProducao, name='loja-editarUnidadeProducao'),
     path('<str:userName>/unidadeProducao/<int:id>/remover', removerUnidadeProducao, name='loja-removerUnidadeProducao'),
     path('criar_produto/<str:userName>/<int:id>', views.criar_produto, name='loja-criarProduto'),
     path('shop/', views.ver_produtos, name='ver_produtos'),
+
 
 
 ]
