@@ -249,7 +249,14 @@ class Veiculo(models.Model):
         verbose_name = "Veículo"
         ordering= ['id','unidadeProducao','nome', 'tipo_veiculo','estado_veiculo','-created','-updated']
 
-    
+    def __repr__(self):
+        return f"Veiculo(nome='{self.nome}', unidadeProducao='{self.unidadeProducao}', tipo_veiculo='{self.tipo_veiculo}', estado_veiculo='{self.estado_veiculo}')"
+
+    class Meta:
+        verbose_name = 'Veiculo'
+        verbose_name_plural = 'Veiculos'
+        ordering = ['nome']
+
     
     
 class UnidadeProducao(models.Model):
@@ -313,6 +320,11 @@ class UnidadeProducao(models.Model):
         verbose_name = "Unidade de Producao"
         ordering=['id', 'nome','fornecedor']
 
+    class Meta:
+        verbose_name = 'UnidadeProducao'
+        verbose_name_plural = 'UnidadesProducao'
+        ordering = ['nome']
+
 
 class Fornecedor(models.Model):
     utilizador = models.OneToOneField(Utilizador, on_delete=models.CASCADE, null=False, related_name='fornecedor')
@@ -343,7 +355,6 @@ class Fornecedor(models.Model):
         verbose_name = "Fornecedor"
         ordering=['id', 'utilizador']
         
-
 
 
 

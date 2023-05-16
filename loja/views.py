@@ -4,33 +4,24 @@ import requests
 from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo, Carrinho,Categoria, Produto
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm 
+from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
-from django.contrib.auth.decorators import login_required
+import requests
+from django.db.models import QuerySet
 from django.contrib.auth.hashers import check_password
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.contrib.auth import logout
 from loja.api.serializers import *
 
-
-
-@login_required(login_url='loja-login')
-def apagarConta(request,pk):
-    utilizador = Utilizador.objects.get(pk=pk)
     
-    if request.user != utilizador:
-        return HttpResponse('Você não deveria estar aqui!')
-    if request.method == 'POST':
-        logout(request)
-        utilizador.delete()
-        return redirect('loja-home')
-    context={'objeto':utilizador, 'pagina':'apagar-conta'}
-    return render(request,'loja/delete.html', context)
-        
-from django.contrib.auth import authenticate
+#     if request.user != utilizador:
+#         return HttpResponse('Você não deveria estar aqui!')
+#     if request.method == 'POST':
+#         logout(request)
+#         utilizador.delete()
+#         return redirect('loja-home')
+#     context={'objeto':utilizador, 'pagina':'apagar-conta'}
+#     return render(request,'loja/delete.html', context)
 
 # Create your views here.
 def loja(request):
@@ -240,21 +231,103 @@ def criarUP(request, userName):
 
 
 
+# def unidadeProducao(request, userName, id):
+#     context = {}
+#     utilizador = Utilizador.objects.get(username=userName)
+#     fornecedor = utilizador.fornecedor
+#     #fornecedor.unidades_producao.all()
+#     unidadeProducao = fornecedor.unidades_producao.get(pk=id)
+#     veiculos = unidadeProducao.veiculo_set.all()
+#     print("\n\n\n\n",repr(veiculos))
+#     num_veiculos = veiculos.count()
+    
+    
+#     context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':unidadeProducao}
+#     return render(request, 'loja/unidadeProducao.html', context)
+
+#######################ZONA DE TESTE######################################################
+
 def unidadeProducao(request, userName, id):
     context = {}
-    utilizador = Utilizador.objects.get(username=userName)
-    fornecedor = utilizador.fornecedor
-    #fornecedor.unidades_producao.all()
-    unidadeProducao = fornecedor.unidades_producao.get(pk=id)
-    veiculos = unidadeProducao.veiculos.all()
+    # utilizador = Utilizador.objects.get(username=userName)
+    # fornecedor = utilizador.fornecedor
+    # #fornecedor.unidades_producao.all()
+    # unidadeProducao = fornecedor.unidades_producao.get(pk=id)
+    # veiculos = unidadeProducao.veiculo_set.all()
     
-    num_veiculos = veiculos.count()
+    # num_veiculos = veiculos.count()
+    #url = 'http://127.0.0.1:8000/api/fornecedores/'+str(userName)
+    #url = 'http://127.0.0.1:8000/api/utilizadores/'
     
+    #response = requests.get(url)
     
-    context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':unidadeProducao}
+    #if response.status_code == 200:
+    #    data = response.json()
+    #    print("FJAOIWJFOIJAWIOFJIOAWJF",id)
+        # Process the data as needed
+        #return data
+    #else:
+        #print('Error:', response.status_code)
+        #print('Response:', response.content)
+    #    return None
+    #("informaçao que fui buscar: ",data)              
+    #print(data[0]['id'])
+    #idFornecedor = data['id']
+
+    url2 = 'http://127.0.0.1:8000/api/fornecedores/'+str(userName)+'/unidadesProducao/'+str(id)+'/veiculos/'
+    #path('fornecedores/<str:idFornecedor>/unidadesProducao/<str:idUnidadeProducao>/veiculos/', views.getVeiculos),
+    response2 = requests.get(url2)
+    if response2.status_code == 200:
+        data2 = response2.json()
+        # Process the data as needed
+        #return data
+    else:
+        #print('Error:', response2.status_code)
+        #print('Response:', response2.content)
+        return None
+
+    print("informaçao que fui buscar 2: ",data2)
+    num_veiculos = len(data2)
+    print("num_veiculos",num_veiculos)
+    veiculos = data2
+    print("veiculos",veiculos)
+
+    # queryset = QuerySet(model=veiculos, query=None, using='default')
+    # queryset._result_cache = veiculos
+    # print("\nprint the QUERYSET ",queryset)
+
+    context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id}
     return render(request, 'loja/unidadeProducao.html', context)
 
+#######################ZONA DE TESTE######################################################
 
+@login_required(login_url='loja-login')
+def editarUnidadeProducao(request, userName, id):
+    pagina = 'editarUnidadeProducao'
+    utilizador = Utilizador.objects.get(username=userName)
+    fornecedor= utilizador.fornecedor
+    unidadeProducao = fornecedor.unidades_producao.get(pk=id)
+    #veiculo = Veiculo.objects.get(pk=idVeiculo)
+    form = editarUnidadeProducaoFormulario(instance=UnidadeProducao)
+    if request.user.is_fornecedor:
+        if request.method == 'POST':
+            formulario = editarUnidadeProducaoFormulario(request.POST)
+            if formulario.is_valid():
+                unidadeProducao.nome = request.POST.get('nome')
+                unidadeProducao.pais = request.POST.get('pais')
+                unidadeProducao.cidade = request.POST.get('cidade')
+                unidadeProducao.morada = request.POST.get('morada')
+                unidadeProducao.tipo_unidade = request.POST.get('tipo_unidade')
+                unidadeProducao.save()
+                link = reverse('loja-perfil', args=[userName])
+                return redirect(link)
+            else:
+                messages.error(request,'Ocorreu um erro durante o processo de edição de uma unidade de produção')
+    else:
+        return HttpResponseForbidden()
+    
+    context = {'form':formulario, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
+    return render(request, 'loja/editarUnidadeProducao.html', context)
 
 
 def removerUnidadeProducao(request, userName, id):
@@ -296,6 +369,37 @@ def criarVeiculo(request, userName, id):
     
     context = {'form':formulario, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
     return render(request, 'loja/criarVeiculo.html', context)
+
+@login_required(login_url='loja-login')
+def editarVeiculo(request, userName, id, idVeiculo):
+    pagina = 'editarVeiculo'
+    utilizador = Utilizador.objects.get(username=userName)
+    fornecedor= utilizador.fornecedor
+    unidadeProducao = fornecedor.unidades_producao.get(pk=id)
+    veiculo = Veiculo.objects.get(pk=idVeiculo)
+    form = editarVeiculoFormulario(instance=veiculo)
+    if request.user.is_fornecedor:
+        if request.method == 'POST':
+            formulario = editarVeiculoFormulario(request.POST, instance = veiculo)
+            if formulario.is_valid():
+                veiculo.nome = request.POST.get('nome')
+                veiculo.estado_veiculo = request.POST.get('estado_veiculo')
+                veiculo.save()
+                # Veiculo.objects.save(
+                #     unidadeProducao = unidadeProducao,
+                #     tipo_veiculo = veiculo.tipo_veiculo,
+                #     nome = request.POST.get('nome'),
+                #     estado_veiculo = request.POST.get('estado_veiculo')
+                # )
+                link = reverse('loja-unidadeProducao', args=[userName, id])
+                return redirect(link)
+            else:
+                messages.error(request,'Ocorreu um erro durante o processo de edição de um veiculo')
+    else:
+        return HttpResponseForbidden()
+    
+    context = {'form':formulario, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
+    return render(request, 'loja/editarVeiculo.html', context)
 
 def removerVeiculo(request, userName, id):
     veiculo = Veiculo.objects.get(id=id)
@@ -369,32 +473,43 @@ def criar_produto(request, userName, id):
     return render(request, 'loja/criar_produto.html', {'form': form})
 
 
-def ver_produtos(request):
-    url = 'http://127.0.0.1:8000/api/produtos/'
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        data = response.json()
-        produtos = data['produtos']
-        produto_ids = [produto['id'] for produto in produtos]
-        precos = ProdutoUnidadeProducao.objects.filter(produto_id__in=produto_ids).order_by('id')
-
-        # Combine products and prices using zip
-        produtos_precos = zip(produtos, precos)
-    else:
-        # Handle the error condition appropriately
-        return None
-
-    context = {
-        'produtos_precos': produtos_precos,
-    }
-    
-    return render(request, 'loja/shop.html', context)
-
-
 
 
 def lista_produtos_eletronicos(request):
     eletronicos = Categoria.objects.get(nome='Eletrónicos')
     produtos = Produto.objects.filter(categoria=eletronicos)
     return render(request, 'lista_produtos.html', {'produtos': produtos})
+
+def ver_produtos(request):
+    q = request.GET.get('q') if request.GET.get('q') != None else ''
+    url = 'http://127.0.0.1:8000/api/produtos/'
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+    else:
+        return None
+
+    url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
+    response2 = requests.get(url2)
+    if response2.status_code == 200:
+        data2 = response2.json()
+    else:
+        return None
+
+    FilteredProducts = []
+    for product in data:
+        if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
+            FilteredProducts.append(product)
+
+    actualFilteredProducts = []
+    for product in FilteredProducts:
+        for shopProduct in data2:
+            if product['id'] == shopProduct['produto']:
+                if shopProduct['preco_a_granel']==None:
+                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade"})
+                else:
+                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel"})
+
+    context={'produtos_precos':actualFilteredProducts}
+    return render(request, 'loja/shop.html', context)

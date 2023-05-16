@@ -55,9 +55,7 @@
                                 <hr>
                                 <br>
                         
-
-                                <a href="{% url 'loja-criarProduto' userName=request.user.username id=unidadeProducao.id %}" class="btn btn-primary">Criar Produto</a> 
-
+                                
 
                         
                                 {% if num_veiculos > 0 %}
@@ -72,14 +70,21 @@
                                             <th>Nome</th>
                                             <th>Tipo Veículo</th>
                                             <th>Estado</th>
+                                            <th>Editar</th>
                                             <th>Remover</th>
                                         </tr>
                                         {% for veiculo in veiculos %}
                                         <tr>
                                             <td>{{ veiculo.id }}</td>
                                             <td>{{ veiculo.nome }}</td>
-                                            <td>{{ veiculo.get_tipo_veiculo_display }}</td>
-                                            <td>{{ veiculo.get_estado_veiculo_display }}</td>
+                                            <td>{{ veiculo.tipo_veiculo }}</td>
+                                            <td>{{ veiculo.estado_veiculo }}</td>
+                                            <td>
+                                                <form action="{% url 'loja-editarVeiculo' userName=request.user.username id=unidadeProducao idVeiculo=veiculo.id %}" method="post">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-info btn-sm">Editar</button>
+                                                </form>
+                                            </td>
                                             <td>
                                                 <form action="{% url 'loja-removerVeiculo' userName=request.user.username id=veiculo.id %}" method="post">
                                                     {% csrf_token %}
@@ -101,14 +106,14 @@
 
                             </div>
                             <div id="botaoAdicionarVeiculos">
-                                <form action="{% url 'loja-criarVeiculo' userName=request.user.username id=unidadeProducao.id %}" method="" class="form-wrapper">
+                                <form action="{% url 'loja-criarVeiculo' userName=request.user.username id=unidadeProducao %}" method="" class="form-wrapper">
                                     {% csrf_token %}
                                     <input type="submit" id="login" class ="c1" value="ADICIONAR VEÍCULO">
                                 </form>
                                 
                             </div>
                             <div id="botaoRemoverUnidadeProducao" style="margin-top: 15px;">
-                                <form action="{% url 'loja-removerUnidadeProducao' userName=request.user.username id=unidadeProducao.id %}" method="post">
+                                <form action="{% url 'loja-removerUnidadeProducao' userName=request.user.username id=unidadeProducao %}" method="post">
                                     {% csrf_token %}
                                     <input type="submit" id="login" class ="c2" onclick="return confirm('Tem certeza que deseja remover a unidade de produção {{ unidadeProducao.nome }}?')" value="Remover Unidade Producao">
                                 </form>

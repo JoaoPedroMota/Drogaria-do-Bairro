@@ -9,12 +9,10 @@ class UtilizadorFormulario(UserCreationForm):
         fields = ['first_name','last_name', 'username', 'email', 'password1', 'password2', 'pais','cidade','telemovel','tipo_utilizador','imagem_perfil']
   
 class FornecedorFormulario(ModelForm):
-
     pass
     # class Meta:
     #     model = Fornecedor
     #     fields = ['descricao']
-                
         
         
         
@@ -32,6 +30,16 @@ class criarVeiculoFormulario(ModelForm):
     class Meta:
         model=Veiculo
         fields = ['nome', 'tipo_veiculo']
+
+class editarVeiculoFormulario(ModelForm):
+    class Meta:
+        model=Veiculo
+        fields = ['nome', 'estado_veiculo']
+
+class editarUnidadeProducaoFormulario(ModelForm):
+    class Meta:
+        model=UnidadeProducao
+        fields = ['nome', 'pais','cidade','morada', 'tipo_unidade']
 
 class ConfirmacaoForm(forms.Form):
     nome_veiculo = forms.CharField()

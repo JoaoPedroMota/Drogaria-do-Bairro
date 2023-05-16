@@ -18,44 +18,76 @@
 </div>
 <!-- end breadcrumb section -->
 <!-- products -->
+<style>
+    .botao{
+        width: 420px !important;
+        height: 40px !important;
+    }
+    #login{
+        width: 320px !important;
+        height: 40px !important;
+    }
+    .styled-input {
+        background-color: rgba(124, 124, 124, 0.2) !important;
+    }
+    .preco{
+        font-size: 30px;
+    }
+   
+</style>
 <div class="product-section mt-150 mb-150">
-    <input type="text" id="searchBox-1" placeholder="Pesquisa por o que quiseres">
+    <form method="GET" action="{% url 'ver_produtos' %}">
+    <h3>Filtre pelo o nome</h3>
+    <input type="text"  class="botao" name="q" placholder="<h3>Filtre pelo o nome</h3>">
+    
+    <input type="submit" id="login" placeholder="aaa"></input>
+    </form>
+    <br>
     <div class="row product-lists">
-        {% for produto, preco in produtos_precos %}
-            <div class="col-lg-4 col-md-6 text-center {{ produto.categoria }}">
-                <div class="single-product-item filtro-item">
-                    <a href="single-product.html">
-                        {% if produto.nome == "Morango" %}
-                            <img src="{% static 'website/assets/img/products/morango.jpg' %}" alt="Morango">
-                        {% elif produto.nome == "Alface" %}
-                            <img src="{% static 'website/assets/img/products/alface.jpg' %}" alt="Alface">
-                        {% elif produto.nome == "Tomate Chucha" %}
-                            <img src="{% static 'website/assets/img/products/tomate.jpg' %}" alt="Tomate Chucha">
-                        {% else %}
-                            <img src="{% static 'website/assets/img/products/default.jpg' %}" alt="Default">
-                        {% endif %}
-                    </a>
-                    <h3>{{ produto.nome }}</h3>
-                    <p class="product-price"><span>Por Kilograma</span> {{ preco.preco_a_granel }}</p>
-                    <a href="cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
-                </div>
+        {% for produto in produtos_precos %}
+        <div class="col-lg-4 col-md-6 text-center {{ produto.categoria }}">
+            <div class="single-product-item filtro-item">
+                <a href="single-product.html">
+                    {% if produto.produto == "Morango" %}
+                    <img src="{% static 'website/assets/img/products/morango.jpg' %}" alt="Morango">
+                    {% elif produto.produto == "Alface" %}
+                    <img src="{% static 'website/assets/img/products/alface.jpg' %}" alt="Alface">
+                    {% elif produto.produto == "Tomate Chucha" %}
+                    <img src="{% static 'website/assets/img/products/tomate.jpg' %}" alt="Tomate Chucha">
+                    {% elif produto.produto == "Gelado Chocolate" %}
+                    <img src="{% static 'website/assets/img/products/gelado_choco.png' %}" alt="Gelado Chocolate">
+                    {% elif produto.produto == "Gelado Laranja" %}
+                    <img src="{% static 'website/assets/img/products/gelado_laranja.jpg' %}" alt="Gelado Chocolate">
+                    {% else %}
+                    <img src="{% static 'website/assets/img/products/default.jpg' %}" alt="Default">
+                    {% endif %}
+                </a>
+    
+                <h3>{{ produto.produto }}</h3>
+                {% if produto.tipo == "granel" %}
+                <p>
+                    <span>Por Kilograma</span>
+                    <input type="number" class="styled-input" min="0" max="10" placeholder="Por Kilograma" onchange="atualizarPreco(this, {{ produto.preco }})">
+                    <span class="preco">{{ produto.preco }}€</span>
+                </p>
+                <br>
+                <a href="cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
+                {% else %}
+                <p>
+                    <span>Por Unidade</span>
+                    <input type="number" class="styled-input" min="0" max="10" placeholder="Por Unidade" onchange="atualizarPreco(this, {{ produto.preco }})">
+                    <span class="preco">{{ produto.preco }}€</span>
+                </p>
+                <br>
+                <a href="cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
+                {% endif %}
             </div>
+        </div>
         {% endfor %}
     </div>
 </div>
    
     
-    
-    
-    
-    
-    
-</div>
-
-
-
-
-
 
 
 
