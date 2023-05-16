@@ -13,7 +13,26 @@ from django.db.models import QuerySet
 from django.contrib.auth.hashers import check_password
 from loja.api.serializers import *
 
-    
+import json
+from authlib.integrations.django_client import OAuth
+from django.conf import settings
+from django.shortcuts import redirect, render, redirect
+from django.urls import reverse
+from urllib.parse import quote_plus, urlencode
+
+oauth = OAuth()
+
+oauth.register(
+    "auth0",
+    client_id=settings.AUTH0_CLIENT_ID,
+    client_secret=settings.AUTH0_CLIENT_SECRET,
+    client_kwargs={
+        "scope": "openid profile email",
+    },
+    server_metadata_url = f"http://{settings.AUTH0_DOMAIN}/.well-known/openid-configuration",
+)
+
+
 #     if request.user != utilizador:
 #         return HttpResponse('Você não deveria estar aqui!')
 #     if request.method == 'POST':
@@ -25,7 +44,10 @@ from loja.api.serializers import *
 
 # Create your views here.
 def loja(request):
-    context = {}
+    context = {
+        "session": request.session.get("user"),
+        "pretty": json.dumps(request.session.get("user"), indent=4),
+    }
     return render(request, 'loja/loja.html', context)
 def contacts(request):
     context = {}
@@ -43,9 +65,6 @@ def checkout(request):
 def news(request):
     context = {}
     return render(request, 'loja/news.html', context)
-
-
-
 
 def confirm_password_view(request):
     if request.method == 'POST':
@@ -67,26 +86,29 @@ def confirm_password_view(request):
     context = {'form': form}
     return render(request, 'password_confirm.html', context)
 
-def loginUtilizador(request):
-    pagina='login'
-    if request.user.is_authenticated:
-        return redirect('loja-home')
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        try:
-            utilizador = Utilizador.objects.get(email=email)
-        except:
-            messages.error(request,"Este email não corresponde a nenhum utilizador registado")
-        utilizador = authenticate(request, email=email, password=password)
-        if utilizador is not None:
-            
-            login(request, utilizador)
-            return redirect('loja-home')
-        else:
-            messages.error(request,"Utilizador ou password errados")  
-    context = {'pagina':pagina}
-    return render(request, 'loja/login_register.html', context)
+def login(request):
+    return oauth.auth0.authorize_redirect(
+        request, request.build_absolute_uri(reverse("loja-callback"))
+    )
+
+def callback(request):
+    token = oauth.auth0.authorize_access_token(request)
+    request.session["user"] = token
+    return redirect(request.build_absolute_uri(reverse("news")))
+
+def logout(request):
+    request.session.clear()
+
+    return redirect(
+        f"https://{settings.AUTH0_DOMAIN}/v2/logout?"
+        + urlencode(
+            {
+                "returnTo": request.build_absolute_uri(reverse("loja-home")),
+                "client_id": settings.AUTH0_CLIENT_ID,
+            },
+            quote_via=quote_plus,
+        ),
+    )
 
 def registerUtilizador(request):
     pagina = 'registo'
@@ -131,12 +153,6 @@ def formFornecedor(request):
             messages.error(request,'Ocorreu um erro durante o processo de registo')
     context = {'form':form}
     return render(request,'loja/register_fornecedor.html' ,context)
-
-def logutUtilizador(request):
-    logout(request)
-    return redirect('loja-home')
-
-
 
 @login_required(login_url='loja-login')
 def editarPerfil(request):

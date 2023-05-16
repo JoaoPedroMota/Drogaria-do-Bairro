@@ -7,13 +7,13 @@ urlpatterns = [
     path('', views.loja, name='loja-home'),
     path('about/', views.about, name='about'),
     path('contacts/', views.contacts, name='contacts'),
-  
     path('news/', views.news, name='news'),
     path('carrinho/', views.carrinho, name='loja-carrinho'),
     path('checkout/', views.checkout, name='loja-checkout'),
-    path('login/', views.loginUtilizador, name='loja-login'),
+    path('login/', views.login, name='loja-login'),
+    path('logout', views.logout, name='loja-logout'),
+    path('callback', views.callback, name='loja-callback'),
     path('register/', views.registerUtilizador, name='loja-register-Utilizador'),
-    path('logout', views.logutUtilizador, name='loja-logout'),
     #path('form-fornecedor/', views.formFornecedor, name='loja-form-forcedor'),
     path('editarPerfil/', views.editarPerfil, name='loja-editarPerfil'),
     path('apagar-conta/<str:pk>/', views.apagarConta, name='loja-delete-conta'),
@@ -27,8 +27,6 @@ urlpatterns = [
     path('<str:userName>/unidadeProducao/<int:id>/remover', removerUnidadeProducao, name='loja-removerUnidadeProducao'),
     path('criar_produto/<str:userName>/<int:id>', views.criar_produto, name='loja-criarProduto'),
     path('shop/', views.ver_produtos, name='ver_produtos'),
-
-
 ]
 
 
