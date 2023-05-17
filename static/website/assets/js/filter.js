@@ -40,3 +40,39 @@ function atualizarNumero(input) {
   // Define o valor do campo como o número arredondado
   input.value = isNaN(numero) ? '' : numero;
 }
+
+
+// Seleciona o elemento h4
+const descricao = document.querySelector('h3');
+
+// Adiciona um ouvinte de eventos ao elemento h4
+descricao.addEventListener('click', function() {
+    // Seleciona a div com mais informações
+    const maisInfo = document.querySelector('.mais-informacao');
+    
+    // Se a div estiver oculta, mostra; senão, oculta
+    if (maisInfo.style.display === 'none') {
+        maisInfo.style.display = 'block';
+    } else {
+        maisInfo.style.display = 'none';
+    }
+});
+
+// Seleciona o elemento h4
+const descricaoToggle = document.querySelector('.descricao-toggle');
+
+// Adiciona um ouvinte de eventos ao elemento h4
+descricaoToggle.addEventListener('click', function() {
+    // Seleciona a div com mais informações
+    const maisInfo = document.querySelector('.mais-informacao');
+
+    // Alterna a classe expandido no elemento h4
+    descricaoToggle.classList.toggle('expandido');
+
+    // Se a div estiver oculta, mostra; senão, oculta
+    if (maisInfo.style.display === 'none') {
+        maisInfo.style.display = 'block';
+    } else {
+        maisInfo.style.display = 'none';
+    }
+});

@@ -547,20 +547,30 @@ def lista_produtos_eletronicos(request):
 def sP(request,produto_id):
     produto=[]
     p=int(produto_id)
-    url = 'http://http://127.0.0.1:8000/api/produtos_loja/produto_id'
+    url = f'http://127.0.0.1:8000/api/produtos_loja/{p}/'
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
     else:
         return None
     
-    for product in data:
-        produto.append({'nome':product['produto']["nome"]})
+    if data['quantidade_por_unidade']==None:
+        context={'produto_info':data['produto']['nome'],'categoria':data['produto']['categoria']['nome'],'granel':data['preco_a_granel'],'fornecedor':data['unidade_producao']['fornecedor']['utilizador'],'up':data['unidade_producao']['nome'],
+                 'morada':data['unidade_producao']['morada'],
+                 'cidade':data['unidade_producao']['cidade'],'pais':data['unidade_producao']['pais'],'descricao':data['descricao'],'unidadeM':'Kilograma','stock':data['stock']
+                 ,'data_producao':data['data_producao'],'marca':data['marca'],'unidade':data['preco_por_unidade']}
+    if data['preco_a_granel']==None:
+        context={'produto_info':data['produto']['nome'],'categoria':data['produto']['categoria']['nome'],'granel':data['preco_a_granel'],'fornecedor':data['unidade_producao']['fornecedor']['utilizador'],'up':data['unidade_producao']['nome'],
+                 'morada':data['unidade_producao']['morada'],
+                 'cidade':data['unidade_producao']['cidade'],'pais':data['unidade_producao']['pais'],'descricao':data['descricao'],'unidadeM':'Unidade','stock':data['stock'],'data_producao':data['data_producao']
+                 ,'marca':data['marca'],'unidade':data['preco_por_unidade']}
 
-    context={'produtos_precos':produto}
     return render(request, 'loja/single-product.html', context)
     
-
+#  if shopProduct['preco_a_granel']==None:
+#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade",'id':shopProduct['id']})
+#                 else:
+#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel",'id':shopProduct['id']})
 
 
 def ver_produtos(request):
@@ -591,9 +601,9 @@ def ver_produtos(request):
         for shopProduct in data2:
             if product['id'] == shopProduct['produto']:
                 if shopProduct['preco_a_granel']==None:
-                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade",'id':shopProduct['id']})
+                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade",'id':shopProduct['id'],'categoria':product['categoria']['nome']})
                 else:
-                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel",'id':shopProduct['id']})
+                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel",'id':shopProduct['id'],'categoria':product['categoria']['nome']})
 
     context={'produtos_precos':actualFilteredProducts}
     return render(request, 'loja/shop.html', context)

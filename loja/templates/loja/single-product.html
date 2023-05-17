@@ -2,7 +2,21 @@
 {% load static %}
 {% block content%}
 
+<style>
+    .product-section h1 {
+        color: black;
+        }
+        .mais-informacao {
+        display: none;
+    }
 
+    .descricao-toggle.expandido i {
+        transform: rotate(-180deg);
+    }
+   
+
+    
+</style>
 <!-- breadcrumb-section -->
 <div class="breadcrumb-section breadcrumb-bg">
     <div class="container">
@@ -11,6 +25,10 @@
                 <div class="breadcrumb-text">
                     <p>Frescos e Organicos</p>
                     <h1>Loja</h1>
+                    
+                    
+
+                   
                 </div>
             </div>
         </div>
@@ -18,47 +36,83 @@
 </div>
 <!-- end breadcrumb section -->
 <!-- products -->
-
+<!-- <h3>{{produto_info}}</h3>
+<h3>{{categoria}}</h3> -->
 
 <div class="product-section mt-150 mb-150">
-   
+    <div class="row product-lists">
+        <div class="col-lg-4 col-md-6 text-center mx-auto">
+            <div class="single-product-item">
+                <a>
+                    {% if produto_info == "Morango" %}
+                    <img src="{% static 'website/assets/img/products/morango.jpg' %}" alt="Morango">
+                    {% elif produto_info == "Alface" %}
+                    <img src="{% static 'website/assets/img/products/alface.jpg' %}" alt="Alface">
+                    {% elif produto_info == "Tomate Chucha" %}
+                    <img src="{% static 'website/assets/img/products/tomate.jpg' %}" alt="Tomate Chucha">
+                    {% elif produto_info == "Gelado Chocolate" %}
+                    <img src="{% static 'website/assets/img/products/gelado_choco.png' %}" alt="Gelado Chocolate">
+                    {% elif produto_info == "Gelado Laranja" %}
+                    <img src="{% static 'website/assets/img/products/gelado_laranja.jpg' %}" alt="Gelado Chocolate">
+                    {% else %}
+                    <img src="{% static 'website/assets/img/products/default.jpg' %}" alt="Default">
+                    {% endif %}
+                </a>
     
+                <h3>{{ produto_info }}</h3>
+                {% if unidade is null %}
+                <p class="container">
+                    <span>Preço por {{ unidadeM }}: {{ granel }}€</span>
+                    <input type="number" class="styled-input" step="0.5" min="0" max="50" placeholder="1 Kg" onblur="atualizarPreco(this, {{ granel }}); alterarParaMaximo(this)" onchange="atualizarPreco(this, {{ produto.preco }}); alterarParaMaximo(this)">
+                    <span class="preco">{{ granel }}€</span>
+                </p>
+                {% else %}
+                <p class="container">
+                    <span>Preço por {{ unidadeM }}: {{ unidade }}€</span>
+                    <input type="number" class="styled-input" step="0.5" min="0" max="50" placeholder="1 Kg" onblur="atualizarPreco(this, {{ unidade }}); alterarParaMaximo(this)" onchange="atualizarPreco(this, {{ produto.preco }}); alterarParaMaximo(this)">
+                    <span class="preco">{{ unidade }}€</span>
+                </p>
+
+                {% endif %} 
+                   
+                <br>
+                <a href="cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
 </div>
-   
-    
-
-
 
 <!-- end products -->
 
 <!-- logo carousel -->
-<div class="logo-carousel-section">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="logo-carousel-inner">
-                    <div class="single-logo-item">
-                        <img src="{%static 'website/assets/img/company-logos/1.png' %}" alt="">
-                    </div>
-                    <div class="single-logo-item">
-                        <img src="{%static 'website/assets/img/company-logos/2.png' %}" alt="">
-                    </div>
-                    <div class="single-logo-item">
-                        <img src="{%static 'website/assets/img/company-logos/3.png' %}" alt="">
-                    </div>
-                    <div class="single-logo-item">
-                        <img src="{%static 'website/assets/img/company-logos/4.png' %}" alt="">
-                    </div>
-                    <div class="single-logo-item">
-                        <img src="{%static 'website/assets/img/company-logos/5.png' %}" alt="">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
 </div>
-
-
-
-	
+<div>
+    <div class ="ola">
+    
+        <h1 class="descricao-toggle">
+            Descrição sobre o artigo
+            <i class="fas fa-chevron-down"></i>
+        </h1>
+        <div class="mais-informacao">
+            <br>
+            <p>Categoria: {{ categoria }}</p>
+            
+            <hr>
+            <p>Fornecedor: {{ fornecedor }}</p>
+            <hr>
+            <p>Unidade de Produção: {{ up }}</p>
+            <hr>
+            <p>Morada: {{ morada }} {{ pais }}{{ cidade }}</p>
+           
+            <hr>
+            <p>{{ descricao }}</p>
+            <hr>
+            <p>Data de Produção: {{ data_producao }}</p>
+            <hr>
+            <p>Marca: {{ marca }}</p>
+        </div>
+        
+        
+        </div>
+</div>
 {% endblock content %}
+
+
