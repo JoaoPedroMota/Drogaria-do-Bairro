@@ -328,10 +328,6 @@ def unidadeProducao(request, userName, id):
     veiculos = data2
     print("veiculos",veiculos)
 
-    # queryset = QuerySet(model=veiculos, query=None, using='default')
-    # queryset._result_cache = veiculos
-    # print("\nprint the QUERYSET ",queryset)
-
     context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id}
     return render(request, 'loja/unidadeProducao.html', context)
 
