@@ -6,9 +6,6 @@ urlpatterns = [
     path('api/', include('loja.api.urls')),
     path('', views.loja, name='loja-home'),
     path('about/', views.about, name='about'),
-    path('contacts/', views.contacts, name='contacts'),
-  
-    path('news/', views.news, name='news'),
     path('carrinho/', views.carrinho, name='loja-carrinho'),
     path('checkout/', views.checkout, name='loja-checkout'),
     path('login/', views.loginUtilizador, name='loja-login'),
@@ -26,8 +23,9 @@ urlpatterns = [
     path('perfil/<str:userName>/unidadeProducao/<str:id>/editarUnidadeProducao/', views.editarUnidadeProducao, name='loja-editarUnidadeProducao'),
     path('<str:userName>/unidadeProducao/<int:id>/remover', removerUnidadeProducao, name='loja-removerUnidadeProducao'),
     path('criar_produto/<str:userName>/<int:id>', views.criar_produto, name='loja-criarProduto'),
-    path('shop/', views.ver_produtos, name='ver_produtos'),
-    path('shop/<int:produto_id>', views.sP, name='loja-single-product'),
+    path('shop/', views.ver_produtos, name='loja-ver_produtos'),
+    path('shop/<int:produto_id>/', views.sP, name='loja-single-product'),
+    path('adicionar_carrinho/<int:produto_id>/', views.adicionar_ao_carrinho, name='adicionar-ao-carrinho')
 
 
 ]

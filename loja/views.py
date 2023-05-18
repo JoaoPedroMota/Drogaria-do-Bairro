@@ -27,9 +27,6 @@ from loja.api.serializers import *
 def loja(request):
     context = {}
     return render(request, 'loja/loja.html', context)
-def contacts(request):
-    context = {}
-    return render(request, 'loja/contacts.html', context)
 def about(request):
     context = {}
     return render(request, 'loja/about.html', context)
@@ -40,12 +37,6 @@ def carrinho(request):
 def checkout(request):
     context = {}
     return render(request, 'loja/checkout.html', context)
-def news(request):
-    context = {}
-    return render(request, 'loja/news.html', context)
-
-
-
 
 def confirm_password_view(request):
     if request.method == 'POST':
@@ -578,8 +569,6 @@ def ver_produtos(request):
         data = response.json()
     else:
         return None
-    for product in data:
-        print(product)
     url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
     response2 = requests.get(url2)
     if response2.status_code == 200:
@@ -591,7 +580,6 @@ def ver_produtos(request):
     for product in data:
         if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
             FilteredProducts.append(product)
-
     actualFilteredProducts = []
     for product in FilteredProducts:
         for shopProduct in data2:
@@ -601,5 +589,12 @@ def ver_produtos(request):
                 else:
                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel",'id':shopProduct['id'],'categoria':product['categoria']['nome']})
 
-    context={'produtos_precos':actualFilteredProducts}
+    context={'produtos_precos':actualFilteredProducts,'termo_pesquisa':q}
     return render(request, 'loja/shop.html', context)
+
+def adicionar_ao_carrinho(request, produto_id):
+    quantidade = request.GET.get('quantidade')
+    print(produto_id)
+    print(quantidade)
+    context = {}
+    return redirect('loja-ver_produtos')

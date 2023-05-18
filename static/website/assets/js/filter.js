@@ -76,3 +76,25 @@ descricaoToggle.addEventListener('click', function() {
         maisInfo.style.display = 'none';
     }
 });
+function adicionarAoCarrinho(event, link) {
+  event.preventDefault(); // Impede o redirecionamento imediato ao clicar no link
+  
+  var quantidadeInput = link.parentNode.querySelector('input[name="quantidade"]'); // Obtém o campo "quantidade" relacionado ao link clicado
+  var quantidade = quantidadeInput.value; // Obtém o valor do campo "quantidade"
+  
+  link.setAttribute("data-quantidade", quantidade); // Atualiza o atributo personalizado "data-quantidade" do link com o novo valor
+  
+  var url = link.href; // Obtém o URL atual do link
+  
+  // Adiciona o valor do campo "quantidade" ao URL como um parâmetro de consulta
+  url += "?quantidade=" + quantidade;
+  
+  window.location.href = url; // Redireciona para o URL modificado
+}
+
+
+
+
+
+
+
