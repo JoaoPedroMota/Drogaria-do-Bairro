@@ -10,7 +10,7 @@ from django_countries import countries
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password as django_validate_password
 from rest_framework.serializers import CharField
-
+from rest_framework import serializers
 class TipoUtilizadorField(Field):
     def to_representation(self, value):
         return dict(Utilizador.TIPO_UTILIZADOR).get(value)
@@ -192,8 +192,9 @@ class UnidadeProducaoSerializer(ModelSerializer):
     class Meta:
         model = UnidadeProducao
         fields = ['id','nome', 'pais', 'cidade', 'morada', 'tipo_unidade','fornecedor',]
-        read_only_fields = ['fornecedor']
-    ####def create(self, validated_data):
+    def save(self, **kwargs):
+        self.validated_data['cidade'] = self.validated_data.get('cidade').upper()
+        return super(UnidadeProducaoSerializer, self).save(**kwargs)
 
     ####def update(self, validated_data):
     
@@ -226,31 +227,79 @@ class CarrinhoSerializer(ModelSerializer):
     consumidor = ConsumidorSerializer()
     class Meta:
         model = Carrinho
-        fields = ['id','nome', 'consumidor']
+        fields = ['id', 'consumidor']
 
 
 
 
-class ProdutoUnidadeProducaoSerializer(ModelSerializer):
-    # produto = ProdutoSerializer()
-    # unidade_producao = UnidadeProducaoSerializer()
-    
+class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProdutoUnidadeProducao
-        fields = ["id","produto", "unidade_producao", "stock","descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca"]
+        fields = ["id", "produto", "unidade_producao", "stock", "descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca"]
         read_only_fields = ['id']
+
+    def validate(self, data):
+        
+        """
+        A mesma coisa que o clean() no modelo ProdutoUnidadeProducao, mas para o serializador
+        """
+        unidade_medida = data.get('unidade_medida')
+        preco_a_granel = data.get('preco_a_granel')
+        unidade_Medida_Por_Unidade = data.get('unidade_Medida_Por_Unidade')
+        quantidade_por_unidade = data.get('quantidade_por_unidade')
+        preco_por_unidade = data.get('preco_por_unidade')
+
+        if unidade_medida == 'un':
+            if preco_a_granel is not None:
+                raise serializers.ValidationError('O preço a granel não é permitido para produtos vendidos à unidade. Remova o campo preco_a_granel.')
+            if unidade_Medida_Por_Unidade is None:
+                raise serializers.ValidationError('Tem de introduzir a unidade de media da embalagem/unidade.')
+            
+            if quantidade_por_unidade is None:
+                raise serializers.ValidationError('A quantidade por unidade é obrigatória para produtos vendidos à unidade.')
+            
+            if preco_por_unidade is None:
+                raise serializers.ValidationError('O preço por unidade é obrigatório para produtos vendidos à unidade.')
+            
+        elif unidade_medida in ('kg', 'g', 'l', 'ml'):
+            if unidade_Medida_Por_Unidade is not None:
+                raise serializers.ValidationError(f'Selecionou antes {dict(self.UNIDADES_MEDIDA_CHOICES).get(unidade_medida)} como unidade de medida deste produto. Este campo serve para indicar qual a unidade de medida do produto à venda. Remova o campo unidade_Medida_Por_Unidade.')
+            if quantidade_por_unidade is not None:
+                raise serializers.ValidationError('A quantidade por unidade não é permitida para produtos vendidos por peso ou volume. Remova este campo.')
+            if preco_por_unidade is not None:
+                raise serializers.ValidationError('O preço por unidade não é permitido para produtos vendidos por peso ou volume. Remova este campo.')
+        else:
+            if unidade_medida == 'un':
+                if unidade_Medida_Por_Unidade is None:
+                    raise serializers.ValidationError('A unidade de medida para produtos vendidos à unidade é obrigatória. Preencha o campo: Unidade Medida Por Unidade')
+                if quantidade_por_unidade is None:
+                    raise serializers.ValidationError('A quantidade para produtos vendidos à unidade é obrigatória. Preencha o campo: Quantidade por unidade')
+                if preco_por_unidade is None:
+                    raise serializers.ValidationError('O preço por produtos vendidos à unidade é obrigatório. Preencha o campo: Preço por unidade')
+            elif unidade_medida in ['kg', 'g', 'l', 'ml']:
+                if preco_a_granel is None:
+                   raise serializers.ValidationError('O preço a granel é obrigatório para produtos vendidos por peso ou volume. Preencha o campo: Preço a granel.') 
+
+        return data
+
+    
 
 
  
         
-class ProdutosCarrinhoSerializer(ModelSerializer):
-    carrinho = CarrinhoSerializer()
-    produto = ProdutoUnidadeProducaoSerializer
+class ProdutosCarrinhoResponseSerializer(ModelSerializer):
+    produto = ProdutoUnidadeProducaoSerializer()
+    carrinho = CarrinhoSerializer(read_only=True)
     class Meta:
         model= ProdutosCarrinho
         fields= ["carrinho", "produto", "quantidade"]
         
-        
+class ProdutosCarrinhoRequestSerializer(ModelSerializer):
+    produto = serializers.PrimaryKeyRelatedField(queryset=ProdutoUnidadeProducao.objects.all())
+    carrinho = CarrinhoSerializer(read_only=True)
+    class Meta:
+        model= ProdutosCarrinho
+        fields= ["carrinho", "produto", "quantidade"]
 
 class FornecedorNomeUtilizadorSerializer(ModelSerializer):
     utilizador = CharField(source="utilizador.nome", read_only=True)

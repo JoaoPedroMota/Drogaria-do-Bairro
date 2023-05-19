@@ -320,11 +320,6 @@ class UnidadeProducao(models.Model):
         verbose_name = "Unidade de Producao"
         ordering=['id', 'nome','fornecedor']
 
-    class Meta:
-        verbose_name = 'UnidadeProducao'
-        verbose_name_plural = 'UnidadesProducao'
-        ordering = ['nome']
-
 
 class Fornecedor(models.Model):
     utilizador = models.OneToOneField(Utilizador, on_delete=models.CASCADE, null=False, related_name='fornecedor')
@@ -473,7 +468,7 @@ class ProdutoUnidadeProducao(models.Model):
             
         elif self.unidade_medida in ('kg', 'g', 'l', 'ml'):
             if self.unidade_Medida_Por_Unidade is not None:#A unidade de medida por unidade não é permitido para produtos vendidos por peso ou volume.
-                raise ValidationError(f'Selecionou antes {dict(self.UNIDADES_MEDIDA_CHOICES).get(self.unidade_medida)} como unidade de medida deste produto. Este campo serve para indicar qual a unidade de medida de um produto vendido à unidade. Remova a seleção deste campo.')
+                raise ValidationError(f'Selecionou antes {dict(self.UNIDADES_MEDIDA_CHOICES).get(self.unidade_medida)} como unidade de medida deste produto. Este campo serve para indicar qual a unidade de medida do produto à venda. Remova a seleção do campo unidade de medida por unidade.')
             if self.quantidade_por_unidade is not None:
                 raise ValidationError('A quantidade por unidade não é permitida para produtos vendidos por peso ou volume. Remova este campo.')
             if self.preco_por_unidade is not None:
@@ -571,7 +566,8 @@ class Carrinho(models.Model):
 class ProdutosCarrinho(models.Model):
     carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='produtos_carrinho')
     produto = models.ForeignKey(ProdutoUnidadeProducao, on_delete=models.SET_NULL, null=True, blank = True)
-    quantidade = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank = False, default= 1)
+    quantidade = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank = True, default= 0)
+    #date_added = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return f'{self.carrinho}. {self.produto}'
     class Meta:
