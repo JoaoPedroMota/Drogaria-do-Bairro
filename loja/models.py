@@ -569,7 +569,6 @@ class Carrinho(models.Model):
 class ProdutosCarrinho(models.Model):
     carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='produtos_carrinho')
     produto = models.ForeignKey(ProdutoUnidadeProducao, on_delete=models.SET_NULL, null=True, blank = True)
-
     quantidade = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank = False, default= 1)
     preco = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     precoKilo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
