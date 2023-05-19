@@ -358,8 +358,8 @@ class ProdutoDetail(APIView):
             return Produto.objects.get(nome=identifier)
         except Produto.DoesNotExist:
             return Http404
-    def get(self, request, slug, format=None):
-        produto = self.get_object(slug)
+    def get(self, request, nome, format=None):
+        produto = self.get_object(nome)
         serializar = ProdutoSerializer(produto, many=False)
         return Response(serializar.data, status=status.HTTP_200_OK)
 

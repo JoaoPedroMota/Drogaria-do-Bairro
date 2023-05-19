@@ -1,6 +1,6 @@
 {% extends 'main.html' %}
 {% load static %}
-{% block content%}
+{% block content %}
 <!-- breadcrumb-section -->
 <div class="breadcrumb-section breadcrumb-bg">
     <div class="container">
@@ -34,30 +34,16 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {% for produto_carrinho in produtos_carrinho %}
                             <tr class="table-body-row">
-                                <td class="product-remove"><a href="#"><i class="far fa-window-close"></i></a></td>
-                                <td class="product-image"><img src="{%static 'website/assets/img/products/product-img-1.jpg' %}" alt=""></td>
-                                <td class="product-name">Strawberry</td>
-                                <td class="product-price">$85</td>
-                                <td class="product-quantity"><input type="number" placeholder="0"></td>
-                                <td class="product-total">1</td>
+                                <td class="product-remove"><a href="{% url 'loja-remover-do-carrinho' produto_id=produto_carrinho.id %}"><i class="far fa-window-close"></i></a></td>
+                                <td class="product-image"><img src="{{ produto_carrinho.produto.imagem.url }}" alt=""></td>
+                                <td class="product-name">{{ produto_carrinho.produto.produto }}</td>
+                                <td class="product-price">{{ produto_carrinho.produto.preco_por_unidade }}€</td>
+                                <td class="product-quantity"><input type="number" placeholder="0" value="{{ produto_carrinho.quantidade }}">{{ produto_carrinho.quantidade }}</td>
+                                <td class="product-total">{{ produto_carrinho.produto.preco_por_unidade|floatformat:2 }}€</td>
                             </tr>
-                            <tr class="table-body-row">
-                                <td class="product-remove"><a href="#"><i class="far fa-window-close"></i></a></td>
-                                <td class="product-image"><img src="{%static 'website/assets/img/products/product-img-2.jpg' %}" alt=""></td>
-                                <td class="product-name">Berry</td>
-                                <td class="product-price">$70</td>
-                                <td class="product-quantity"><input type="number" placeholder="0"></td>
-                                <td class="product-total">1</td>
-                            </tr>
-                            <tr class="table-body-row">
-                                <td class="product-remove"><a href="#"><i class="far fa-window-close"></i></a></td>
-                                <td class="product-image"><img src="{%static 'website/assets/img/products/product-img-3.jpg' %}" alt=""></td>
-                                <td class="product-name">Lemon</td>
-                                <td class="product-price">$35</td>
-                                <td class="product-quantity"><input type="number" placeholder="0"></td>
-                                <td class="product-total">1</td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -75,25 +61,26 @@
                         <tbody>
                             <tr class="total-data">
                                 <td><strong>Subtotal: </strong></td>
-                                <td>$500</td>
+                                <td>{{ total|floatformat:2 }}€</td>
                             </tr>
                             <tr class="total-data">
                                 <td><strong>Shipping: </strong></td>
-                                <td>$45</td>
+                                <td>0€</td>
                             </tr>
                             <tr class="total-data">
                                 <td><strong>Total: </strong></td>
-                                <td>$545</td>
+                                <td>{{ total|floatformat:2 }}€</td>
                             </tr>
                         </tbody>
                     </table>
                     <div class="cart-buttons">
                         <a href="/cart" class="boxed-btn">Update Cart</a>
-                        
                     </div>
                 </div>
 
                 <div class="coupon-section">
+                   
+
                     <h3>Apply Coupon</h3>
                     <div class="coupon-form-wrap">
                         <form action="index.html">

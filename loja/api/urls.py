@@ -38,10 +38,12 @@ urlpatterns = [
     
     
     path('produtos/', views.ProdutoList.as_view()),
-    path('produtos/<str:slug>/', views.ProdutoDetail.as_view()), #preciso ver isto
+    path('produtos/<str:nome>/', views.ProdutoDetail.as_view()), #preciso ver isto
     path('produtos_loja/',views.ProdutoUnidadeProducaoAll.as_view()),
     path('produtos_loja/em_stock/', views.ProdutoUnidadeProducaoEmStock.as_view()),
     path('produtos_loja/<int:idProduto>/', views.SingleProductDetails.as_view()),
     
 ]   
+
+
 urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json', 'html'])
