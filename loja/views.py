@@ -1,10 +1,10 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 import requests
-from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo, Carrinho,Categoria, Produto
+from .models import *
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario
+from .forms import PasswordConfirmForm, ProdutoUnidadeProducaoForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
@@ -13,7 +13,8 @@ from django.db.models import QuerySet
 from django.contrib.auth.hashers import check_password
 from loja.api.serializers import *
 
-    
+
+ 
 #     if request.user != utilizador:
 #         return HttpResponse('Você não deveria estar aqui!')
 #     if request.method == 'POST':
@@ -30,9 +31,17 @@ def loja(request):
 def about(request):
     context = {}
     return render(request, 'loja/about.html', context)
-def carrinho(request):
-    context = {}
-    return render(request, 'loja/carrinho.html', context)
+# def carrinho(request):
+
+#     if request.user.is_authenticated:
+#             if request.user.is_consumidor:
+#                 consumidor = request.user.username
+#                 carrinho, created = Carrinho.objects.get_or_create(consumidor=consumidor, complete=False)
+#                 items = carrinho.adicionar_ao_carrinho.all()
+#     else:
+#         items = []
+#     context = {'items':ProdutosCarrinho}
+#     return render(request, 'loja/carrinho.html', context)
 
 def checkout(request):
     context = {}
@@ -592,9 +601,71 @@ def ver_produtos(request):
     context={'produtos_precos':actualFilteredProducts,'termo_pesquisa':q}
     return render(request, 'loja/shop.html', context)
 
+# def adicionar_ao_carrinho(request, produto_id):
+#     quantidade = request.GET.get('quantidade')
+#     print(produto_id)
+#     print(quantidade)
+#     context = {}
+#     return redirect('loja-ver_produtos')
+
+
+
+
+
+
+##################################################
+
+def carrinho(request):
+
+    carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+    produtos_carrinho = carrinho.produtos_carrinho.all()
+    total = 0
+
+    for produto_carrinho in produtos_carrinho:
+        if produto_carrinho.produto.preco_por_unidade is not None and produto_carrinho.quantidade is not None:
+            total += produto_carrinho.produto.preco_por_unidade * produto_carrinho.quantidade
+
+
+    context = {
+        'carrinho': carrinho,
+        'produtos_carrinho': produtos_carrinho,
+        'total': total
+    }
+    return render(request, 'loja/carrinho.html', context)
+
 def adicionar_ao_carrinho(request, produto_id):
-    quantidade = request.GET.get('quantidade')
-    print(produto_id)
-    print(quantidade)
-    context = {}
+
+#### FALTA VERIFICAR AUTENTICAÇAO ####
+
+    # if request.user.is_authenticated:
+    #     if request.user.is_consumidor:
+
+    produto = ProdutoUnidadeProducao.objects.get(id=produto_id)
+    carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+
+    # Verifica se o produto já existe no carrinho
+    produto_carrinho, created = ProdutosCarrinho.objects.get_or_create(carrinho=carrinho, produto=produto)
+
+    # Aumenta a quantidade do produto no carrinho
+    produto_carrinho.quantidade = 1
+    #produto_carrinho.quantidade += 1
+    produto_carrinho.save()
+
     return redirect('loja-ver_produtos')
+
+
+from django.shortcuts import get_object_or_404, redirect
+from .models import Carrinho, ProdutosCarrinho
+
+def remover_do_carrinho(request, produto_id):
+    carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+    produto_carrinho = get_object_or_404(ProdutosCarrinho, carrinho=carrinho, id=produto_id)
+
+    # Reduz a quantidade do produto no carrinho
+    # if produto_carrinho.quantidade > 1:
+    #     produto_carrinho.quantidade -= 1
+    #     produto_carrinho.save()
+    # else:
+    produto_carrinho.delete()
+
+    return redirect('loja-carrinho')

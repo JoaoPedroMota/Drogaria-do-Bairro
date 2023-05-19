@@ -106,7 +106,7 @@
                     <span class="preco">{{ produto.preco }}€</span>
                 </p>
                 <br>
-                <a href="{% url 'adicionar-ao-carrinho' produto_id=produto.id %}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1"><i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
+                <a href="{% url 'loja-adicionar-ao-carrinho' produto_id=produto.id %}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1"><i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
 
                 {% else %}
                 <p class="container">
@@ -116,7 +116,7 @@
                 </p>
                 <br>
                
-                <a href="{% url 'adicionar-ao-carrinho' produto_id=produto.id %}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1"><i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
+                <a href="{% url 'loja-adicionar-ao-carrinho' produto_id=produto.id %}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1"><i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
 
                 {% endif %}
             </div>
