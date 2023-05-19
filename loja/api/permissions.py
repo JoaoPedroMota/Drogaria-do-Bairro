@@ -26,6 +26,29 @@ class IsFornecedorAndOwnerOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         if request.user.is_authenticated and request.user.is_fornecedor:
+            username = view.kwargs.get('username')
+
+            user = Utilizador.objects.get(username=username)
+
+            idFornecedor = user.fornecedor.id
+
+            idUnidadeProducao = view.kwargs.get('idUnidadeProducao')
+
+            try:
+                up = UnidadeProducao.objects.get(id=idUnidadeProducao)
+                return up.fornecedor.utilizador == request.user and up.fornecedor.id == int(idFornecedor)
+            except UnidadeProducao.DoesNotExist:
+                return False
+        raise PermissionDenied(detail="Não pode realizar esta ação porque não é um fornecedor")
+
+
+
+
+
+
+class IsFornecedorAndOwner(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated and request.user.is_fornecedor:
             idFornecedor = view.kwargs.get('idFornecedor')
             idUnidadeProducao = view.kwargs.get('idUnidadeProducao')
             try:
@@ -34,3 +57,24 @@ class IsFornecedorAndOwnerOrReadOnly(permissions.BasePermission):
             except UnidadeProducao.DoesNotExist:
                 return False
         raise PermissionDenied(detail="Não pode realizar esta ação porque não é um fornecedor")
+
+
+
+class IsConsumidorAndOwnerOrReadOnly(permissions.BasePermission):
+    def has_permission(self,request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        if not request.user.is_consumidor:
+            raise PermissionDenied(detail="Não é um consumidor autenticado!")
+        if request.user.is_authenticated:
+            if request.user.is_consumidor:
+                username = view.kwargs.get('username')
+                user = Utilizador.objects.get(username=username)
+                idConsumidor = user.consumidor.id
+                idCarrinho = user.consumidor.carrinho.id
+                try:
+                    cart = Carrinho.objects.get(id=idCarrinho)
+                    return cart.consumidor.utilizador == request.user and cart.consumidor.id == int(idConsumidor)
+                except Carrinho.DoesNotExist:
+                    return False
+        raise PermissionDenied(detail='Não pode ver ou editar os produtos que estão no carrinho de outro consumidor. Não é o consumidor dono deste carrinho')

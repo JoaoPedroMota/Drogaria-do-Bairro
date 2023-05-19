@@ -310,7 +310,7 @@ def unidadeProducao(request, userName, id):
     #print(data[0]['id'])
     #idFornecedor = data['id']
 
-    url2 = 'http://127.0.0.1:8000/api/fornecedores/'+str(userName)+'/unidadesProducao/'+str(id)+'/veiculos/'
+    url2 = 'http://127.0.0.1:8000/api/'+str(userName)+'/fornecedor/unidadesProducao/'+str(id)+'/veiculos/'
     #path('fornecedores/<str:idFornecedor>/unidadesProducao/<str:idUnidadeProducao>/veiculos/', views.getVeiculos),
     response2 = requests.get(url2)
     if response2.status_code == 200:
@@ -572,14 +572,16 @@ def sP(request,produto_id):
 def ver_produtos(request):
     q = request.GET.get('q') if request.GET.get('q') != None else ''
     url = 'http://127.0.0.1:8000/api/produtos/'
-    response = requests.get(url)
+    info = {'q':q}
+    response = requests.get(url, data=info)
 
     if response.status_code == 200:
         data = response.json()
     else:
         return None
     url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
-    response2 = requests.get(url2)
+    info = {'q':q}
+    response2 = requests.get(url2, data=info)
     if response2.status_code == 200:
         data2 = response2.json()
     else:
