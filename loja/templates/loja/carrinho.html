@@ -51,23 +51,23 @@
                         </thead>
     <tbody>
     {% for produto_carrinho in produtos_carrinho %}
-    
+        <p>{{produto_carrinho.produto.produto}}</p>
     <tr class="table-body-row">
         <td class="product-remove"><a href="{% url 'loja-remover-do-carrinho' produto_id=produto_carrinho.id %}"><i class="far fa-window-close"></i></a></td>
         <td class="product-image">
-            {% if produto_carrinho.produto.produto == "Morango" %}
+            {% if produto_carrinho.produto.produto|striptags|default:""|length  == "Morango"|length %}
                 <img src="{% static 'website/assets/img/products/morango.jpg' %}" alt="Morango">
-            {% elif produto_carrinho.produto.produto == "Alface" %}
+            {% elif produto_carrinho.produto.produto|striptags|default:""|length == "Alface"|length %}
                 <img src="{% static 'website/assets/img/products/alface.jpg' %}" alt="Alface">
-            {% elif produto_carrinho.produto.produto == "Tomate Chucha" %}
+            {% elif produto_carrinho.produto.produto|striptags|default:""|length == "Tomate Chucha"|length %}
                 <img src="{% static 'website/assets/img/products/tomate.jpg' %}" alt="Tomate Chucha">
-            {% elif produto_carrinho.produto.produto == "Gelado Chocolate" %}
+            {% elif produto_carrinho.produto.produto|striptags|default:""|length == "Gelado Chocolate"|length %}
                 <img src="{% static 'website/assets/img/products/gelado_choco.png' %}" alt="Gelado Chocolate">
-            {% elif produto_carrinho.produto.produto == "Gelado Laranja" %}
+            {% elif produto_carrinho.produto.produto|striptags|default:""|length == "Gelado Laranja"|length %}
                 <img src="{% static 'website/assets/img/products/gelado_laranja.jpg' %}" alt="Gelado Laranja">
-            {% elif produto_carrinho.produto.produto == "Gelado de Sardinha" %}
+            {% elif produto_carrinho.produto.produto|striptags|default:""|length == "Gelado de Sardinha"|length %}
                 <img src="{% static 'website/assets/img/products/gelado_sardinha.jpg' %}" alt="Gelado Sardinha">
-            {% elif produto_carrinho.produto.produto == "Gelado Banana" %}
+            {% elif produto_carrinho.produto.produto|striptags|default:""|length == "Gelado Banana"|length %}
                 <img src="{% static 'website/assets/img/products/gelado_banana.jpg' %}" alt="Gelado Banana">
             {% else %}
                
@@ -78,8 +78,9 @@
         <td class="product-price">{{produto_carrinho.preco}}€</td>
         <td class="">{{ produto_carrinho.quantidade|floatformat:1 }} Kg</td>
     </tr>
-    {% endfor %}
+   
 </tbody>
+{% endfor %}
                     </table>
                 </div>
             </div>
