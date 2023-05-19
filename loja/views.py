@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 import requests
@@ -622,7 +623,10 @@ def carrinho(request):
     carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
     produtos_carrinho = carrinho.produtos_carrinho.all()
 
-    total_price = sum(produto_carrinho.preco for produto_carrinho in produtos_carrinho)
+
+    total_price = sum(produto_carrinho.preco if produto_carrinho.preco is not None else 0 for produto_carrinho in produtos_carrinho)
+
+    
 
 
 
@@ -637,23 +641,29 @@ def adicionar_ao_carrinho(request, produto_id):
     data = request.GET.get('preco')
     split_values = data.split('?')
     valor = float(split_values[0])
-    quantidade = int(split_values[1].split('=')[1]) 
-    preco_atualizado = valor * quantidade
-   
+    quantidade = int(split_values[1].split('=')[1])
+    preco_atualizado = Decimal(str(valor * quantidade))
+
     if request.user.is_authenticated and request.user.is_consumidor:
         produto = ProdutoUnidadeProducao.objects.get(id=produto_id)
         carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
         produto_carrinho, created = ProdutosCarrinho.objects.get_or_create(carrinho=carrinho, produto=produto)
+
         if created:
+            
+            produto_carrinho.quantidade = quantidade
+            produto_carrinho.preco = preco_atualizado
+            produto_carrinho.precoKilo = valor
+            produto_carrinho.save()
             messages.success(request, 'O produto foi adicionado ao carrinho com sucesso.')
         else:
-            messages.warning(request, 'O produto já está no carrinho.')
+            # O produto já está no carrinho, então atualize a quantidade e o preço
+            produto_carrinho.quantidade += quantidade
+            produto_carrinho.preco += preco_atualizado
+            produto_carrinho.save()
+            messages.success(request, 'O produto foi atualizado com sucesso.')
 
-        produto_carrinho.precoKilo = valor
-        produto_carrinho.quantidade = quantidade
-        produto_carrinho.preco = preco_atualizado
-        produto_carrinho.save()
-
+       
     return redirect('loja-ver_produtos')
 
 
