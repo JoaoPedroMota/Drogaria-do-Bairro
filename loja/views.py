@@ -621,17 +621,15 @@ def carrinho(request):
 
     carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
     produtos_carrinho = carrinho.produtos_carrinho.all()
-    total = 0
 
-    for produto_carrinho in produtos_carrinho:
-        if produto_carrinho.produto.preco_por_unidade is not None and produto_carrinho.quantidade is not None:
-            total += produto_carrinho.produto.preco_por_unidade * produto_carrinho.quantidade
+    total_price = sum(produto_carrinho.preco for produto_carrinho in produtos_carrinho)
+
 
 
     context = {
         'carrinho': carrinho,
         'produtos_carrinho': produtos_carrinho,
-        'total': total
+        'total': total_price
     }
     return render(request, 'loja/carrinho.html', context)
 
