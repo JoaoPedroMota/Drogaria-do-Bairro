@@ -1,6 +1,14 @@
 {% extends 'main.html' %}
 {% load static %}
 {% block content %}
+<style>
+    .messages{
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+    font-size: 30px;
+  }
+</style>
 <!-- breadcrumb-section -->
 <div class="breadcrumb-section breadcrumb-bg">
     <div class="container">
@@ -15,9 +23,16 @@
     </div>
 </div>
 <!-- end breadcrumb section -->
-
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
 <!-- cart -->
 <div class="cart-section mt-150 mb-150">
+   
     <div class="container">
         <div class="row">
             <div class="col-lg-8 col-md-12">
@@ -26,22 +41,24 @@
                         <thead class="cart-table-head">
                             <tr class="table-head-row">
                                 <th class="product-remove"></th>
-                                <th class="product-image">Product Image</th>
-                                <th class="product-name">Name</th>
-                                <th class="product-price">Price</th>
-                                <th class="product-quantity">Quantity</th>
-                                <th class="product-total">Total</th>
+                                <th class="product-image">Imagem</th>
+                                <th class="product-name">Nome</th>
+                                <th class="product-price">Preço Kilo</th>
+                                <th class="product-price">Preço </th>
+                                <th class="product-quantity">Quantidade</th>
+                                
                             </tr>
                         </thead>
                         <tbody>
                             {% for produto_carrinho in produtos_carrinho %}
+                            
                             <tr class="table-body-row">
                                 <td class="product-remove"><a href="{% url 'loja-remover-do-carrinho' produto_id=produto_carrinho.id %}"><i class="far fa-window-close"></i></a></td>
-                                <td class="product-image"><img src="{{ produto_carrinho.produto.imagem.url }}" alt=""></td>
+                                <td class="product-image"><img src="{% static 'website/assets/img/products/alface.jpg' %}" alt=""></td>
                                 <td class="product-name">{{ produto_carrinho.produto.produto }}</td>
-                                <td class="product-price">{{ produto_carrinho.produto.preco_por_unidade }}€</td>
-                                <td class="product-quantity"><input type="number" placeholder="0" value="{{ produto_carrinho.quantidade }}">{{ produto_carrinho.quantidade }}</td>
-                                <td class="product-total">{{ produto_carrinho.produto.preco_por_unidade|floatformat:2 }}€</td>
+                                <td class="product-quantity">{{produto_carrinho.precoKilo}}€</td>
+                                <td class="product-price">{{produto_carrinho.preco}}€</td>
+                                <td class="">{{ produto_carrinho.quantidade|floatformat:1 }} Kg</td>
                             </tr>
                             {% endfor %}
                         </tbody>

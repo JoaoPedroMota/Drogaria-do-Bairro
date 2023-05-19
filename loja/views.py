@@ -634,22 +634,25 @@ def carrinho(request):
     return render(request, 'loja/carrinho.html', context)
 
 def adicionar_ao_carrinho(request, produto_id):
+    data = request.GET.get('preco')
+    split_values = data.split('?')
+    valor = float(split_values[0])
+    quantidade = int(split_values[1].split('=')[1]) 
+    preco_atualizado = valor * quantidade
+   
+    if request.user.is_authenticated and request.user.is_consumidor:
+        produto = ProdutoUnidadeProducao.objects.get(id=produto_id)
+        carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+        produto_carrinho, created = ProdutosCarrinho.objects.get_or_create(carrinho=carrinho, produto=produto)
+        if created:
+            messages.success(request, 'O produto foi adicionado ao carrinho com sucesso.')
+        else:
+            messages.warning(request, 'O produto já está no carrinho.')
 
-#### FALTA VERIFICAR AUTENTICAÇAO ####
-
-    # if request.user.is_authenticated:
-    #     if request.user.is_consumidor:
-
-    produto = ProdutoUnidadeProducao.objects.get(id=produto_id)
-    carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
-
-    # Verifica se o produto já existe no carrinho
-    produto_carrinho, created = ProdutosCarrinho.objects.get_or_create(carrinho=carrinho, produto=produto)
-
-    # Aumenta a quantidade do produto no carrinho
-    produto_carrinho.quantidade = 1
-    #produto_carrinho.quantidade += 1
-    produto_carrinho.save()
+        produto_carrinho.precoKilo = valor
+        produto_carrinho.quantidade = quantidade
+        produto_carrinho.preco = preco_atualizado
+        produto_carrinho.save()
 
     return redirect('loja-ver_produtos')
 
@@ -667,5 +670,5 @@ def remover_do_carrinho(request, produto_id):
     #     produto_carrinho.save()
     # else:
     produto_carrinho.delete()
-
+    messages.success(request, 'O produto foi removido do carrinho com sucesso.')
     return redirect('loja-carrinho')
