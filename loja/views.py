@@ -27,9 +27,6 @@ from loja.api.serializers import *
 def loja(request):
     context = {}
     return render(request, 'loja/loja.html', context)
-def contacts(request):
-    context = {}
-    return render(request, 'loja/contacts.html', context)
 def about(request):
     context = {}
     return render(request, 'loja/about.html', context)
@@ -40,12 +37,6 @@ def carrinho(request):
 def checkout(request):
     context = {}
     return render(request, 'loja/checkout.html', context)
-def news(request):
-    context = {}
-    return render(request, 'loja/news.html', context)
-
-
-
 
 def confirm_password_view(request):
     if request.method == 'POST':
@@ -247,6 +238,42 @@ def criarUP(request, userName):
 
 #######################ZONA DE TESTE######################################################
 
+# def ver_produtos(request):
+#     q = request.GET.get('q') if request.GET.get('q') != None else ''
+#     url = 'http://127.0.0.1:8000/api/produtos/'
+#     response = requests.get(url)
+
+#     if response.status_code == 200:
+#         data = response.json()
+#     else:
+#         return None
+
+#     url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
+#     response2 = requests.get(url2)
+#     if response2.status_code == 200:
+#         data2 = response2.json()
+#     else:
+#         return None
+
+#     FilteredProducts = []
+#     for product in data:
+#         if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
+#             FilteredProducts.append(product)
+
+#     actualFilteredProducts = []
+#     for product in FilteredProducts:
+#         for shopProduct in data2:
+#             if product['id'] == shopProduct['produto']:
+#                 if shopProduct['preco_a_granel']==None:
+#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade"})
+#                 else:
+#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel"})
+
+#     context={'produtos_precos':actualFilteredProducts}
+#     return render(request, 'loja/shop.html', context)
+
+
+
 def unidadeProducao(request, userName, id):
     context = {}
     # utilizador = Utilizador.objects.get(username=userName)
@@ -292,10 +319,6 @@ def unidadeProducao(request, userName, id):
     veiculos = data2
     print("veiculos",veiculos)
 
-    # queryset = QuerySet(model=veiculos, query=None, using='default')
-    # queryset._result_cache = veiculos
-    # print("\nprint the QUERYSET ",queryset)
-
     context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id}
     return render(request, 'loja/unidadeProducao.html', context)
 
@@ -308,11 +331,11 @@ def editarUnidadeProducao(request, userName, id):
     fornecedor= utilizador.fornecedor
     unidadeProducao = fornecedor.unidades_producao.get(pk=id)
     #veiculo = Veiculo.objects.get(pk=idVeiculo)
-    form = editarUnidadeProducaoFormulario(instance=UnidadeProducao)
+    form = editarUnidadeProducaoFormulario(instance=unidadeProducao)
     if request.user.is_fornecedor:
         if request.method == 'POST':
-            formulario = editarUnidadeProducaoFormulario(request.POST)
-            if formulario.is_valid():
+            form = editarUnidadeProducaoFormulario(request.POST, request.FILES,instance = unidadeProducao)
+            if form.is_valid():
                 unidadeProducao.nome = request.POST.get('nome')
                 unidadeProducao.pais = request.POST.get('pais')
                 unidadeProducao.cidade = request.POST.get('cidade')
@@ -326,9 +349,36 @@ def editarUnidadeProducao(request, userName, id):
     else:
         return HttpResponseForbidden()
     
-    context = {'form':formulario, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
+    context = {'form':form, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
     return render(request, 'loja/editarUnidadeProducao.html', context)
 
+# @login_required(login_url='loja-login')
+# def editarPerfil(request):
+#     pagina = 'editarPerfil'
+#     utilizador = request.user
+#     form = EditarPerfil(instance=utilizador)
+#     if request.method == 'POST':
+#         form = EditarPerfil(request.POST, request.FILES,instance = utilizador)
+#         username = request.POST.get('username')
+#         utilizador.first_name = request.POST.get('first_name')
+#         utilizador.last_name = request.POST.get('last_name')
+#         utilizador.nome = utilizador.first_name + ' ' + utilizador.last_name
+#         utilizador.email = request.POST.get('email')
+#         utilizador.pais = request.POST.get('pais')
+#         utilizador.cidade = request.POST.get('cidade')
+#         utilizador.telemovel = request.POST.get('telemovel')
+#         utilizador.imagem_perfil = request.POST.get('imagem_perfil')
+#         utilizador.username = username  
+#         if form.is_valid():
+#             utilizador = form.save(commit=False)
+#             utilizador.username = username.lower()
+#             utilizador.cidade = utilizador.cidade.upper()
+#             utilizador.save()
+#             messages.success(request, 'Perfil atualizado com sucesso.')
+#             link = reverse('loja-perfil', args=[request.user.username])
+#             return redirect(link)
+#     context = {'form':form, 'pagina':pagina}
+#     return render(request, 'loja/editarUtilizador.html', context)
 
 def removerUnidadeProducao(request, userName, id):
     # Busca a unidade de produção pelo id passado na URL
@@ -480,6 +530,36 @@ def lista_produtos_eletronicos(request):
     produtos = Produto.objects.filter(categoria=eletronicos)
     return render(request, 'lista_produtos.html', {'produtos': produtos})
 
+
+def sP(request,produto_id):
+    produto=[]
+    p=int(produto_id)
+    url = f'http://127.0.0.1:8000/api/produtos_loja/{p}/'
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+    else:
+        return None
+    
+    if data['quantidade_por_unidade']==None:
+        context={'produto_info':data['produto']['nome'],'categoria':data['produto']['categoria']['nome'],'granel':data['preco_a_granel'],'fornecedor':data['unidade_producao']['fornecedor']['utilizador'],'up':data['unidade_producao']['nome'],
+                 'morada':data['unidade_producao']['morada'],
+                 'cidade':data['unidade_producao']['cidade'],'pais':data['unidade_producao']['pais'],'descricao':data['descricao'],'unidadeM':'Kilograma','stock':data['stock']
+                 ,'data_producao':data['data_producao'],'marca':data['marca'],'unidade':data['preco_por_unidade']}
+    if data['preco_a_granel']==None:
+        context={'produto_info':data['produto']['nome'],'categoria':data['produto']['categoria']['nome'],'granel':data['preco_a_granel'],'fornecedor':data['unidade_producao']['fornecedor']['utilizador'],'up':data['unidade_producao']['nome'],
+                 'morada':data['unidade_producao']['morada'],
+                 'cidade':data['unidade_producao']['cidade'],'pais':data['unidade_producao']['pais'],'descricao':data['descricao'],'unidadeM':'Unidade','stock':data['stock'],'data_producao':data['data_producao']
+                 ,'marca':data['marca'],'unidade':data['preco_por_unidade']}
+
+    return render(request, 'loja/single-product.html', context)
+    
+#  if shopProduct['preco_a_granel']==None:
+#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade",'id':shopProduct['id']})
+#                 else:
+#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel",'id':shopProduct['id']})
+
+
 def ver_produtos(request):
     q = request.GET.get('q') if request.GET.get('q') != None else ''
     url = 'http://127.0.0.1:8000/api/produtos/'
@@ -490,7 +570,6 @@ def ver_produtos(request):
         data = response.json()
     else:
         return None
-
     url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
     info = {'q':q}
     response2 = requests.get(url2, data=info)
@@ -503,15 +582,21 @@ def ver_produtos(request):
     for product in data:
         if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
             FilteredProducts.append(product)
-
     actualFilteredProducts = []
     for product in FilteredProducts:
         for shopProduct in data2:
             if product['id'] == shopProduct['produto']:
                 if shopProduct['preco_a_granel']==None:
-                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade"})
+                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade",'id':shopProduct['id'],'categoria':product['categoria']['nome']})
                 else:
-                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel"})
+                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel",'id':shopProduct['id'],'categoria':product['categoria']['nome']})
 
-    context={'produtos_precos':actualFilteredProducts}
+    context={'produtos_precos':actualFilteredProducts,'termo_pesquisa':q}
     return render(request, 'loja/shop.html', context)
+
+def adicionar_ao_carrinho(request, produto_id):
+    quantidade = request.GET.get('quantidade')
+    print(produto_id)
+    print(quantidade)
+    context = {}
+    return redirect('loja-ver_produtos')

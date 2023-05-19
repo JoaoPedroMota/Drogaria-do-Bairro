@@ -11,6 +11,7 @@
                 <div class="breadcrumb-text">
                     <p>Frescos e Organicos</p>
                     <h1>Loja</h1>
+                    <h1 id="search-term" style="display: none;"></h1>
                 </div>
             </div>
         </div>
@@ -39,15 +40,48 @@
     .preco{
         font-size: 30px;
     }
-    
-   
+    .pesquisa h3{
+        font-size: 30px;
+        font-weight: bold;
+    }
+    h2{
+        font-size: 26px;
+    }
+    .pesquisa {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .search-term {
+    display: inline-block;
+    border: 1px solid #ccc;
+    background-color: #f2f2f2;
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-right: 10px;
+  }
+  .search-term {
+    margin-left: 5px;
+  }
 </style>
+
+
+{% if termo_pesquisa %}
+<div class="pesquisa">
+      <h3>Você pesquisou por :</h3>
+    <div class="search-term">
+    <h2> {{ termo_pesquisa }}</h2>
+    </div>
+  </div>
+{% endif %}
+
+
 <div class="product-section mt-150 mb-150">
     <div class="row product-lists">
         {% for produto in produtos_precos %}
         <div class="col-lg-4 col-md-6 text-center {{ produto.categoria }}">
             <div class="single-product-item filtro-item">
-                <a href="single-product.html">
+                <a href="{% url 'loja-single-product' produto_id=produto.id%}">
                     {% if produto.produto == "Morango" %}
                     <img src="{% static 'website/assets/img/products/morango.jpg' %}" alt="Morango">
                     {% elif produto.produto == "Alface" %}
@@ -62,24 +96,28 @@
                     <img src="{% static 'website/assets/img/products/default.jpg' %}" alt="Default">
                     {% endif %}
                 </a>
-    
                 <h3>{{ produto.produto }}</h3>
+                <h4>Categoria: {{ produto.categoria }}</h4>
                 {% if produto.tipo == "granel" %}
                 <p class="container">
                     <span>Preço por Kg: {{produto.preco}}</span>
-                    <input type="number" class="styled-input" step="0.5" min="0" max="50" placeholder="1 Kg" onblur="atualizarPreco(this, {{ produto.preco }}); alterarParaMaximo(this)" onchange="atualizarPreco(this, {{ produto.preco }}); alterarParaMaximo(this)">
+                    <input type="number" class="styled-input" step="0.5" min="0" max="50" placeholder="1 Kg" name="quantidade" value="1" oninput="atualizarPreco(this, {{ produto.preco }})">
+
                     <span class="preco">{{ produto.preco }}€</span>
                 </p>
                 <br>
-                <a href="cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
+                <a href="{% url 'adicionar-ao-carrinho' produto_id=produto.id %}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1"><i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
+
                 {% else %}
                 <p class="container">
                     <span>Preço por unidade: {{produto.preco}}€</span>
-                    <input type="number" step="1" class="styled-input" min="0" max="50" placeholder="1 uni"  onblur="atualizarNumero(this); atualizarPreco(this, {{ produto.preco }});" onchange="atualizarPreco(this, {{ produto.preco }}); atualizarNumero(this)">
+                    <input type="number" class="styled-input" step="0.5" min="0" max="50" placeholder="1 Kg" name="quantidade" value="1" oninput="atualizarPreco(this, {{ produto.preco }})">
                     <span class="preco">{{ produto.preco }}€</span>
                 </p>
                 <br>
-                <a href="cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
+               
+                <a href="{% url 'adicionar-ao-carrinho' produto_id=produto.id %}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1"><i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
+
                 {% endif %}
             </div>
         </div>
@@ -88,7 +126,6 @@
 </div>
    
     
-
 
 
 <!-- end products -->

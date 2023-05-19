@@ -58,25 +58,28 @@
 <!--PreLoader Ends-->
 <!-- search area -->
 <div class="search-area">
-	<div class="container">
-		<div class="row">
-			<div class="col-lg-12">
-				<span class="close-btn"><i class="fas fa-window-close"></i></span>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <span class="close-btn"><i class="fas fa-window-close"></i></span>
 				<div class="search-bar">
 					<div class="search-bar-tablecell">
-						<form method="GET" action="{% url 'ver_produtos' %}">
+						<form method="GET" action="{% url 'loja-ver_produtos' %}">
 							<h3>Pesquise o seu produto</h3>
-							<input type="text"  class="botao" name="q" placholder="<h3>Filtre pelo o nome</h3>">
-							
-							<button type="submit">Pesquisar<i class="fas fa-search"></i></button>
-							</form>
-						
+
+							<input type="text" id="search-input" class="botao" name="q" placeholder="Filtre pelo nome ou categoria">
+							<button type="submit">Pesquisar <i class="fas fa-search"></i></button>
+						</form>
+
 					</div>
 				</div>
-			</div>
-		</div>
-	</div>
+			
+            </div>
+        </div>
+    </div>
 </div>
+
+
 <!-- end search area -->
 
 <!-- hero area -->
@@ -148,6 +151,13 @@
         </ul>
     </div>
     {% endif %}
+	{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 {% include 'footer.html' %}
 
 
@@ -174,5 +184,7 @@
 <!-- filtra na barra de pesquisa -->
 <script src="{%static 'website/assets/js/filter.js' %}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js" integrity="sha512-hlS+Nt9jUHWBl2FGRZS3sLEx/n0f06ETzkBdfq/mLIJ8vfxlh4bPAdQQrsrqob7/v/aRj0V8T/UtQ2yZJG6KCA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </body>
 </html>

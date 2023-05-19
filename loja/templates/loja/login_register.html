@@ -27,7 +27,7 @@
                                         </div>
                                         <input type="submit" id="login" value="SIGNIN">
                                     </form>
-                                    <p>Ainda não tens uma conta <a href="/register" class="link-registo">Regista-te agora!</a></p>
+                                    <p>Ainda não tens conta? <a href="/register" class="link-registo">Regista-te agora!</a></p>
                                     </div>
                                 </div>          
                             </div>
@@ -37,7 +37,7 @@
 </div>
 <style>
     .link-registo {
-        color: blue !important;
+        color: rgb(0, 200, 255) !important;
         text-decoration: underline;
     }
 </style>
@@ -109,7 +109,7 @@
             
                     <input type="submit" id="login" value="SIGNUP">
                   </form>
-                  <p class="link">Já tens conta <a href="/login" class="link">Entra agora!</a></p>
+                  <p class="link">Se já tens conta <a href="/login" class="link-entraAgora">Entra agora!</a></p>
                   
                 
               
@@ -120,6 +120,11 @@
     </div>
 </div>
 </div>
-
+<style>
+    .link-entraAgora {
+        color: rgb(0, 200, 255) !important;
+        text-decoration: underline;
+    }
+</style>
 {% endif %}
 {% endblock content %}

@@ -40,3 +40,61 @@ function atualizarNumero(input) {
   // Define o valor do campo como o número arredondado
   input.value = isNaN(numero) ? '' : numero;
 }
+
+
+// Seleciona o elemento h4
+const descricao = document.querySelector('h3');
+
+// Adiciona um ouvinte de eventos ao elemento h4
+descricao.addEventListener('click', function() {
+    // Seleciona a div com mais informações
+    const maisInfo = document.querySelector('.mais-informacao');
+    
+    // Se a div estiver oculta, mostra; senão, oculta
+    if (maisInfo.style.display === 'none') {
+        maisInfo.style.display = 'block';
+    } else {
+        maisInfo.style.display = 'none';
+    }
+});
+
+// Seleciona o elemento h4
+const descricaoToggle = document.querySelector('.descricao-toggle');
+
+// Adiciona um ouvinte de eventos ao elemento h4
+descricaoToggle.addEventListener('click', function() {
+    // Seleciona a div com mais informações
+    const maisInfo = document.querySelector('.mais-informacao');
+
+    // Alterna a classe expandido no elemento h4
+    descricaoToggle.classList.toggle('expandido');
+
+    // Se a div estiver oculta, mostra; senão, oculta
+    if (maisInfo.style.display === 'none') {
+        maisInfo.style.display = 'block';
+    } else {
+        maisInfo.style.display = 'none';
+    }
+});
+function adicionarAoCarrinho(event, link) {
+  event.preventDefault(); // Impede o redirecionamento imediato ao clicar no link
+  
+  var quantidadeInput = link.parentNode.querySelector('input[name="quantidade"]'); // Obtém o campo "quantidade" relacionado ao link clicado
+  var quantidade = quantidadeInput.value; // Obtém o valor do campo "quantidade"
+  
+  link.setAttribute("data-quantidade", quantidade); // Atualiza o atributo personalizado "data-quantidade" do link com o novo valor
+  
+  var url = link.href; // Obtém o URL atual do link
+  
+  // Adiciona o valor do campo "quantidade" ao URL como um parâmetro de consulta
+  url += "?quantidade=" + quantidade;
+  
+  window.location.href = url; // Redireciona para o URL modificado
+}
+
+
+
+
+
+
+
