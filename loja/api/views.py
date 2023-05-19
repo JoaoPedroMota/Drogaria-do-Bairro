@@ -21,7 +21,7 @@ from decimal import Decimal
 ### serializers.py ###
 from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer
 ### permissions.py ###
-from .permissions import IsOwnerOrReadOnly, IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwner
+from .permissions import IsOwnerOrReadOnly, IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly
 ####
 
 @api_view(['GET'])  # Exemplo para as próximas views: @api_view(['GET', 'PUT' 'POST'])
@@ -437,7 +437,7 @@ class ProdutoUnidadeProducaoDetail(APIView):
         produto = self.get_object(idProdutoUnidadeProducao)
         serializarProduto = ProdutoUnidadeProducaoSerializer(produto, many=False)
         return Response(serializarProduto.data, status=status.HTTP_200_OK)
-    def pull(self, request, username, idUnidadeProducao, idProdutoUnidadeProducao, format=None):
+    def put(self, request, username, idUnidadeProducao, idProdutoUnidadeProducao, format=None):
         pass
     def delete(self, request, username, idUnidadeProducao, idProdutoUnidadeProducao, format=None):
         pass
@@ -567,24 +567,13 @@ class CarrinhoList(APIView):
     
 
 class ProdutosCarrinhoList(APIView):
-    permission_classes = [IsConsumidorAndOwner, IsAuthenticated]
-    def get_object(self, username):
+    permission_classes = [IsConsumidorAndOwnerOrReadOnly, IsAuthenticatedOrReadOnly]
+    def get_object(self, carrinho):
         try:
-            utilizador_temp = Utilizador.objects.get(username=username)
-            try:
-                consumidor_temp = Consumidor.objects.get(utilizador = utilizador_temp)
-                try:
-                    cart = Carrinho.objects.get(consumidor=consumidor_temp)
-                    try:
-                        return ProdutosCarrinho.objects.filter(carrinho=cart)
-                    except ProdutosCarrinho.DoesNotExist:
-                        raise Http404
-                except Carrinho.DoesNotExist:
-                    return Http404
-            except Consumidor.DoesNotExist:
-                raise Http404
-        except Utilizador.DoesNotExist:
+            return ProdutosCarrinho.objects.filter(carrinho=carrinho)
+        except ProdutosCarrinho.DoesNotExist:
             raise Http404
+
     def get_carrinho(self, username):
         try:
             utilizador_temp = Utilizador.objects.get(username=username)
@@ -598,14 +587,15 @@ class ProdutosCarrinhoList(APIView):
                 raise Http404
         except Utilizador.DoesNotExist:
             raise Http404
-    def get(self, request, username):
-        itens_carrinho = self.get_object(username)
+    def get(self, request, username, format=None):
+        carrinho = self.get_carrinho(username)
+        itens_carrinho = self.get_object(carrinho)
         if itens_carrinho.exists():
             serializar = ProdutosCarrinhoResponseSerializer(itens_carrinho, many=True) #serializer para responder
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(serializar.data,status=status.HTTP_200_OK)
-    def post(self, request, username):
+    def post(self, request, username, format=None):
         carrinho = self.get_carrinho(username)
         serializador = ProdutosCarrinhoRequestSerializer(data=request.data)
         if serializador.is_valid():
@@ -614,3 +604,63 @@ class ProdutosCarrinhoList(APIView):
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializador.errors, status=status.HTTP_400_BAD_REQUEST)
         
+class ProdutosCarrinhoDetail(APIView):
+    permission_classes = [IsConsumidorAndOwnerOrReadOnly, IsAuthenticated]
+    def get_object(self, cart, idProdutoCart):
+        try:
+            return ProdutosCarrinho.objects.get(carrinho=cart, id=idProdutoCart)
+        except ProdutosCarrinho.DoesNotExist:
+            raise Http404
+
+    def get_carrinho(self, username):
+        try:
+            utilizador_temp = Utilizador.objects.get(username=username)
+            try:
+                consumidor_temp = Consumidor.objects.get(utilizador = utilizador_temp)
+                try:
+                    return Carrinho.objects.get(consumidor=consumidor_temp)
+                except Carrinho.DoesNotExist:
+                    return Http404
+            except Consumidor.DoesNotExist:
+                raise Http404
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get(self, request, username, idProdutoCart, format=None):
+        carrinho = self.get_carrinho(username)
+        item_carrinho = self.get_object(carrinho, idProdutoCart)
+        if item_carrinho is not None:
+            serializar = ProdutosCarrinhoResponseSerializer(item_carrinho, many=False) #serializer para responder
+            return Response(serializar.data,status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Produto não encontrado no carrinho"},status=status.HTTP_404_NOT_FOUND)
+    def put(self, request, username, idProdutoCart, format=None):
+        carrinho = self.get_carrinho(username)
+        item_carrinho = self.get_object(carrinho, idProdutoCart)
+        
+        if item_carrinho is None:
+            return Response({"detail": "Produto não encontrado no carrinho"},status=status.HTTP_404_NOT_FOUND)
+
+        # Atualize o objeto com os novos dados
+        data = request.data
+        serializer = ProdutosCarrinhoRequestSerializer(item_carrinho, data=data)
+        
+        if serializer.is_valid():
+            serializer.save()
+            response_serializer = ProdutosCarrinhoResponseSerializer(serializer.instance)
+            return Response(response_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, username, idProdutoCart, format=None):
+        carrinho = self.get_carrinho(username)
+        item_carrinho = self.get_object(carrinho, idProdutoCart)
+        
+        if item_carrinho is None:
+            return Response({"detail": "Produto não encontrado no carrinho"},status=status.HTTP_404_NOT_FOUND)
+
+        # Exclua o objeto
+        item_carrinho.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+
