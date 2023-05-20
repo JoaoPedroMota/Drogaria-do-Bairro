@@ -15,7 +15,9 @@ urlpatterns = [
     path('consumidores/', views.ConsumidoresList.as_view()),
     path('consumidores/carrinhos/', views.CarrinhoList.as_view()),
     
+    path('consumidores/carrinhos/<int:idCarrinho>/', views.CarrinhoDetail.as_view()),
     
+
     path('<str:username>/consumidor/', views.ConsumidoresDetail.as_view()),
     path('<str:username>/consumidor/carrinho/', views.ProdutosCarrinhoList.as_view()),
     path('<str:username>/consumidor/carrinho/<int:idProdutoCart>/', views.ProdutosCarrinhoDetail.as_view()),
@@ -43,6 +45,7 @@ urlpatterns = [
     path('produtos_loja/em_stock/', views.ProdutoUnidadeProducaoEmStock.as_view()),
     path('produtos_loja/<int:idProduto>/', views.SingleProductDetails.as_view()),
     
+
 ]   
 
 

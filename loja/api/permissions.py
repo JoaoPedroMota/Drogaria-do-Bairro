@@ -64,8 +64,9 @@ class IsConsumidorAndOwnerOrReadOnly(permissions.BasePermission):
     def has_permission(self,request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
-        if not request.user.is_consumidor:
-            raise PermissionDenied(detail="Não é um consumidor autenticado!")
+        if request.user.is_authenticated:
+            if not request.user.is_consumidor:
+                raise PermissionDenied(detail="Não é um consumidor autenticado!")
         if request.user.is_authenticated:
             if request.user.is_consumidor:
                 username = view.kwargs.get('username')

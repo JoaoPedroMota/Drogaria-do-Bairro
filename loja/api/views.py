@@ -23,6 +23,13 @@ from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorS
 ### permissions.py ###
 from .permissions import IsOwnerOrReadOnly, IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly
 ####
+from decimal import Decimal
+
+
+
+
+
+
 
 @api_view(['GET'])  # Exemplo para as próximas views: @api_view(['GET', 'PUT' 'POST'])
 def getRotas(request, format=None):
@@ -564,7 +571,17 @@ class CarrinhoList(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(serializar.data, status=status.HTTP_200_OK)
     
-    
+class CarrinhoDetail(APIView):
+    def get_object(self, instance):
+        try:
+            return Carrinho.objects.get(id=instance)
+        except Carrinho.DoesNotExist:
+            raise Http404
+    def get(self, request, idCarrinho):
+        carrinho = self.get_object(idCarrinho)
+        serializar = CarrinhoSerializer(carrinho, many=False)
+        return Response(serializar.data, status=status.HTTP_200_OK)
+            
 
 class ProdutosCarrinhoList(APIView):
     permission_classes = [IsConsumidorAndOwnerOrReadOnly, IsAuthenticatedOrReadOnly]
@@ -599,7 +616,14 @@ class ProdutosCarrinhoList(APIView):
         carrinho = self.get_carrinho(username)
         serializador = ProdutosCarrinhoRequestSerializer(data=request.data)
         if serializador.is_valid():
-            serializador.save(carrinho=carrinho)
+            itemCarrinho = serializador.validated_data['produto']
+            if itemCarrinho.unidade_medida in ['kg', 'g','l','ml']:
+                precoKilo = itemCarrinho.preco_a_granel
+                preco = Decimal(request.data['quantidade'])*precoKilo
+            elif itemCarrinho.unidade_medida in ['un']:
+                precoKilo = itemCarrinho.preco_por_unidade
+                preco = Decimal(request.data['quantidade'])*precoKilo
+            serializador.save(carrinho=carrinho, preco=preco, precoKilo=precoKilo)
             response_serializer = ProdutosCarrinhoResponseSerializer(serializador.instance)
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializador.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -645,7 +669,14 @@ class ProdutosCarrinhoDetail(APIView):
         serializer = ProdutosCarrinhoRequestSerializer(item_carrinho, data=data)
         
         if serializer.is_valid():
-            serializer.save()
+            produto = item_carrinho.produto
+            if produto.unidade_medida in ['kg','g','l','ml']:
+                precoKilo = produto.preco_a_granel
+                preco = Decimal(request.data['quantidade']) * precoKilo
+            elif produto.unidade_medida in ['un']:
+                precoKilo = produto.preco_por_unidade
+                preco = Decimal(request.data['quantidade']) * precoKilo
+            serializer.save(preco=preco, precoKilo=precoKilo)
             response_serializer = ProdutosCarrinhoResponseSerializer(serializer.instance)
             return Response(response_serializer.data, status=status.HTTP_200_OK)
         else:

@@ -292,14 +292,16 @@ class ProdutosCarrinhoResponseSerializer(ModelSerializer):
     carrinho = CarrinhoSerializer(read_only=True)
     class Meta:
         model= ProdutosCarrinho
-        fields= ["carrinho", "produto", "quantidade","id"]
+        fields= ["carrinho", "produto", "quantidade","precoKilo","preco","id"]
+        read_only = ["preco","precoKilo",'id', 'carrinho']
         
 class ProdutosCarrinhoRequestSerializer(ModelSerializer):
     produto = serializers.PrimaryKeyRelatedField(queryset=ProdutoUnidadeProducao.objects.all())
     carrinho = CarrinhoSerializer(read_only=True)
     class Meta:
         model= ProdutosCarrinho
-        fields= ["carrinho", "produto", "quantidade","id"]
+        fields= ["carrinho", "produto", "quantidade","precoKilo","preco","id"]
+        read_only = ["preco","precoKilo",'id', 'carrinho']
     def validate(self, data):
         quantidade = data.get('quantidade')
         produtoUP = data.get('produto')
@@ -311,6 +313,10 @@ class ProdutosCarrinhoRequestSerializer(ModelSerializer):
             if parte_fracao != 0:
                 raise serializers.ValidationError(f'Produtos vendidos à unidade não podem ter quantidade não inteiras. Escolha um número sem parte fracionária')
         return data
+
+
+
+
 class FornecedorNomeUtilizadorSerializer(ModelSerializer):
     utilizador = CharField(source="utilizador.nome", read_only=True)
     class Meta:

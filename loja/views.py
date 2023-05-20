@@ -619,7 +619,34 @@ def ver_produtos(request):
 ##################################################
 
 def carrinho(request):
+    def criar_instancia_produto_carrinho(json):
+        """Tentar criar uma instância do produto carrinho
 
+        Args:
+            json (dict): json convertido num dicionário.
+        """
+        idCarrinho = json["carrinho"]["id"]
+        idProdutoUP = json['produto']['id']
+        quantidade = Decimal(json["quantidade"])
+        preco = Decimal(json["preco"])
+        precoKilo = Decimal(json["precoKilo"])
+        
+        urlCarrinho = f"http://127.0.0.1:8000/api/consumidores/carrinho/{idCarrinho}"
+        urlProdutoUP = f"http://127.0.0.1:8000/api/produtos_loja/{idProdutoUP}/"
+        
+        respostaCarrinho = requests.get(urlCarrinho)
+        conteudoCarrinho = respostaCarrinho.json()
+
+        respostaProdutoUP = requests.get(urlProdutoUP)
+        conteudoProdutoUP = respostaProdutoUP.json()
+    
+    
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
+    resposta = sessao.get(url)
+    conteudo = resposta.json()
+    print(conteudo)
     carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
     produtos_carrinho = carrinho.produtos_carrinho.all()
 
