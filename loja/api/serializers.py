@@ -288,6 +288,9 @@ class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
  
         
 class ProdutosCarrinhoResponseSerializer(ModelSerializer):
+    """"
+    Usado para responder a pedidos à API
+    """
     produto = ProdutoUnidadeProducaoSerializer()
     carrinho = CarrinhoSerializer(read_only=True)
     class Meta:
@@ -296,6 +299,15 @@ class ProdutosCarrinhoResponseSerializer(ModelSerializer):
         read_only = ["preco","precoKilo",'id', 'carrinho']
         
 class ProdutosCarrinhoRequestSerializer(ModelSerializer):
+    """Usado para fazer a API saber intrepertar pedidos
+
+    Args:
+        ModelSerializer (_type_): _description_
+
+
+    Returns:
+        ProdutoCarrinhoSerializer: Um ProdutoCarrinho Serializado
+    """
     produto = serializers.PrimaryKeyRelatedField(queryset=ProdutoUnidadeProducao.objects.all())
     carrinho = CarrinhoSerializer(read_only=True)
     class Meta:
@@ -318,6 +330,13 @@ class ProdutosCarrinhoRequestSerializer(ModelSerializer):
 
 
 class FornecedorNomeUtilizadorSerializer(ModelSerializer):
+    """Serializador de apoio  a UnidadeProducaoSingleProdutoSerializer
+    Ver mais abaixo no codigo.
+    Retirna o nome de um fornecedor. esse nome vem do utilizador associado ao proprio fornecedor
+
+    Args:
+        ModelSerializer (_type_): _description_
+    """
     utilizador = CharField(source="utilizador.nome", read_only=True)
     class Meta:
         model = Fornecedor
@@ -326,6 +345,9 @@ class FornecedorNomeUtilizadorSerializer(ModelSerializer):
 
 
 class UnidadeProducaoSingleProdutoSerializer(ModelSerializer):
+    """
+    Serializador de auxilio a Single Product Serializer. Devolve o id, o fornecedor, isto é o nome do fornecedor da UP, a morada, cidade e pais da UP
+    """
     fornecedor = FornecedorNomeUtilizadorSerializer(read_only=True)
     class Meta:
         model = UnidadeProducao
@@ -333,7 +355,9 @@ class UnidadeProducaoSingleProdutoSerializer(ModelSerializer):
         read_only_fields = ['fornecedor']
 
 
-class SingleProdutoPaginaSerializer(ModelSerializer):      
+class SingleProdutoPaginaSerializer(ModelSerializer):
+    """Devolve um só produto da tabela ProdutoUnidadeProducao
+    """
     unidade_producao = UnidadeProducaoSingleProdutoSerializer(read_only=True)
     produto = ProdutoSerializer()
     class Meta:

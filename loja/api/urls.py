@@ -31,16 +31,20 @@ urlpatterns = [
     path('<str:username>/fornecedor/unidadesProducao/<str:idUnidadeProducao>/veiculos/<str:idVeiculo>/', views.getVeiculo),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/produtos/', views.ProdutoUnidadeProducaoList.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/produtos/<int:idProdutoUnidadeProducao>/', views.ProdutoUnidadeProducaoDetail.as_view()),
-    
+    path('unidadesProducao/<str:id>/', views.UnidadeProducaoDetailSoInfo.as_view()),
     
     
     # loja
     path('categorias/', views.CategoriaList.as_view()),
     path('categorias/<str:slug>/', views.CategoriaDetail.as_view()), #preciso ver isto
+    path('categoriaNome/<str:nome>/', views.CategoriaDetailNome.as_view()),
+    
+    
     
     
     path('produtos/', views.ProdutoList.as_view()),
     path('produtos/<str:nome>/', views.ProdutoDetail.as_view()), #preciso ver isto
+    path('produtosID/<str:id>/', views.ProdutoDetailID.as_view()),
     path('produtos_loja/',views.ProdutoUnidadeProducaoAll.as_view()),
     path('produtos_loja/em_stock/', views.ProdutoUnidadeProducaoEmStock.as_view()),
     path('produtos_loja/<int:idProduto>/', views.SingleProductDetails.as_view()),

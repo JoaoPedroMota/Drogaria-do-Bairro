@@ -57,7 +57,7 @@ class PasswordConfirmForm(forms.Form):
 class ProdutoForm(forms.ModelForm):
     class Meta:
         model = Produto
-        fields = ['nome']
+        fields = ['nome', 'categoria']
 
 class ProdutoUnidadeProducaoForm(forms.ModelForm):
     data_producao = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))

@@ -50,7 +50,7 @@
 						<div id="UnidadeProducao">
                            
                             <div id="infoGeralUnidadeProducao">
-                                <h2>Unidade de Produção: </h2>
+                                <h2>Unidade de Produção: {{nome_up}} </h2>
                                 <h3>{{unidadeProducao.nome}}</h3>
                                 <hr>
 
@@ -113,13 +113,48 @@
 
                             <br>
                         
-                            {% if produtos %}
-                                <h4>Produtos associados:</h4>
-                                <ul>
-                                    {% for produto in produtos %}
-                                    <li>{{ produto.nome }}</li>
+                            {% if produtosUP %}
+                                <h2>Produtos associados a esta Unidade de Producao</h4>
+                                    
+                                    <table id="customers">
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th>Stock</th>
+                                            <th>Descricao</th>
+                                            <th>Unidade Medida</th>
+                                            <th>Preco</th>
+                                            <th>Unid. Medida por Unid.</th>
+                                            <th>Qnt. por Unid.</th>
+                                            <th>Data de Produção</th>
+                                            <th>Marca</th>
+                                        </tr>
+                                        {% for produto in produtosUP %}
+                                        <tr>
+                                            <td>{{ produto.produto }}</td>
+                                            <td>{{ produto.stock }}</td>
+                                            <td>{{ produto.descricao }}</td>
+                                            <td>{{ produto.unidade_medida }}</td>
+                                            <!-- preco -->
+                                            {% if produto.preco_a_granel != None %}
+                                                <td>{{produto.preco_a_granel}}€/{{produto.unidade_medida}}</td>
+                                            {% elif produto.preco_por_unidade != None %}
+                                                <td>{{produto.preco_por_unidade}}€/un</td>
+                                            {% endif %}
+                                            <!-- fim preco -->
+                                            {% if produto.unidade_medida != 'un' %}
+                                            <td> Campo não aplicável </td>
+                                            <td> Campo não aplicável </td>
+                                            {% else %}
+                                            <td> {{produto.unidade_Medida_Por_Unidade}}</td>
+                                            <td>  {{produto.quantidade_por_unidade}} </td>
+                                            {% endif %}
+                                            <td> {{produto.data_producao}}</td>
+                                            <td> {{produto.marca}}</td>
+                                        </tr>
+ 
+
                                     {% endfor %}
-                                </ul>
+                                </table>
                                 {% else %}
                                 <p>Nenhum produto associado a esta unidade de produção.</p>
                                 {% endif %}

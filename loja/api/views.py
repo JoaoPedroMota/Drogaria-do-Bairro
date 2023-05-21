@@ -170,6 +170,21 @@ class UnidadeProducaoList(APIView):
         return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
+class UnidadeProducaoDetailSoInfo(APIView):
+    def get_object(self, identifier):
+        try:
+            return UnidadeProducao.objects.get(id=identifier)
+        except UnidadeProducao.DoesNotExist:
+            raise Http404
+    def get(self, request, id):
+        up = self.get_object(id)
+        upSerializer = UnidadeProducaoSerializer(up, many=False)
+        return Response(upSerializer.data, status=status.HTTP_200_OK)
+
+
+
+
+
 class UnidadeProducaoDetail(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]#, IsFornecedorOrReadOnly
     def get_object(self, identifier, username):
@@ -317,6 +332,23 @@ class CategoriaDetail(APIView):
         return Response(serializar.data, status=status.HTTP_200_OK)
 ##############################################################
 
+
+class CategoriaDetailNome(APIView):
+    """
+    Devolve uma categoria, mas pelo nome
+    """
+    def get_object(self, identifier):
+        try:
+            return Categoria.objects.get(nome=identifier)
+        except Categoria.DoesNotExist:
+            return Http404
+    def get(self, request, nome, format=None):
+        categoria = self.get_object(nome)
+        serializar = CategoriaSerializer(categoria, many=False)
+        return Response(serializar.data, status=status.HTTP_200_OK)
+
+
+
 class ProdutoList(APIView):
     """
     Devolve todos os produtos da loja
@@ -370,7 +402,18 @@ class ProdutoDetail(APIView):
         serializar = ProdutoSerializer(produto, many=False)
         return Response(serializar.data, status=status.HTTP_200_OK)
 
-
+class ProdutoDetailID(APIView):
+    """Devolve um produto na loja, mas procura por um id
+    """
+    def get_object(self, identifier):
+        try:
+            return Produto.objects.get(id=identifier)
+        except Produto.DoesNotExist:
+            return Http404
+    def get(self, request, id, format=None):
+        produto = self.get_object(id)
+        serializar = ProdutoSerializer(produto, many=False)
+        return Response(serializar.data, status=status.HTTP_200_OK)
 
 class ProdutoUnidadeProducaoList(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]

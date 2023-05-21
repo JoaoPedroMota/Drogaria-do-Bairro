@@ -286,6 +286,104 @@ def criarUP(request, userName):
 
 def unidadeProducao(request, userName, id):
     context = {}
+    def criar_produto_temporario(produtosUPRespostaJSON):
+        lista_produtos_up = []
+        nome_up = ""
+        semaforo = 0
+        print(produtosUPRespostaJSON)
+        for produto in produtosUPRespostaJSON:
+            ### TABELA PRODUTO
+            idProduto = produto.get('produto')
+            urlProduto = f'http://127.0.0.1:8000/api/produtosID/{idProduto}/'
+            respostaProdutoGeral = requests.get(urlProduto)
+            produtoDicionario = respostaProdutoGeral.json() #informações de um produto
+
+
+            
+            print(f"PRODUTO DICIONÁRIO:{produtoDicionario}")
+            
+            
+            
+            #### TABELA CATEGORIA
+            
+            
+            nomeCategoria = produtoDicionario['categoria']['nome']
+            
+            
+            
+
+            # urlCategoria = f'http://127.0.0.1:8000/api/categoriaNome/{nomeCategoria}/'
+        
+            # respostaCategoria = requests.get(urlCategoria) #informacoes de uma categoria
+
+            # categoriaDicionario = respostaCategoria.json()
+
+
+            categoria = Categoria.objects.get(nome=nomeCategoria) #problema com loop de categoria pai
+            
+            
+            
+        
+            
+            #### DE VOLTA TABELA PRODUTO
+            produtoDicionario['categoria'] = categoria
+            
+            
+            produtoGeral = Produto(**produtoDicionario)  #cria um objeto produto sem guardar
+            produto['produto'] = produtoGeral
+
+            
+            
+            ##### TABELA UNIDADE PRODUÇÃO
+            idUP = produto['unidade_producao']
+            urlUP = f'http://127.0.0.1:8000/api/unidadesProducao/{idUP}'
+            respostaUP = requests.get(urlUP)
+            upDicionario = respostaUP.json() #informações de um produto
+            
+            
+            
+            ##### TABELA FORNECEDORES
+            usernameFornecedor = upDicionario['fornecedor']['utilizador']
+            
+            urlFornecedor = f'http://127.0.0.1:8000/api/{usernameFornecedor}/fornecedor/'
+            urlUtilizadorFornecedor = f'http://127.0.0.1:8000/api/utilizadores/{usernameFornecedor}/'
+            
+            
+            respostaFornecedor = requests.get(urlFornecedor)
+            respostaUtilizador = requests.get(urlUtilizadorFornecedor)
+            
+            dicionarioFornecedor = respostaFornecedor.json()
+            dicionarioUtilizador = respostaUtilizador.json()
+            
+            
+            
+            user_temp = Utilizador(**dicionarioUtilizador)
+            dicionarioFornecedor['utilizador'] = user_temp
+            
+            fornecedor_temp = Fornecedor(**dicionarioFornecedor)
+            
+            
+            upDicionario['fornecedor'] = fornecedor_temp
+            up_temporario = UnidadeProducao(**upDicionario)           
+            
+            
+            if semaforo == 0:
+                nome_up = up_temporario.nome
+            
+            produto['unidade_producao']=up_temporario
+            
+            
+            
+            
+            #### TABELA ProdutoUnidadeProducao
+            myProduto = ProdutoUnidadeProducao(**produto) #cria um produto unidade producao sem guardar
+            lista_produtos_up.append(myProduto)
+            print(lista_produtos_up)
+            print(f"PRODUTO DICIONÁRIO:{produtoDicionario}")
+            print(f"CATEGORIA:{categoria}")
+        return lista_produtos_up, nome_up
+    
+
     # utilizador = Utilizador.objects.get(username=userName)
     # fornecedor = utilizador.fornecedor
     # #fornecedor.unidades_producao.all()
@@ -323,13 +421,25 @@ def unidadeProducao(request, userName, id):
         #print('Response:', response2.content)
         return None
 
-    print("informaçao que fui buscar 2: ",data2)
+    #print("informaçao que fui buscar 2: ",data2)
     num_veiculos = len(data2)
-    print("num_veiculos",num_veiculos)
+    #print("num_veiculos",num_veiculos)
     veiculos = data2
-    print("veiculos",veiculos)
+    #print("veiculos",veiculos)
 
-    context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id}
+    
+    
+    ######produtos
+    urlProdutosUP = f'http://127.0.0.1:8000/api/{userName}/fornecedor/unidadesProducao/{id}/produtos/'
+    
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    respostaProdutosUP = sessao.get(urlProdutosUP)
+    produtosUP = respostaProdutosUP.json()
+    lista_produtos_up,nome_up = criar_produto_temporario(produtosUP)
+    
+    
+    context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id, "produtosUP":lista_produtos_up, 'nome_up':nome_up}
     return render(request, 'loja/unidadeProducao.html', context)
 
 #######################ZONA DE TESTE######################################################
