@@ -5,6 +5,9 @@ from .views import removerUnidadeProducao, removerVeiculo, criar_produto, ver_pr
 urlpatterns = [
     path('api/', include('loja.api.urls')),
     path('', views.loja, name='loja-home'),
+
+    path('auth0', views.auth0, name='auth0'),
+
     path('about/', views.about, name='about'),
     path('contacts/', views.contacts, name='contacts'),
     path('news/', views.news, name='news'),

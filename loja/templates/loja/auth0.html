@@ -7,7 +7,7 @@
 {% if session %}
   <h1>Welcome {{session.userinfo.name}}!</h1>
   <p><a href="{% url 'loja-logout' %}">Logout</a></p>
-  <div><pre>{{request.user.email}}</pre></div>
+  <div><pre>{{pretty}}</pre></div>
 {% else %}
   <h1>Welcome Guest</h1>
   <p><a href="{% url 'loja-login' %}">Login</a></p>

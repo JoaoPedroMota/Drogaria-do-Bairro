@@ -3,7 +3,7 @@ from django.urls import reverse
 import requests
 from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo, Carrinho,Categoria, Produto
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login as AuthLogin, logout
 from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
@@ -47,8 +47,17 @@ def loja(request):
     context = {
         "session": request.session.get("user"),
         "pretty": json.dumps(request.session.get("user"), indent=4),
+        
     }
     return render(request, 'loja/loja.html', context)
+
+def auth0(request):
+    context = {
+        "session": request.session.get("user"),
+        "pretty": json.dumps(request.session.get("user"), indent=4),
+    }
+    return render(request, 'loja/auth0.html', context)
+
 def contacts(request):
     context = {}
     return render(request, 'loja/contacts.html', context)
@@ -94,7 +103,16 @@ def login(request):
 def callback(request):
     token = oauth.auth0.authorize_access_token(request)
     request.session["user"] = token
-    return redirect(request.build_absolute_uri(reverse("news")))
+    
+    user_id = token['userinfo']['email']
+
+    request.session['auth0_user_id'] = user_id
+
+    user = Utilizador.objects.get(email=user_id)
+
+    AuthLogin(request, user)
+
+    return redirect(request.build_absolute_uri(reverse("loja-home")))
 
 def logout(request):
     request.session.clear()
@@ -122,7 +140,7 @@ def registerUtilizador(request):
             utilizador.cidade = utilizador.cidade.upper()
             utilizador.nome = utilizador.first_name+' '+ utilizador.last_name
             utilizador.save()
-            login(request,utilizador)
+            AuthLogin(request,utilizador)
             if utilizador.tipo_utilizador == "C":
                 consumidor = Consumidor.objects.create(utilizador=utilizador)
                 carrinho = Carrinho.objects.create(consumidor=consumidor)
