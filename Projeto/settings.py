@@ -189,7 +189,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS = True # cuidado!!!! verificar quando estiver no sercvidor. ESTA LINHA DEFINE QUEM PODE FAZER PEDIDOS À API
 
 REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'rest_framework_json_api.exceptions.exception_handler',
+    'EXCEPTION_HANDLER': (
+        'rest_framework_json_api.exceptions.exception_handler',
+        'rest_framework_json.exceptions.exception_handler',
+        "Projeto.loja.api.utilidades_api.custom_exception_handler"
+                          ),
     'DEFAULT_PARSER_CLASSES': (
         'rest_framework_json_api.parsers.JSONParser',
     ),

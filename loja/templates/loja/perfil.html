@@ -69,6 +69,8 @@
                 </div>
                 {% if request.user.is_fornecedor %}
                 <div id="Fornecedor">
+                    <a href="{% url 'loja-criarProduto' userName=request.user.username%}" class="btn btn-primary">Criar Produto</a>
+                    <a href="{% url 'loja-associarProdutoUP' %}" class="btn btn-primary"> Associar Produto a Unidade de Produção</a>
                     <table id="infoGeralFornecedor">
                         {% if numero_up > 0 %}
                         <div id="numeroUPfornecedor">

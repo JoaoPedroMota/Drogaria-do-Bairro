@@ -26,17 +26,20 @@ class IsFornecedorAndOwnerOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         if request.user.is_authenticated and request.user.is_fornecedor:
-            username = view.kwargs.get('username')
+            username = view.kwargs.get('username') #username no link.
 
-            user = Utilizador.objects.get(username=username)
+            user = Utilizador.objects.get(username=username) # a que utilizador corresponde o username no link
 
-            idFornecedor = user.fornecedor.id
+            idFornecedor = user.fornecedor.id #qual o fornecedor que tem como username, o username no link
 
-            idUnidadeProducao = view.kwargs.get('idUnidadeProducao')
+            idUnidadeProducao = view.kwargs.get('idUnidadeProducao') #id unidade de producao está indicada no link
 
             try:
-                up = UnidadeProducao.objects.get(id=idUnidadeProducao)
-                return up.fornecedor.utilizador == request.user and up.fornecedor.id == int(idFornecedor)
+                up = UnidadeProducao.objects.get(id=idUnidadeProducao) #unidade producao com o id que está no link
+                return up.fornecedor.utilizador == request.user and up.fornecedor.id == int(idFornecedor) #se o fornecedor(utilizador) da up indicada no link
+                                                                                                        # for o mesmo utilizador do request e o id do fornecedor 
+                                                                                                        # da up indicada no link for o mesmo id do fornecedor do utilizador indicado no link
+                                                                                                        #
             except UnidadeProducao.DoesNotExist:
                 return False
         raise PermissionDenied(detail="Não pode realizar esta ação porque não é um fornecedor")

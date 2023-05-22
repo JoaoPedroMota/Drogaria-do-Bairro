@@ -1,13 +1,15 @@
 {% extends 'main.html' %}
 {% block content %}
-<h2>Registar novo produto</h2>
+
+
+<h1>Registar novo produto</h1>
 <form method="post" enctype="multipart/form-data">
   {% csrf_token %}
   {{ form.as_p }}
-  <div>
+  <!-- <div>
     <label for="{{ form.imagem.id_for_label }}">Imagem:</label>
     {{ form.imagem }}
-  </div>
+  </div> -->
   <button type="submit">Salvar</button>
 </form>
 {% endblock %}

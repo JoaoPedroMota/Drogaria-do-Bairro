@@ -1,6 +1,7 @@
 from decimal import Decimal
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.middleware.csrf import get_token
 import requests
 from .models import *
 from django.contrib import messages
@@ -13,6 +14,7 @@ import requests
 from django.db.models import QuerySet
 from django.contrib.auth.hashers import check_password
 from loja.api.serializers import *
+from .utils import fornecedor_required
 
 
  
@@ -202,7 +204,8 @@ def perfil(request, userName):
         context['numero_up'] = numero_up
     return render(request,'loja/perfil.html',context)
 
-@login_required(login_url='loja-login')
+# @login_required(login_url='loja-login')
+@fornecedor_required
 def criarUP(request, userName):
     utilizador = Utilizador.objects.get(username=userName)
     fornecedor_id = utilizador.fornecedor
@@ -283,14 +286,14 @@ def criarUP(request, userName):
 #     return render(request, 'loja/shop.html', context)
 
 
-
+@fornecedor_required
 def unidadeProducao(request, userName, id):
     context = {}
     def criar_produto_temporario(produtosUPRespostaJSON):
         lista_produtos_up = []
         nome_up = ""
         semaforo = 0
-        print(produtosUPRespostaJSON)
+        #print("\n\n\n\nPRODUTOS RECEBIDOS. VIERAM DA API:",produtosUPRespostaJSON)
         for produto in produtosUPRespostaJSON:
             ### TABELA PRODUTO
             idProduto = produto.get('produto')
@@ -300,7 +303,7 @@ def unidadeProducao(request, userName, id):
 
 
             
-            print(f"PRODUTO DICIONÁRIO:{produtoDicionario}")
+            #print(f"PRODUTO DICIONÁRIO:{produtoDicionario}")
             
             
             
@@ -346,7 +349,7 @@ def unidadeProducao(request, userName, id):
             usernameFornecedor = upDicionario['fornecedor']['utilizador']
             
             urlFornecedor = f'http://127.0.0.1:8000/api/{usernameFornecedor}/fornecedor/'
-            urlUtilizadorFornecedor = f'http://127.0.0.1:8000/api/utilizadores/{usernameFornecedor}/'
+            urlUtilizadorFornecedor = f'http://127.0.0.1:8000/api/{usernameFornecedor}/utilizadores/'
             
             
             respostaFornecedor = requests.get(urlFornecedor)
@@ -378,39 +381,39 @@ def unidadeProducao(request, userName, id):
             #### TABELA ProdutoUnidadeProducao
             myProduto = ProdutoUnidadeProducao(**produto) #cria um produto unidade producao sem guardar
             lista_produtos_up.append(myProduto)
-            print(lista_produtos_up)
-            print(f"PRODUTO DICIONÁRIO:{produtoDicionario}")
-            print(f"CATEGORIA:{categoria}")
+            #print(f"\n\n\n\nPRODUTO DICIONÁRIO UM SÓ PRODUTO:{produtoDicionario}")
+        #print(f"\n\n\n\nLista de todos os produtos desta Unidade de Produção: {lista_produtos_up}")
+        
         return lista_produtos_up, nome_up
     
-
-    # utilizador = Utilizador.objects.get(username=userName)
-    # fornecedor = utilizador.fornecedor
-    # #fornecedor.unidades_producao.all()
-    # unidadeProducao = fornecedor.unidades_producao.get(pk=id)
-    # veiculos = unidadeProducao.veiculo_set.all()
-    
-    # num_veiculos = veiculos.count()
-    #url = 'http://127.0.0.1:8000/api/fornecedores/'+str(userName)
-    #url = 'http://127.0.0.1:8000/api/utilizadores/'
-    
-    #response = requests.get(url)
-    
-    #if response.status_code == 200:
-    #    data = response.json()
-    #    print("FJAOIWJFOIJAWIOFJIOAWJF",id)
-        # Process the data as needed
-        #return data
-    #else:
-        #print('Error:', response.status_code)
-        #print('Response:', response.content)
-    #    return None
-    #("informaçao que fui buscar: ",data)              
-    #print(data[0]['id'])
-    #idFornecedor = data['id']
+    if True: #esconder codigo abaixo
+        pass
+        # utilizador = Utilizador.objects.get(username=userName)
+        # fornecedor = utilizador.fornecedor
+        # #fornecedor.unidades_producao.all()
+        # unidadeProducao = fornecedor.unidades_producao.get(pk=id)
+        # veiculos = unidadeProducao.veiculo_set.all()
+        
+        # num_veiculos = veiculos.count()
+        #url = 'http://127.0.0.1:8000/api/fornecedores/'+str(userName)
+        #url = 'http://127.0.0.1:8000/api/utilizadores/'
+        
+        #response = requests.get(url)
+        
+        #if response.status_code == 200:
+        #    data = response.json()
+        #    print("FJAOIWJFOIJAWIOFJIOAWJF",id)
+            # Process the data as needed
+            #return data
+        #else:
+            #print('Error:', response.status_code)
+            #print('Response:', response.content)
+        #    return None
+        #("informaçao que fui buscar: ",data)              
+        #print(data[0]['id'])
+        #idFornecedor = data['id']
 
     url2 = 'http://127.0.0.1:8000/api/'+str(userName)+'/fornecedor/unidadesProducao/'+str(id)+'/veiculos/'
-    #path('fornecedores/<str:idFornecedor>/unidadesProducao/<str:idUnidadeProducao>/veiculos/', views.getVeiculos),
     response2 = requests.get(url2)
     if response2.status_code == 200:
         data2 = response2.json()
@@ -444,7 +447,8 @@ def unidadeProducao(request, userName, id):
 
 #######################ZONA DE TESTE######################################################
 
-@login_required(login_url='loja-login')
+# @login_required(login_url='loja-login')
+@fornecedor_required
 def editarUnidadeProducao(request, userName, id):
     pagina = 'editarUnidadeProducao'
     utilizador = Utilizador.objects.get(username=userName)
@@ -499,7 +503,7 @@ def editarUnidadeProducao(request, userName, id):
 #             return redirect(link)
 #     context = {'form':form, 'pagina':pagina}
 #     return render(request, 'loja/editarUtilizador.html', context)
-
+@fornecedor_required
 def removerUnidadeProducao(request, userName, id):
     # Busca a unidade de produção pelo id passado na URL
     unidade_producao = UnidadeProducao.objects.get(pk=id)
@@ -513,7 +517,8 @@ def removerUnidadeProducao(request, userName, id):
     return redirect('loja-perfil', userName=request.user.username)
 
 
-@login_required(login_url='loja-login')
+# @login_required(login_url='loja-login')
+@fornecedor_required
 def criarVeiculo(request, userName, id):
     pagina = 'criarVeiculo'
     utilizador = Utilizador.objects.get(username=userName)
@@ -540,7 +545,8 @@ def criarVeiculo(request, userName, id):
     context = {'form':formulario, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
     return render(request, 'loja/criarVeiculo.html', context)
 
-@login_required(login_url='loja-login')
+#@login_required(login_url='loja-login')
+@fornecedor_required
 def editarVeiculo(request, userName, id, idVeiculo):
     pagina = 'editarVeiculo'
     utilizador = Utilizador.objects.get(username=userName)
@@ -571,11 +577,21 @@ def editarVeiculo(request, userName, id, idVeiculo):
     context = {'form':formulario, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
     return render(request, 'loja/editarVeiculo.html', context)
 
+
+
+@fornecedor_required
 def removerVeiculo(request, userName, id):
     veiculo = Veiculo.objects.get(id=id)
     veiculo.delete()
     return redirect(request.META['HTTP_REFERER'])
 
+
+
+
+
+
+#### O QUE É ISTO??????????????
+@fornecedor_required
 def remover_veiculo(request, id):
     veiculo = get_object_or_404(Veiculo, pk=id)
     if request.method == 'POST':
@@ -624,20 +640,42 @@ def remover_veiculo(request, id):
 #     context = {'produtos': produtos}
 #     return render(request, 'ver_produtos.html', context)
 
-
-def criar_produto(request, userName, id):
-    unidade = get_object_or_404(UnidadeProducao, pk=id)
+# @login_required(login_url='loja-login')
+@fornecedor_required
+def criar_produto(request, userName):
     if request.method == 'POST':
         form = ProdutoForm(request.POST)
         if form.is_valid():
-            produto = form.save(commit=False)
-            categoria_nome = form.cleaned_data['categoria']
-            categoria, _ = Categoria.objects.get_or_create(nome=categoria_nome)
-            produto.categoria = categoria
-            produto.unidade_producao = unidade
-            produto.save()
-            messages.success(request, 'Produto criado com sucesso!')
-            return redirect('loja-unidadeProducao', userName=userName, id=id)
+            nome_produto = form.cleaned_data['nome']
+            idCategoria = form.data['categoria']
+            urlCategoria = f'http://127.0.0.1:8000/api/categorias/{idCategoria}/'
+            respostaCategoria = requests.get(urlCategoria)
+            conteudo = respostaCategoria.json()
+            
+            categoria_nome = conteudo.get('nome')
+            produto_data = {
+                "nome": nome_produto,
+                "categoria": categoria_nome
+            }
+            print("DICIONÁRIO INFO:",produto_data)
+            sessao = requests.Session()
+            sessao.cookies.update(request.COOKIES)
+            urlCriarProduto = f"http://127.0.0.1:8000/api/produtos/"
+            
+            headers = {"Authorization": f"Token {request.user.auth_token}"}
+            
+            
+            resposta = sessao.post(urlCriarProduto, data=produto_data, headers=headers)
+            if resposta.status_code == 201:
+                messages.success(request, 'Produto criado com sucesso!')
+                return redirect('loja-perfil', userName=userName)
+            else:
+                print("ERRO!!!!!!!!")
+                messages.error(request, 'Erro ao criar Produto!')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}_error::{error}')
     else:
         form = ProdutoForm()
     return render(request, 'loja/criar_produto.html', {'form': form})
@@ -819,3 +857,87 @@ def remover_do_carrinho(request, produto_id):
     produto_carrinho.delete()
     messages.success(request, 'O produto foi removido do carrinho com sucesso.')
     return redirect('loja-carrinho')
+
+    
+@fornecedor_required
+def removerAssociaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProducao):    
+    if request.method == 'POST':
+        url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/produtos/{idProdutoUnidadeProducao}/'
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
+        
+        csrf_token = get_token(request)
+        headers = {'X-CSRFToken':csrf_token}
+        
+        resposta = sessao.delete(url, headers=headers)
+        
+        if resposta.status_code == 204:
+            if resposta.text:
+                conteudo = resposta.json()
+                detial = conteudo.get('detail', 'Erro desconhecido ao apagar a associação')
+                print(conteudo)
+        else:
+            print("Erro ao apagar associação")
+    return redirect('loja-unidadeProducao', userName=request.user.username, id=idUnidadeProducao)
+
+
+
+#@login_required(login_url='loja-login')
+@fornecedor_required
+def criarAssociacaoProdutoUP(request):
+    formulario = ProdutoUnidadeProducaoForm(user=request.user)
+    if request.method == 'POST':
+        form = ProdutoUnidadeProducaoForm(request.POST, user=request.user)
+        if form.is_valid():
+            produto = form.cleaned_data['produto']
+            unidade_producao = form.cleaned_data['unidade_producao']
+            descricao = form.cleaned_data['descricao']
+            stock = form.cleaned_data['stock']
+            unidade_medida = form.cleaned_data['unidade_medida']
+            preco_a_granel = form.cleaned_data['preco_a_granel']
+            unidade_Medida_Por_Unidade = form.cleaned_data['unidade_Medida_Por_Unidade']
+            quantidade_por_unidade = form.cleaned_data['quantidade_por_unidade']
+            preco_por_unidade = form.cleaned_data['preco_por_unidade']
+            data_producao = form.cleaned_data['data_producao']
+            marca = form.cleaned_data['marca']
+            
+            produto_up_data= {
+                "produto": produto.id,
+                "unidade_producao":unidade_producao.id,
+                "descricao": descricao,
+                "stock": stock,
+                "unidade_medida": unidade_medida,
+                "preco_a_granel":preco_a_granel,
+                "unidade_Medida_Por_Unidade": unidade_Medida_Por_Unidade,
+                "quantidade_por_unidade": quantidade_por_unidade,
+                "preco_por_unidade": preco_por_unidade,
+                "data_producao":data_producao,
+                "marca":marca
+            }
+            
+            print(produto_up_data)
+            url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{unidade_producao.id}/produtos/'
+
+            
+            
+            
+            sessao = requests.Session()
+            sessao.cookies.update(request.COOKIES)
+        
+            csrf_token = get_token(request)
+            headers = {'X-CSRFToken':csrf_token}
+        
+            resposta = sessao.post(url, headers=headers,)
+            if resposta.status_code == 201:
+                messages.success(request, 'Produto criado com sucesso.')
+                return redirect('loja-perfil', userName=request.user.username)
+            else:
+                pass
+        else:
+            # Se o formulário não é válido, armazena os erros em cada campo do formulário
+            for field in form:
+                field.error_messages = [error for error in form.errors.get(field.name, [])]
+            context = {'formulario': form}
+            return render(request, 'loja/criarAssociacaoProdutoUP.html', context)
+    context = {'formulario': formulario}
+    return render(request, 'loja/criarAssociacaoProdutoUP.html', context)
