@@ -45,9 +45,7 @@ oauth.register(
 # Create your views here.
 def loja(request):
     context = {
-        "session": request.session.get("user"),
-        "pretty": json.dumps(request.session.get("user"), indent=4),
-        
+        "session": request.session.get("user")
     }
     return render(request, 'loja/loja.html', context)
 
@@ -103,16 +101,31 @@ def login(request):
 def callback(request):
     token = oauth.auth0.authorize_access_token(request)
     request.session["user"] = token
+
+    # email = token['userinfo']['email']
+
+    # user, created = Utilizador.objects.get_or_create(username= token['userinfo']['nickname'] ,email=email)
+
+    # AuthLogin(request, user)
+
+    # if created:
+    #     return redirect("auth0")
+    # else:
+    #     return redirect(request.build_absolute_uri(reverse("loja-home")))
+
+    username = token['userinfo']['nickname']
+
+    # url = f'http://127.0.0.1:8000/api/utilizadores/{username}'
+    url = f'http://127.0.0.1:8000/api/utilizadores/ninfante'
     
-    user_id = token['userinfo']['email']
+    response = requests.get(url)
 
-    request.session['auth0_user_id'] = user_id
-
-    user = Utilizador.objects.get(email=user_id)
-
-    AuthLogin(request, user)
-
-    return redirect(request.build_absolute_uri(reverse("loja-home")))
+    if response.status_code == 200:
+        user = Utilizador(**response.json())
+        AuthLogin(request, user)
+        return redirect(request.build_absolute_uri(reverse("loja-home")))
+    else:
+        pass
 
 def logout(request):
     request.session.clear()
@@ -224,6 +237,7 @@ def apagarConta(request, pk):
 
 @login_required(login_url='loja-login')
 def perfil(request, userName):
+    print(request.session.get("user"))
     utilizadorPerfil = Utilizador.objects.get(username=userName)
     pagina = 'perfil'
     context={'pagina':pagina, 'utilizadorView': utilizadorPerfil}

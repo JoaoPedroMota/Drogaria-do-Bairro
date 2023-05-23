@@ -8,6 +8,7 @@
   <h1>Welcome {{session.userinfo.name}}!</h1>
   <p><a href="{% url 'loja-logout' %}">Logout</a></p>
   <div><pre>{{pretty}}</pre></div>
+  <div><pre>{{pretty2}}</pre></div>
 {% else %}
   <h1>Welcome Guest</h1>
   <p><a href="{% url 'loja-login' %}">Login</a></p>
