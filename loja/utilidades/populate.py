@@ -60,5 +60,6 @@ Categoria.objects.create(nome="Nuggets", categoria_pai=54)
 Categoria.objects.create(nome="Padaria e Pastelaria", categoria_pai=2)
 Categoria.objects.create(nome="Padaria", categoria_pai=57)
 Categoria.objects.create(nome="Pastelaria", categoria_pai=57)
-Categoria.objects.create(nome="Pão", categoria_pai=57)
+Categoria.objects.create(nome="Pão", categoria_pai=57)  
 ####### FIM CATEGORIAS #######
+

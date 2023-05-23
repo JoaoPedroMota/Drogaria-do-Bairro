@@ -50,11 +50,9 @@
 						<div id="UnidadeProducao">
                            
                             <div id="infoGeralUnidadeProducao">
-                                <h2>Unidade de Produção: {{nome_up}} </h2>
-                                <h3>{{unidadeProducao.nome}}</h3>
+                                <h2>Unidade de Produção:</h2>
+                                <h3>{{nome_up}}</h3>
                                 <hr>
-
-
                                 {% if num_veiculos > 0 %}
                                 <div id="numeroVeiculos">
                                     <p>Número de veículos desta unidade de produção: {{num_veiculos}}.</p>
@@ -127,6 +125,7 @@
                                             <th>Qnt. por Unid.</th>
                                             <th>Data de Produção</th>
                                             <th>Marca</th>
+                                            <th>Remover Produto de Unidade de Produção</th>
                                         </tr>
                                         {% for produto in produtosUP %}
                                         <tr>
@@ -150,6 +149,12 @@
                                             {% endif %}
                                             <td> {{produto.data_producao}}</td>
                                             <td> {{produto.marca}}</td>
+                                            <td>
+                                                <form action="{% url 'loja-removerAssociaoProdutoUP' idUnidadeProducao=unidadeProducao idProdutoUnidadeProducao=produto.id %}" method="post">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja remover a associação entre o Produto: {{produto.produto}} e a Unidade de Produção atual ({{nome_up}}) ?')">Remover</button>
+                                                </form>
+                                            </td>
                                         </tr>
  
 

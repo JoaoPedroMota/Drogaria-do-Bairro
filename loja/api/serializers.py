@@ -2,7 +2,7 @@ from rest_framework.serializers import ModelSerializer, Field, SerializerMethodF
 from rest_framework.fields import ImageField
 #### MODELOS ####
 from loja.models import Utilizador, Consumidor, UnidadeProducao, Fornecedor, Veiculo, Produto, Categoria, Carrinho, ProdutosCarrinho, ProdutoUnidadeProducao
-
+from .utilidades_api import categorias_nao_pai
 #######
 from django_countries.fields import CountryField
 from django_countries.serializers import CountryFieldMixin
@@ -214,15 +214,49 @@ class CategoriaProduto(ModelSerializer):
     class Meta:
         model = Categoria
         fields= ['nome']
+
+
+
+
 class ProdutoSerializer(ModelSerializer):
-    categoria = CategoriaProduto(read_only=True)
+    categoria = CategoriaProduto()
     class Meta:
         model = Produto
         fields = ['id','nome', 'categoria']
-        
-        
-        
-        
+
+
+
+class ProdutoSerializerRequest(serializers.ModelSerializer):
+    categoria= serializers.CharField(write_only=True)  # Adicione este campo
+
+    class Meta:
+        model = Produto
+        fields = ['id', 'nome', 'categoria']
+
+    def validate_categoria_nome(self, value):
+        categorias_validas = categorias_nao_pai()
+        if value not in [categoria.nome for categoria in categorias_validas]:
+            raise serializers.ValidationError("A categoria selecionada é inválida. Por favor, escolha uma categoria que não seja uma categoria pai.")
+        return value
+
+    def create(self, validated_data):
+        if type(validated_data['categoria']) == str:
+            categoria = validated_data.pop('categoria')
+        elif type(validated_data['categoira']) == dict:
+            categoria_temp = validated_data.pop('categoria')
+            categoria = categoria_temp['nome']
+        else:
+            raise serializers.ValidationError("A categoria nem é uma string nem um dicionário válido.")
+        try:
+            categoria = Categoria.objects.get(nome=categoria)
+        except Categoria.DoesNotExist:
+            raise serializers.ValidationError(f"A categoria {categoria} não existe")
+        produto = Produto.objects.create(categoria=categoria, **validated_data)
+        return produto
+
+
+
+
 class CarrinhoSerializer(ModelSerializer):
     consumidor = ConsumidorSerializer()
     class Meta:
@@ -243,6 +277,7 @@ class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
         """
         A mesma coisa que o clean() no modelo ProdutoUnidadeProducao, mas para o serializador
         """
+        print("A validar a informação...")
         unidade_medida = data.get('unidade_medida')
         preco_a_granel = data.get('preco_a_granel')
         unidade_Medida_Por_Unidade = data.get('unidade_Medida_Por_Unidade')
@@ -253,21 +288,24 @@ class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
             if preco_a_granel is not None:
                 raise serializers.ValidationError('O preço a granel não é permitido para produtos vendidos à unidade. Remova o campo preco_a_granel.')
             if unidade_Medida_Por_Unidade is None:
-                raise serializers.ValidationError('Tem de introduzir a unidade de media da embalagem/unidade.')
+                raise serializers.ValidationError('Tem de introduzir a unidade de media da embalagem/unidade. Preencha o campo  \"unidade_Medida_Por_Unidade\"')
             
             if quantidade_por_unidade is None:
-                raise serializers.ValidationError('A quantidade por unidade é obrigatória para produtos vendidos à unidade.')
+                raise serializers.ValidationError('A quantidade por unidade é obrigatória para produtos vendidos à unidade. Preencha o campo quantidade_por_unidade ')
             
             if preco_por_unidade is None:
                 raise serializers.ValidationError('O preço por unidade é obrigatório para produtos vendidos à unidade.')
             
         elif unidade_medida in ('kg', 'g', 'l', 'ml'):
             if unidade_Medida_Por_Unidade is not None:
-                raise serializers.ValidationError(f'Selecionou antes {dict(self.UNIDADES_MEDIDA_CHOICES).get(unidade_medida)} como unidade de medida deste produto. Este campo serve para indicar qual a unidade de medida do produto à venda. Remova o campo unidade_Medida_Por_Unidade.')
+                raise serializers.ValidationError(f'Selecionou antes {unidade_medida} como unidade de medida deste produto. Este campo serve para indicar qual a unidade de medida do produto à venda. Remova o campo unidade_Medida_Por_Unidade.')
             if quantidade_por_unidade is not None:
                 raise serializers.ValidationError('A quantidade por unidade não é permitida para produtos vendidos por peso ou volume. Remova este campo.')
             if preco_por_unidade is not None:
                 raise serializers.ValidationError('O preço por unidade não é permitido para produtos vendidos por peso ou volume. Remova este campo.')
+            if preco_a_granel is None:
+                   raise serializers.ValidationError('O preço a granel é obrigatório para produtos vendidos por peso ou volume. Preencha o campo: Preço a granel.') 
+
         else:
             if unidade_medida == 'un':
                 if unidade_Medida_Por_Unidade is None:

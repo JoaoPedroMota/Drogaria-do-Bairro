@@ -7,7 +7,7 @@ urlpatterns = [
     path('', views.getRotas),
     # utilizadores
     path('utilizadores/', views.UtilizadoresList.as_view()),
-    path('utilizadores/<str:username>/', views.UtilizadoresDetail.as_view()),
+    path('<str:username>/utilizadores/', views.UtilizadoresDetail.as_view()),
     
     
     
@@ -36,7 +36,7 @@ urlpatterns = [
     
     # loja
     path('categorias/', views.CategoriaList.as_view()),
-    path('categorias/<str:slug>/', views.CategoriaDetail.as_view()), #preciso ver isto
+    path('categorias/<int:id>/', views.CategoriaDetail.as_view()), #preciso ver isto
     path('categoriaNome/<str:nome>/', views.CategoriaDetailNome.as_view()),
     
     

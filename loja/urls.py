@@ -21,13 +21,14 @@ urlpatterns = [
     path('perfil/<str:userName>/unidadeProducao/<str:id>/editarVeiculo/<str:idVeiculo>', views.editarVeiculo, name='loja-editarVeiculo'),
     path('perfil/<str:userName>/unidadeProducao/<str:id>/editarUnidadeProducao/', views.editarUnidadeProducao, name='loja-editarUnidadeProducao'),
     path('<str:userName>/unidadeProducao/<int:id>/remover', removerUnidadeProducao, name='loja-removerUnidadeProducao'),
-    path('criar_produto/<str:userName>/<int:id>', views.criar_produto, name='loja-criarProduto'),
+    path('criar_produto/<str:userName>/', views.criar_produto, name='loja-criarProduto'),
     path('shop/', views.ver_produtos, name='loja-ver_produtos'),
     path('shop/<int:produto_id>/', views.sP, name='loja-single-product'),
     path('carrinho/', views.carrinho, name='loja-carrinho'),
     path('adicionar_ao_carrinho/<int:produto_id>/', views.adicionar_ao_carrinho, name='loja-adicionar-ao-carrinho'),
     path('remover_do_carrinho/<int:produto_id>/', views.remover_do_carrinho, name='loja-remover-do-carrinho'),
-
+    path('remover_produto_unidadeProducao/<int:idUnidadeProducao>/<int:idProdutoUnidadeProducao>/', views.removerAssociaoProdutoUP, name='loja-removerAssociaoProdutoUP'),
+    path('associar_produto_unidade_producao/', views.criarAssociacaoProdutoUP, name="loja-associarProdutoUP")
 ]
 
 

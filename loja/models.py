@@ -374,7 +374,7 @@ def generate_slug(name):
 #from .views import adicionar_atributos_a_subcategorias
 
 class Categoria(models.Model):
-    nome = models.CharField(max_length=30, unique=True) 
+    nome = models.CharField(max_length=50, unique=True) 
     #slug = models.SlugField(max_length=50, unique=True)                               #default=1,
     categoria_pai = models.ForeignKey('Categoria', on_delete=models.SET_NULL,  null=True, blank=True)
     def __str__(self):
@@ -429,19 +429,19 @@ class ProdutoUnidadeProducao(models.Model):
     )
     
     ### produto e unidade de produção
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='unidades_producao')
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='unidades_producao', blank=False, null=False)
     unidade_producao = models.ForeignKey(UnidadeProducao, on_delete=models.CASCADE, related_name='produtos')
     stock = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False, validators=[MinValueValidator(0)])
-    descricao = models.TextField(max_length=200, null=True, blank=False)    
+    descricao = models.TextField(max_length=200, null=True, blank=True)    
     #cenas a granel
     unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES, null=False, blank=False)
-    preco_a_granel = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
+    preco_a_granel = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
     ###cenas à unidade
     unidade_Medida_Por_Unidade = models.CharField(max_length=2,choices=UNIDADES_MEDIDA_CHOICES_unidade, null=True, blank=True)
-    quantidade_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
-    preco_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)  
+    quantidade_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)])
+    preco_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)])  
     # outras cenas
-    data_producao = models.DateField( null=True,blank=False, default=timezone.now)
+    data_producao = models.DateField( null=True,blank=True, default=timezone.now)
     marca = models.CharField(max_length=100, null=True)
 
     def get_imagem(self):
@@ -461,10 +461,10 @@ class ProdutoUnidadeProducao(models.Model):
             if self.preco_a_granel is not None:
                 raise ValidationError('O preço a granel não é permitido para produtos vendidos à unidade. Remova a este campo.')
             if self.unidade_Medida_Por_Unidade is None:
-                raise ValidationError('Tem de introduzir a unidade de media da embalagem/unidade.')
+                raise ValidationError('Tem de introduzir a unidade de media da embalagem/unidade. Preencha o campo  "unidade_Medida_Por_Unidade"')
             
             if self.quantidade_por_unidade is None:
-                raise ValidationError('A quantidade por unidade é obrigatória para produtos vendidos à unidade.')
+                raise ValidationError('A quantidade por unidade é obrigatória para produtos vendidos à unidade. Preencha o campo "quantidade_por_unidade"')
             
             if self.preco_por_unidade is None:
                 raise ValidationError('O preço por unidade é obrigatório para produtos vendidos à unidade.')
@@ -476,6 +476,8 @@ class ProdutoUnidadeProducao(models.Model):
                 raise ValidationError('A quantidade por unidade não é permitida para produtos vendidos por peso ou volume. Remova este campo.')
             if self.preco_por_unidade is not None:
                 raise ValidationError('O preço por unidade não é permitido para produtos vendidos por peso ou volume. Remova este campo.')
+            if self.preco_a_granel is None:
+                raise ValidationError('O preço a granel é obrigatório para produtos vendidos por peso ou volume. Preencha o campo: Preço a granel.') 
         else:
             if self.unidade_medida == 'un':
                 if self.unidade_Medida_Por_Unidade is None:

@@ -107,7 +107,11 @@
             <hr>
             <p>Data de Produção: {{ data_producao }}</p>
             <hr>
+            {% if marca != None %}
             <p>Marca: {{ marca }}</p>
+            {% else %}
+            <p>Marca: Não atribuída </p>
+            {% endif %}
         </div>
         
         

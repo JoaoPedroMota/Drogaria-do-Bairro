@@ -1,6 +1,7 @@
 ### APP loja #####
 ### models.py ###
 from loja.models import Utilizador, Consumidor, Fornecedor, UnidadeProducao, Veiculo, Categoria, Produto, Carrinho, ProdutoUnidadeProducao, ProdutosCarrinho
+from .utilidades_api import categorias_nao_pai
 #### DJANGO ######
 from django.http import Http404
 from django.views.decorators.csrf import csrf_exempt
@@ -19,7 +20,7 @@ from rest_framework.response import Response
 from decimal import Decimal
 #### DENTRO DA APP #####
 ### serializers.py ###
-from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer
+from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer, ProdutoSerializerRequest
 ### permissions.py ###
 from .permissions import IsOwnerOrReadOnly, IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly
 ####
@@ -208,10 +209,10 @@ class UnidadeProducaoDetail(APIView):
         user = Utilizador.objects.get(username=username)
         fornecedor = user.fornecedor
         if request.user.is_consumidor:
-            return Response("Não pode criar uma unidade de produção. Não é um fornecedor!")
+            return Response("Não pode criar uma unidade de produção. Não é um fornecedor!", status=status.HTTP_405_METHOD_NOT_ALLOWED)
         if request.user.is_fornecedor:
             if request.user.fornecedor != fornecedor:
-                return Response("Só pode editar unidades de produção para si e não para os outros")
+                return Response("Só pode editar unidades de produção para si e não para os outros", status=status.HTTP_400_BAD_REQUEST)
             up = self.get_object(idUnidadeProducao, username)
             deserializer = UnidadeProducaoSerializer(up, data=request.data)
             if deserializer.is_valid():
@@ -225,9 +226,9 @@ class UnidadeProducaoDetail(APIView):
         user = Utilizador.objects.get(username=username)
         fornecedor = user.fornecedor
         if request.user.is_consumidor:
-            return Response("Não pode criar uma unidade de produção. Não é um fornecedor!")
+            return Response("Não pode apagar uma unidade de produção. Não é um fornecedor!")
         if request.user.fornecedor != fornecedor:
-            return Response("Só pode criar unidades de produção para si e não para os outros")
+            return Response("Só pode apagar as suas unidades de produção e não as dos outros")
         up = self.get_object(idUnidadeProducao, username)
         up.delete()
         return Response(f"Unidade de produção '{up.nome}' apagada com sucesso!",status=status.HTTP_204_NO_CONTENT)
@@ -323,11 +324,12 @@ class CategoriaDetail(APIView):
     """
     def get_object(self, identifier):
         try:
-            return Categoria.objects.get(slug=identifier)
+            return Categoria.objects.get(id=identifier)
         except Categoria.DoesNotExist:
+            print("ERRO!")
             return Http404
-    def get(self, request, slug, format=None):
-        categoria = self.get_object(slug)
+    def get(self, request, id, format=None):
+        categoria = self.get_object(id)
         serializar = CategoriaSerializer(categoria, many=False)
         return Response(serializar.data, status=status.HTTP_200_OK)
 ##############################################################
@@ -380,12 +382,14 @@ class ProdutoList(APIView):
             return Response(serializar.data, status=status.HTTP_200_OK)
         
     def post(self, request, format=None):
-        request.data['slug'] = request.data['slug']
-        produto = ProdutoSerializer(data=request.data)
+        #request.data['slug'] = request.data['slug']
+        produto = ProdutoSerializerRequest(data=request.data)
         if produto.is_valid():
             produto_temp = produto.save()
-            return Response(produto_temp.data, status=status.HTTP_201_CREATED)
-        return Response(produto.errors, status=status.HTTP_400_BAD_REQUEST)
+            resposta_produto_serializer = ProdutoSerializer(produto_temp, many=False)
+            return Response(resposta_produto_serializer.data, status=status.HTTP_201_CREATED)
+        print("\n\n\n\n", produto.errors, "\n\n\n\n\n")
+        return Response({'detail': produto.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProdutoDetail(APIView):
@@ -421,20 +425,27 @@ class ProdutoUnidadeProducaoList(APIView):
     def get_produtos_up(self, username, identifierUP):
         try:
             user = Utilizador.objects.get(username=username)
-            try:
-                fornecedor = user.fornecedor
-                try:
-                    up= UnidadeProducao.objects.get(Q(fornecedor=fornecedor) & Q(id=identifierUP))
-                    try:
-                        return ProdutoUnidadeProducao.objects.filter(unidade_producao=up)
-                    except ProdutoUnidadeProducao.DoesNotExist:
-                        raise Http404
-                except UnidadeProducao.DoesNotExist:
-                    raise Http404
-            except Fornecedor.DoesNotExist:
-                raise Http404
         except Utilizador.DoesNotExist:
-            raise Http404
+            raise Http404("Utilizador não encontrado")
+
+        try:
+            fornecedor = user.fornecedor
+        except Fornecedor.DoesNotExist:
+            raise Http404("O username introduzido não corresponde a um fornecedor")
+
+        try:
+            
+            up = UnidadeProducao.objects.get(Q(fornecedor=fornecedor) & Q(id=identifierUP))
+        except UnidadeProducao.DoesNotExist:
+            raise Http404(f"O fornecedor introduzido não tem nenhuma Unidade de Produção com o id {identifierUP}")
+
+        try:
+            produtos_up = ProdutoUnidadeProducao.objects.filter(unidade_producao=up)
+        except ProdutoUnidadeProducao.DoesNotExist:
+            raise Http404("A unidade de produção escolhida não contém produtos associados")
+        else:
+            return produtos_up
+
         
     def get(self, request, username, idUnidadeProducao, format=None):
         proUP = self.get_produtos_up(username, idUnidadeProducao)
@@ -455,7 +466,8 @@ class ProdutoUnidadeProducaoList(APIView):
             raise Http404
         unidadeProducao = UnidadeProducao.objects.get(id=idUnidadeProducao)
         if request.data['unidade_producao'] != idUnidadeProducao:
-            return Response(f'Não pode adicionar produtos a outra unidade de produção que não a atual. Você está na unidade de produção:{unidadeProducao.nome}. Use o id {unidadeProducao.id}')
+            return Response(f'Não pode adicionar produtos a outra unidade de produção que não a atual. Você está na unidade de produção:{unidadeProducao.nome}. Use o id {unidadeProducao.id}', status=status.HTTP_400_BAD_REQUEST)
+        
         produto_request = request.data['produto']
         # nome_produto = produto_request['nome']
         # produto, created = Produto.objects.get_or_create(nome=nome_produto)
@@ -464,7 +476,7 @@ class ProdutoUnidadeProducaoList(APIView):
         #     categoria = self.get_categoria(nome_categoria)
         #     produto.categoria = categoria
         #     produto.save()
-
+        request.data['unidade_producao'] = idUnidadeProducao
         serializar = ProdutoUnidadeProducaoSerializer(data=request.data)
         if serializar.is_valid():
             serializar.save()
@@ -488,9 +500,54 @@ class ProdutoUnidadeProducaoDetail(APIView):
         serializarProduto = ProdutoUnidadeProducaoSerializer(produto, many=False)
         return Response(serializarProduto.data, status=status.HTTP_200_OK)
     def put(self, request, username, idUnidadeProducao, idProdutoUnidadeProducao, format=None):
-        pass
+        produto = self.get_object(idProdutoUnidadeProducao)
+        unidadeProducao = UnidadeProducao.objects.get(id=idUnidadeProducao)
+        if request.data['produto'] != produto.produto.id:
+            return Response(f"Não pode alterar o campo produto após a criação da associação entre o produto e uma unidade de produção. Para adicionar uma associação entre produto e unidade produção nova, crie uma nova associação com o método POST. Para remover a atual use o método DELETE")
+        if request.data['unidade_producao'] != idUnidadeProducao:
+            return Response(f'Não pode alterar a unidade de producao de um dado produto para outra unidade de produção. Este valor não é editável. Você está na unidade de produção:{unidadeProducao.nome}. Use o id {unidadeProducao.id}', status=status.HTTP_400_BAD_REQUEST)
+        request.data['unidade_producao'] = idUnidadeProducao
+        informacao = request.data
+        deserializar = ProdutoUnidadeProducaoSerializer(produto, data=informacao)
+        if deserializar.is_valid():
+            deserializar.save()
+            return Response(deserializar.data, status=status.HTTP_200_OK)
+        return Response(deserializar.errors, status=status.HTTP_400_BAD_REQUEST)
+        
     def delete(self, request, username, idUnidadeProducao, idProdutoUnidadeProducao, format=None):
-        pass
+        produto = self.get_object(idProdutoUnidadeProducao)
+        try:
+            user = Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            return Response(detail=f"Utilizador com o username: {username} não existe", status=status.HTTP_404_NOT_FOUND)
+        try:
+            fornecedor = Fornecedor.objects.get(utilizador=user)
+        except Fornecedor.DoesNotExist:
+            return Response(detail=f"Utilizador com o username: {username} não é um fornecedor", status=status.HTTP_404_NOT_FOUND)
+        try:
+            up = UnidadeProducao.objects.get(id=idUnidadeProducao)
+        except UnidadeProducao.DoesNotExist:
+            return Response(detail=f"Unidade de Produção com o id: {idUnidadeProducao} não existe", status=status.HTTP_404_NOT_FOUND)
+        
+        
+        
+        
+        
+        if request.user.is_consumidor:
+            return Response("Não pode apagar um produto unidade de produção. Não é um fornecedor!", status=status.HTTP_404_NOT_FOUND)
+        if request.user.fornecedor != fornecedor:
+            return Response("Só pode apagar os seus produtos associados às suas unidades de produção e não de outros fornecedores", status=status.HTTP_404_NOT_FOUND)
+        
+        
+        if produto is None:
+             return Response({"detail": f"Produto {idProdutoUnidadeProducao} associado à unidade de produção com o id {idUnidadeProducao} não encontrado."},status=status.HTTP_404_NOT_FOUND)
+
+        # Exclua o objeto
+        produto.delete()
+            
+        return Response(f"Associação entre o produto {idProdutoUnidadeProducao}(Nome: {produto.produto.nome}) associado à unidade de produção: {idUnidadeProducao}(Nome da Unidade de Produção: {up.nome}) apagada com sucesso!",status=status.HTTP_204_NO_CONTENT)
+        
+
 
 
 
