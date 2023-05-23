@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.contrib.auth.hashers import check_password
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
+from django.db import IntegrityError
 ##### REST FRAMEWORK #####
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -77,7 +78,6 @@ class UtilizadoresList(APIView):
         serializar = UtilizadorSerializer(utilizadores, many=True)
         return Response(serializar.data)
     def post(self, request, format=None):
-        print("Método:", request.method)
         request.data['username'] = request.data['username'].lower()
         utilizador = UtilizadorSerializer(data=request.data)
         if utilizador.is_valid():
@@ -166,7 +166,6 @@ class UnidadeProducaoList(APIView):
         deserializer = UnidadeProducaoSerializer(data=request.data)
         if deserializer.is_valid():
             up_guardada = deserializer.save(fornecedor=fornecedor)
-            print("\nJá guardei!!!\n")
             return Response(deserializer.data, status=status.HTTP_201_CREATED)
         return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -383,13 +382,12 @@ class ProdutoList(APIView):
         
     def post(self, request, format=None):
         #request.data['slug'] = request.data['slug']
-        print(request.data)
         produto = ProdutoSerializerRequest(data=request.data)
         if produto.is_valid():
             produto_temp = produto.save()
             resposta_produto_serializer = ProdutoSerializer(produto_temp, many=False)
             return Response(resposta_produto_serializer.data, status=status.HTTP_201_CREATED)
-        print("\n\n\n\n", produto.errors, "\n\n\n\n\n")
+        #print("\n\n\n\n", produto.errors, "\n\n\n\n\n")
         return Response({'detail': produto.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -468,7 +466,7 @@ class ProdutoUnidadeProducaoList(APIView):
             unidadeProducao = UnidadeProducao.objects.get(id=idUnidadeProducao)
         except UnidadeProducao.DoesNotExist:
             raise Http404
-        print("PRINT NA API. REQUEST.DATA:",request.data)
+        #print("PRINT NA API. REQUEST.DATA:",request.data)
         if int(request.data.get('unidade_producao')) != int(idUnidadeProducao):
             return Response(f'Não pode adicionar produtos a outra unidade de produção que não a atual. Você está na unidade de produção:{unidadeProducao.nome}. Use o id {unidadeProducao.id}', status=status.HTTP_400_BAD_REQUEST)
         serializar = ProdutoUnidadeProducaoSerializer(data=request.data)
@@ -504,8 +502,11 @@ class ProdutoUnidadeProducaoDetail(APIView):
         informacao = request.data
         deserializar = ProdutoUnidadeProducaoSerializer(produto, data=informacao)
         if deserializar.is_valid():
-            deserializar.save()
-            return Response(deserializar.data, status=status.HTTP_200_OK)
+            try:
+                deserializar.save()
+                return Response(deserializar.data, status=status.HTTP_200_OK)
+            except IntegrityError:
+                return Response({"detail": "Já existe este produto nesta unidade de produção.", "error_code": "INTEGRITY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(deserializar.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def delete(self, request, username, idUnidadeProducao, idProdutoUnidadeProducao, format=None):

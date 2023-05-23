@@ -2,7 +2,7 @@ from decimal import Decimal
 from datetime import date
 import requests
 import json
-
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.middleware.csrf import get_token
@@ -892,6 +892,7 @@ def criarAssociacaoProdutoUP(request):
     formulario = ProdutoUnidadeProducaoForm(user=request.user)
     if request.method == 'POST':
         form = ProdutoUnidadeProducaoForm(request.POST, user=request.user)
+        # try:
         if form.is_valid():
             produto = form.cleaned_data['produto']
             unidade_producao = form.cleaned_data['unidade_producao']
@@ -931,15 +932,24 @@ def criarAssociacaoProdutoUP(request):
         
             resposta = sessao.post(url, headers=headers,data=produto_up_data)
             if resposta.status_code == 201:
-                messages.success(request, 'Produto criado com sucesso.')
+                #messages.success(request, 'Produto criado com sucesso.')
                 return redirect('loja-perfil', userName=request.user.username)
             else:
-                pass
+                if resposta.status_code == 400:
+                    error_code = resposta.json().get('error_code')
+                    if error_code == 'INTEGRITY_ERROR':
+                        form.add_error('produto', f'Já existe este produto ({produto}) nesta unidade de produção ({unidade_producao}).')
+                    else:
+                        form.add_error('produto', f'Outro erro 400 BAD REQUEST: ', resposta.json().get('detail'))
         else:
             # Se o formulário não é válido, armazena os erros em cada campo do formulário
-            for field in form:
-                field.error_messages = [error for error in form.errors.get(field.name, [])]
+            #print("Erro de validação do formulário")
             context = {'formulario': form}
             return render(request, 'loja/criarAssociacaoProdutoUP.html', context)
+    # except IntegrityError as e:
+        #     print(e)
+        #     form.add_error("produto", f'Já existe este produto ({produto}) nesta unidade de produção ({unidade_producao}).')
+        #     context = {'formulario': form}
+        #     return render(request, 'loja/criarAssociacaoProdutoUP.html', context)
     context = {'formulario': formulario}
     return render(request, 'loja/criarAssociacaoProdutoUP.html', context)

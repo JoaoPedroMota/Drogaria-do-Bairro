@@ -1,5 +1,5 @@
 import phonenumbers
-from django.db import models
+from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser
 from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.auth.validators import ASCIIUsernameValidator
@@ -455,6 +455,14 @@ class ProdutoUnidadeProducao(models.Model):
         verbose_name_plural = "Produtos por Unidade Producao"
         verbose_name = "Produto por Unidade Producao"
         ordering=['id','produto','unidade_producao']
+        unique_together = ('produto', 'unidade_producao')
+
+    
+    def save(self, *args, **kwargs):
+        try:
+            super().save(*args, **kwargs)
+        except IntegrityError:
+            raise ValidationError(f"Já existe este produto ({self.produto}) nesta unidade de produção ({self.unidade_producao}). Não pode ter o mesmo produto na mesma unidade de produção. Altere um dos campos.")
     
     def clean(self):
         super().clean()
@@ -490,7 +498,7 @@ class ProdutoUnidadeProducao(models.Model):
             elif self.unidade_medida in ['kg', 'g', 'l', 'ml']:
                 if self.preco_a_granel is None:
                    raise ValidationError('O preço a granel é obrigatório para produtos vendidos por peso ou volume. Preencha o campo: Preço a granel.') 
-                
+    
                 
                 
 # class Imagem(models.Model):

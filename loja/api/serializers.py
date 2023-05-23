@@ -273,17 +273,39 @@ class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
         fields = ["id", "produto", "unidade_producao", "stock", "descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca"]
         read_only_fields = ['id']
 
+    def verificar_existencia_associacao(self, produto, unidade_producao):
+        existe_associacao = False
+
+        if produto and unidade_producao:
+            # Faça a verificação aqui e atribua o resultado à variável existe_associacao
+            instance = self.instance
+            queryset = ProdutoUnidadeProducao.objects.filter(produto=produto, unidade_producao=unidade_producao)
+            if instance:
+                queryset = queryset.exclude(pk=instance.pk)
+            existe_associacao = queryset.exists()
+
+        return existe_associacao
+    
+    
+    
     def validate(self, data):
         
         """
         A mesma coisa que o clean() no modelo ProdutoUnidadeProducao, mas para o serializador
         """
+        
+        
+        
         unidade_medida = data.get('unidade_medida')
         preco_a_granel = data.get('preco_a_granel')
         unidade_Medida_Por_Unidade = data.get('unidade_Medida_Por_Unidade')
         quantidade_por_unidade = data.get('quantidade_por_unidade')
         preco_por_unidade = data.get('preco_por_unidade')
 
+        produto = data.get('produto')
+        unidade_producao = data.get('unidade_producao')
+        
+        
         if unidade_medida == 'un':
             if preco_a_granel is not None:
                 raise serializers.ValidationError('O preço a granel não é permitido para produtos vendidos à unidade. Remova o campo preco_a_granel.')
@@ -317,7 +339,8 @@ class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
             elif unidade_medida in ['kg', 'g', 'l', 'ml']:
                 if preco_a_granel is None:
                    raise serializers.ValidationError('O preço a granel é obrigatório para produtos vendidos por peso ou volume. Preencha o campo: Preço a granel.') 
-
+        if self.verificar_existencia_associacao(produto, unidade_producao):
+            raise serializers.ValidationError("Já existe este produto ({produto}) nesta unidade de produção ({unidade_producao}). Não pode ter o mesmo produto na mesma unidade de produção. Altere um dos campos.")
         return data
 
     
