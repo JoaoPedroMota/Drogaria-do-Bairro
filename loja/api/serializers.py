@@ -1,3 +1,4 @@
+import logging
 from rest_framework.serializers import ModelSerializer, Field, SerializerMethodField, ValidationError
 from rest_framework.fields import ImageField
 #### MODELOS ####
@@ -264,7 +265,7 @@ class CarrinhoSerializer(ModelSerializer):
         fields = ['id', 'consumidor']
 
 
-
+logger = logging.getLogger(__name__)
 
 class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -277,7 +278,6 @@ class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
         """
         A mesma coisa que o clean() no modelo ProdutoUnidadeProducao, mas para o serializador
         """
-        print("A validar a informação...")
         unidade_medida = data.get('unidade_medida')
         preco_a_granel = data.get('preco_a_granel')
         unidade_Medida_Por_Unidade = data.get('unidade_Medida_Por_Unidade')

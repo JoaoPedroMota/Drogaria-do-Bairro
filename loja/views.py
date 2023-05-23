@@ -1,8 +1,12 @@
 from decimal import Decimal
+from datetime import date
+import requests
+import json
+
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.middleware.csrf import get_token
-import requests
+
 from .models import *
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -657,7 +661,7 @@ def criar_produto(request, userName):
                 "nome": nome_produto,
                 "categoria": categoria_nome
             }
-            print("DICIONÁRIO INFO:",produto_data)
+            # print("DICIONÁRIO INFO:",produto_data)
             sessao = requests.Session()
             sessao.cookies.update(request.COOKIES)
             urlCriarProduto = f"http://127.0.0.1:8000/api/produtos/"
@@ -905,17 +909,15 @@ def criarAssociacaoProdutoUP(request):
                 "produto": produto.id,
                 "unidade_producao":unidade_producao.id,
                 "descricao": descricao,
-                "stock": stock,
+                "stock": float(stock),
                 "unidade_medida": unidade_medida,
-                "preco_a_granel":preco_a_granel,
+                "preco_a_granel": float(preco_a_granel) if preco_a_granel is not None else None,
                 "unidade_Medida_Por_Unidade": unidade_Medida_Por_Unidade,
-                "quantidade_por_unidade": quantidade_por_unidade,
-                "preco_por_unidade": preco_por_unidade,
-                "data_producao":data_producao,
+                "quantidade_por_unidade": float(quantidade_por_unidade) if quantidade_por_unidade is not None else None,
+                "preco_por_unidade": float(preco_por_unidade) if preco_por_unidade is not None else None,
+                "data_producao": data_producao.isoformat() if isinstance(data_producao, date) else None,
                 "marca":marca
             }
-            
-            print(produto_up_data)
             url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{unidade_producao.id}/produtos/'
 
             
@@ -927,7 +929,7 @@ def criarAssociacaoProdutoUP(request):
             csrf_token = get_token(request)
             headers = {'X-CSRFToken':csrf_token}
         
-            resposta = sessao.post(url, headers=headers,)
+            resposta = sessao.post(url, headers=headers,data=produto_up_data)
             if resposta.status_code == 201:
                 messages.success(request, 'Produto criado com sucesso.')
                 return redirect('loja-perfil', userName=request.user.username)

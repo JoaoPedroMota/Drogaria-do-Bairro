@@ -383,6 +383,7 @@ class ProdutoList(APIView):
         
     def post(self, request, format=None):
         #request.data['slug'] = request.data['slug']
+        print(request.data)
         produto = ProdutoSerializerRequest(data=request.data)
         if produto.is_valid():
             produto_temp = produto.save()
@@ -421,7 +422,6 @@ class ProdutoDetailID(APIView):
 
 class ProdutoUnidadeProducaoList(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]
-
     def get_produtos_up(self, username, identifierUP):
         try:
             user = Utilizador.objects.get(username=username)
@@ -464,19 +464,13 @@ class ProdutoUnidadeProducaoList(APIView):
             fornecedor = user.fornecedor
         except Fornecedor.DoesNotExist:
             raise Http404
-        unidadeProducao = UnidadeProducao.objects.get(id=idUnidadeProducao)
-        if request.data['unidade_producao'] != idUnidadeProducao:
+        try:
+            unidadeProducao = UnidadeProducao.objects.get(id=idUnidadeProducao)
+        except UnidadeProducao.DoesNotExist:
+            raise Http404
+        print("PRINT NA API. REQUEST.DATA:",request.data)
+        if int(request.data.get('unidade_producao')) != int(idUnidadeProducao):
             return Response(f'Não pode adicionar produtos a outra unidade de produção que não a atual. Você está na unidade de produção:{unidadeProducao.nome}. Use o id {unidadeProducao.id}', status=status.HTTP_400_BAD_REQUEST)
-        
-        produto_request = request.data['produto']
-        # nome_produto = produto_request['nome']
-        # produto, created = Produto.objects.get_or_create(nome=nome_produto)
-        # if created:
-        #     nome_categoria = produto_request['categoria']['nome']
-        #     categoria = self.get_categoria(nome_categoria)
-        #     produto.categoria = categoria
-        #     produto.save()
-        request.data['unidade_producao'] = idUnidadeProducao
         serializar = ProdutoUnidadeProducaoSerializer(data=request.data)
         if serializar.is_valid():
             serializar.save()
