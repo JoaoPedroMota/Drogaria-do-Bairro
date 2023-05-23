@@ -819,3 +819,5 @@ def remover_do_carrinho(request, produto_id):
     produto_carrinho.delete()
     messages.success(request, 'O produto foi removido do carrinho com sucesso.')
     return redirect('loja-carrinho')
+
+
