@@ -11,7 +11,17 @@
 {% endif %} -->
 <form method="post" enctype="multipart/form-data">
   {% csrf_token %}
-  {{ formulario.as_p }}
+  {% for field in formulario %}
+  <div class="form-group">
+    <label for="{{ field.auto_id }}">{{ field.label }}</label>
+    {{ field }}
+    {% if field.errors %}
+      {% for error in field.errors %}
+        <p class="error">{{ error }}</p>
+      {% endfor %}
+    {% endif %}
+  </div>
+{% endfor %}
   <button type="submit">Guardar e Associar</button>
 </form>
 {% endblock %}

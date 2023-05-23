@@ -95,7 +95,7 @@ class Utilizador(AbstractUser):
     ]
     
     # Campos personalizados
-    nome = models.CharField(max_length=200, null=True)
+    nome = models.CharField(max_length=200, null=True, blank=True)
     email = models.EmailField(unique=True, null=True, blank=False, error_messages={'unique': 'Já existe um utilizador com esse e-mail.'})
     username = models.CharField(max_length=20, unique=True, null=True, blank=False, validators=[ASCIIUsernameValidator()], help_text='Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ ', error_messages={ 'unique': 'Já existe um utilizador com esse nome de utilizador.',},)
     pais = CountryField(null=True, blank=False, default='PT')
@@ -426,6 +426,7 @@ class ProdutoUnidadeProducao(models.Model):
         ('g', 'Grama'),
         ('l', 'Litro'),
         ('ml', 'Mililitro'),
+        ('un', 'Unidade')
     )
     
     ### produto e unidade de produção
@@ -442,7 +443,7 @@ class ProdutoUnidadeProducao(models.Model):
     preco_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)])  
     # outras cenas
     data_producao = models.DateField( null=True,blank=True, default=timezone.now)
-    marca = models.CharField(max_length=100, null=True)
+    marca = models.CharField(max_length=100, null=True, blank=True)
 
     def get_imagem(self):
         from .imagem import Imagem
