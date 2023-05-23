@@ -371,15 +371,15 @@ def generate_slug(name):
     return slug
 
 
+#from .views import adicionar_atributos_a_subcategorias
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=50, unique=True) 
     #slug = models.SlugField(max_length=50, unique=True)                               #default=1,
     categoria_pai = models.ForeignKey('Categoria', on_delete=models.SET_NULL,  null=True, blank=True)
-    # def __str__(self):
-    #     return self.nome
     def __str__(self):
         return self.nome
+    
     
     def __repr__(self):
         if self.categoria_pai is None:
@@ -390,10 +390,10 @@ class Categoria(models.Model):
         verbose_name_plural = "Categorias"
         verbose_name = "Categoria"
         ordering = [ 'id'   ,'nome']
-    # def save(self, *args, **kwargs):
-    #     if not self.slug:
-    #         self.slug = generate_slug(self.nome)
-    #     super().save(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        # Chame o método save da classe pai para salvar a categoria
+        super().save(*args, **kwargs)
 
 class Produto(models.Model):
     nome = models.CharField(max_length=100, unique=True)
@@ -427,7 +427,6 @@ class ProdutoUnidadeProducao(models.Model):
         ('l', 'Litro'),
         ('ml', 'Mililitro'),
     )
-    
     
     ### produto e unidade de produção
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='unidades_producao', blank=False, null=False)
@@ -507,10 +506,10 @@ class ProdutoUnidadeProducao(models.Model):
 class Atributo(models.Model):
     nome = models.CharField(max_length=100)
     #por exemplo data-de-validade em vez de Data de Validade
-    slug = models.SlugField(null=True)
-    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
+    #slug = models.SlugField(null=True)
+    #categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, default=1, null=True, blank=True)
     #true caso tenha opçoes especificas por exemplo tamanho(XS,S,M,L,XL), false caso contrario, peso por exemplo
-    is_variante = models.BooleanField(default=False)
+    #is_variante = models.BooleanField(default=False)
 
     def __str__(self):
         return self.nome
@@ -520,8 +519,8 @@ class Atributo(models.Model):
         verbose_name = "Atributo"
         ordering=['id']
     def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = generate_slug(self.nome)
+        # if not self.slug:
+        #     self.slug = generate_slug(self.nome)
         super().save(*args, **kwargs)       
 
 from django.core.exceptions import ValidationError
@@ -530,36 +529,61 @@ from django.db import models
 #ligaçao entre a tabela categoria e os atributos
 class CategoriaAtributo(models.Model):
     # produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
-    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, null=True, blank=True)
     atributo = models.ForeignKey(Atributo, on_delete=models.CASCADE)
-    valor = models.CharField(max_length=100)
+    #valor = models.CharField(max_length=100)
 
     class Meta:
         verbose_name_plural = "Categoria Atributos"
         verbose_name = "Categoria Atributo"
         ordering= ['id']
 
+    def save(self, *args, **kwargs):
+        if not self.id:
+            super().save(*args, **kwargs)
+            adicionar_atributos_a_subcategorias(self.categoria, self.atributo)
+        else:
+            super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.categoria.nome} - {self.atributo.nome}"
 
 
+def adicionar_atributos_a_subcategorias(categoria, atributo):
+    subcategorias = Categoria.objects.filter(categoria_pai=categoria)
+    for subcategoria in subcategorias:
+        # Verifique se já existe uma instância de CategoriaAtributo para a combinação de categoria e atributo
+        if not CategoriaAtributo.objects.filter(categoria=subcategoria, atributo=atributo).exists():
+            categoria_atributo = CategoriaAtributo(categoria=subcategoria, atributo=atributo)
+            categoria_atributo.save()
+        adicionar_atributos_a_subcategorias(subcategoria, atributo)
 
 
+#opçoes para os atributos, por exemplo cor: vermelho,verde,amarelo
+class Opcao(models.Model):
+    nome = models.CharField(max_length=100)
+    atributos = models.ForeignKey(Atributo, on_delete=models.CASCADE, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Opção disponivel"
+        verbose_name_plural ="Opções disponiveis"
+    def __str__(self):
+        return f"{self.nome} - {self.atributos.nome}"
 
 
-# loja/migrations/000X_auto_add_slug_to_produto.py
+#para guardar as escolhas das opçoes para cada produto criado
+class ProdutoOpcao(models.Model):
+    produto = models.ForeignKey('ProdutoUnidadeProducao', on_delete=models.CASCADE, related_name='opcoes')
+    opcao = models.ForeignKey('Opcao', on_delete=models.CASCADE)
+    #valor = models.CharField(max_length=100)
 
+    def __str__(self):
+        return f'{self.produto.nome} - {self.opcao.nome}: {self.valor}'
 
+    class Meta:
+        verbose_name = "Opção guardada"
+        verbose_name_plural ="Opções guardadas"
 
-#########################################DEFINIR CATEGORIAS PAI##################################
-#from loja.models import Categoria
-
-# # # Cria categoria pai "Alimentos"
-# alimentos = Categoria.objects.create(nome='Alimentos')
-# # Cria subcategoria "Frutas e Legumes" com categoria pai "Alimentos"
-# frutas_e_legumes = Categoria.objects.create(nome='Frutas e Legumes', categoria_pai=alimentos)
-# # Cria subcategoria "Frutas" com categoria pai "Frutas e Legumes"
-# frutas = Categoria.objects.create(nome='Frutas', categoria_pai=frutas_e_legumes)
-# # Cria subcategoria "Legumes" com categoria pai "Frutas e Legumes"
-# legumes = Categoria.objects.create(nome='Legumes', categoria_pai=frutas_e_legumes)
 class Carrinho(models.Model):
     consumidor = models.OneToOneField(Consumidor, null=False, on_delete=models.CASCADE, related_name='carrinho')
     
@@ -569,6 +593,7 @@ class Carrinho(models.Model):
         verbose_name = "Carrinho"
         verbose_name_plural ="Carrinhos"
         ordering=['id']
+
 class ProdutosCarrinho(models.Model):
     carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='produtos_carrinho')
     produto = models.ForeignKey(ProdutoUnidadeProducao, on_delete=models.SET_NULL, null=True, blank = True)
