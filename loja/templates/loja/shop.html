@@ -88,6 +88,15 @@
         {% endfor %}
     </ul>
 {% endif %}
+
+{% for categoria in categoriaProduto %}
+    <div>
+        <a href="{% url 'loja-ver_produtos' %}?q={{categoria.nome}}" >{{categoria.nome}}</a>
+        
+    </div>
+{% endfor %}
+
+
 <div class="product-section mt-150 mb-150">
     <div class="row product-lists">
         {% for produto in produtos_precos %}

@@ -715,11 +715,6 @@ def sP(request,produto_id):
                  ,'marca':data['marca'],'unidade':data['preco_por_unidade']}
 
     return render(request, 'loja/single-product.html', context)
-    
-#  if shopProduct['preco_a_granel']==None:
-#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade",'id':shopProduct['id']})
-#                 else:
-#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel",'id':shopProduct['id']})
 
 
 def ver_produtos(request):
@@ -753,8 +748,30 @@ def ver_produtos(request):
                 else:
                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel",'id':shopProduct['id'],'categoria':product['categoria']['nome']})
 
-    context={'produtos_precos':actualFilteredProducts,'termo_pesquisa':q}
+    url3 = 'http://127.0.0.1:8000/api/categorias/'
+    response3 = requests.get(url3)
+    if response.status_code == 200:
+        data3 = response3.json()
+    else:
+        return None
+
+    print(data3)
+
+    context={'produtos_precos':actualFilteredProducts,'termo_pesquisa':q,'categoriaProduto':data3}
     return render(request, 'loja/shop.html', context)
+
+
+# def ver_produtos_categorias(request):
+#     url = 'http://127.0.0.1:8000/api/categorias/'
+#     response = requests.get(url)
+#     if response.status_code == 200:
+#         data = response.json()
+#     else:
+#         return None
+    
+#     context={'categoriaProduto': data}
+#     print(str(context))
+#     return render(request, 'loja/shop.html', context)
 
 # def adicionar_ao_carrinho(request, produto_id):
 #     quantidade = request.GET.get('quantidade')
@@ -768,7 +785,7 @@ def ver_produtos(request):
 
 
 
-##################################################
+######################CARRINHO############################
 
 def carrinho(request):
     def criar_instancia_produto_carrinho(json):

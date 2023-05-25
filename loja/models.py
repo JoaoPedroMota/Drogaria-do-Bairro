@@ -376,7 +376,7 @@ def generate_slug(name):
 class Categoria(models.Model):
     nome = models.CharField(max_length=50, unique=True) 
     #slug = models.SlugField(max_length=50, unique=True)                               #default=1,
-    categoria_pai = models.ForeignKey('Categoria', on_delete=models.SET_NULL,  null=True, blank=True)
+    categoria_pai = models.ForeignKey('Categoria', on_delete=models.SET_NULL,  null=True, blank=True, related_name="categorias_filhas")
     def __str__(self):
         return self.nome
     
