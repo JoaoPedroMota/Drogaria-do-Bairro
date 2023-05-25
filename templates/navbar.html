@@ -67,7 +67,7 @@
               <li><img class="imagens" id='imagem-perfil' src="{{request.user.imagem_perfil.url}}"
                 style="width:50px;height: 40px;border-radius: 100%;" /></li>
               {% endif %}
-              
+              {% if not request.user.is_authenticated or request.user.is_consumidor%}
               <li>
                 <div class="header-icons">
                   <a class="shopping-cart" href="/carrinho"><i class="fas fa-shopping-cart"></i></a>
@@ -85,6 +85,8 @@
     </div>
   </div>
 </div>
+
+
 <!-- end header -->
 
 <!-- search area -->
@@ -106,4 +108,12 @@
 </div>
 
 </nav>
-
+{% else %}
+</ul>
+</nav>
+</div>
+</div>
+</div>
+</div>
+</div>
+{% endif %}

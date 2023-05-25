@@ -694,27 +694,74 @@ def lista_produtos_eletronicos(request):
 
 
 def sP(request,produto_id):
-    produto=[]
+    
+    filtered_products=[]
     p=int(produto_id)
-    url = f'http://127.0.0.1:8000/api/produtos_loja/{p}/'
+    url = f'http://127.0.0.1:8000/api/produtos_loja/'
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
     else:
         return None
-    
-    if data['quantidade_por_unidade']==None:
-        context={'produto_info':data['produto']['nome'],'categoria':data['produto']['categoria']['nome'],'granel':data['preco_a_granel'],'fornecedor':data['unidade_producao']['fornecedor']['utilizador'],'up':data['unidade_producao']['nome'],
-                 'morada':data['unidade_producao']['morada'],
-                 'cidade':data['unidade_producao']['cidade'],'pais':data['unidade_producao']['pais'],'descricao':data['descricao'],'unidadeM':'Kilograma','stock':data['stock']
-                 ,'data_producao':data['data_producao'],'marca':data['marca'],'unidade':data['preco_por_unidade']}
-    if data['preco_a_granel']==None:
-        context={'produto_info':data['produto']['nome'],'categoria':data['produto']['categoria']['nome'],'granel':data['preco_a_granel'],'fornecedor':data['unidade_producao']['fornecedor']['utilizador'],'up':data['unidade_producao']['nome'],
-                 'morada':data['unidade_producao']['morada'],
-                 'cidade':data['unidade_producao']['cidade'],'pais':data['unidade_producao']['pais'],'descricao':data['descricao'],'unidadeM':'Unidade','stock':data['stock'],'data_producao':data['data_producao']
-                 ,'marca':data['marca'],'unidade':data['preco_por_unidade']}
+    listaID=[]
 
-    return render(request, 'loja/single-product.html', context)
+    for product in data:
+        if product['produto'] == p:
+            listaID.append(product['id'])
+    
+    for i in listaID:
+        url = f'http://127.0.0.1:8000/api/produtos_loja/{i}/'
+        response = requests.get(url)
+        if response.status_code == 200:
+            data2 = response.json()
+            for product in data:
+                if product['id'] == i:
+                    filtered_products.append({
+                        'id':data2['id'],
+                        'nome': data2['produto']['nome'],
+                        'stock': product['stock'],
+                        'descricao': product['descricao'],
+                        'categoria': data2['produto']['categoria']['nome'],
+                        'up': data2['unidade_producao']['nome'],
+                        'fornecedor': data2['unidade_producao']['fornecedor']['utilizador'],
+                        'morada': data2['unidade_producao']['morada'],
+                        'pais': data2['unidade_producao']['pais'],
+                        'cidade': data2['unidade_producao']['cidade'],
+                        'dataP': data2['data_producao'],
+                        'marca': data2['marca'],
+                        'precoU':data2['preco_por_unidade'],
+                        'precoG':data2['preco_a_granel']
+                    })
+        else:
+            return None
+
+
+    context={'filtered_products':filtered_products}
+
+    
+
+
+
+    return render(request, 'loja/single-product.html',context)
+    # url = f'http://127.0.0.1:8000/api/produtos_loja/{p}/'
+    # response = requests.get(url)
+    # if response.status_code == 200:
+    #     data = response.json()
+    # else:
+    #     return None
+    
+    # if data['quantidade_por_unidade']==None:
+    #     context={'produto_info':data['produto']['nome'],'categoria':data['produto']['categoria']['nome'],'granel':data['preco_a_granel'],'fornecedor':data['unidade_producao']['fornecedor']['utilizador'],'up':data['unidade_producao']['nome'],
+    #              'morada':data['unidade_producao']['morada'],
+    #              'cidade':data['unidade_producao']['cidade'],'pais':data['unidade_producao']['pais'],'descricao':data['descricao'],'unidadeM':'Kilograma','stock':data['stock']
+    #              ,'data_producao':data['data_producao'],'marca':data['marca'],'unidade':data['preco_por_unidade']}
+    # if data['preco_a_granel']==None:
+    #     context={'produto_info':data['produto']['nome'],'categoria':data['produto']['categoria']['nome'],'granel':data['preco_a_granel'],'fornecedor':data['unidade_producao']['fornecedor']['utilizador'],'up':data['unidade_producao']['nome'],
+    #              'morada':data['unidade_producao']['morada'],
+    #              'cidade':data['unidade_producao']['cidade'],'pais':data['unidade_producao']['pais'],'descricao':data['descricao'],'unidadeM':'Unidade','stock':data['stock'],'data_producao':data['data_producao']
+    #              ,'marca':data['marca'],'unidade':data['preco_por_unidade']}
+
+    # return render(request, 'loja/single-product.html', context)
     
 #  if shopProduct['preco_a_granel']==None:
 #                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade",'id':shopProduct['id']})
@@ -723,40 +770,56 @@ def sP(request,produto_id):
 
 
 def ver_produtos(request):
-    if  not request.user.is_authenticated or (request.user.is_authenticated and request.user.is_consumidor):
-        q = request.GET.get('q') if request.GET.get('q') != None else ''
+    if not request.user.is_authenticated or (request.user.is_authenticated and request.user.is_consumidor):
+        q = request.GET.get('q', '')  # Usando o operador de coalescência nula para definir um valor padrão vazio para 'q'
         url = 'http://127.0.0.1:8000/api/produtos/'
-        info = {'q':q}
+        info = {'q': q}
         response = requests.get(url, data=info)
 
         if response.status_code == 200:
             data = response.json()
         else:
-            return None
+            return HttpResponse(status=response.status_code)
+
         url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
-        info = {'q':q}
+        info = {'q': q}
         response2 = requests.get(url2, data=info)
         if response2.status_code == 200:
             data2 = response2.json()
         else:
-            return None
+            return HttpResponse(status=response2.status_code)
 
         FilteredProducts = []
         for product in data:
             if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
                 FilteredProducts.append(product)
+        
         actualFilteredProducts = []
+
         for product in FilteredProducts:
+            prices = []
+            prices1 = []
+
             for shopProduct in data2:
                 if product['id'] == shopProduct['produto']:
-                    if shopProduct['preco_a_granel']==None:
-                        actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade",'id':shopProduct['id'],'categoria':product['categoria']['nome']})
+                    if shopProduct['preco_a_granel'] is not None:
+                        prices.append(shopProduct['preco_a_granel'])
                     else:
-                        actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel",'id':shopProduct['id'],'categoria':product['categoria']['nome']})
+                        prices1.append(shopProduct['preco_por_unidade'])
 
-        context={'produtos_precos':actualFilteredProducts,'termo_pesquisa':q}
+            min_price = min(prices) if prices and None not in prices else -1
+            min_price1 = min(prices1) if prices1 and None not in prices1 else -1
+            if prices or prices1:
+                actualFilteredProducts.append({
+                    'id': product['id'],
+                    'produto': product['nome'],
+                    'min_precoG': min_price,
+                    'min_precoU': min_price1,
+                    'categoria': product['categoria']['nome']
+                })
+        
+        context = {'produtos_precos': actualFilteredProducts, 'termo_pesquisa': q}
         return render(request, 'loja/shop.html', context)
-    return redirect('loja-home')
 
 # def adicionar_ao_carrinho(request, produto_id):
 #     quantidade = request.GET.get('quantidade')
