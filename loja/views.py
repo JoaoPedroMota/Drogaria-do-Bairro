@@ -723,38 +723,40 @@ def sP(request,produto_id):
 
 
 def ver_produtos(request):
-    q = request.GET.get('q') if request.GET.get('q') != None else ''
-    url = 'http://127.0.0.1:8000/api/produtos/'
-    info = {'q':q}
-    response = requests.get(url, data=info)
+    if  not request.user.is_authenticated or (request.user.is_authenticated and request.user.is_consumidor):
+        q = request.GET.get('q') if request.GET.get('q') != None else ''
+        url = 'http://127.0.0.1:8000/api/produtos/'
+        info = {'q':q}
+        response = requests.get(url, data=info)
 
-    if response.status_code == 200:
-        data = response.json()
-    else:
-        return None
-    url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
-    info = {'q':q}
-    response2 = requests.get(url2, data=info)
-    if response2.status_code == 200:
-        data2 = response2.json()
-    else:
-        return None
+        if response.status_code == 200:
+            data = response.json()
+        else:
+            return None
+        url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
+        info = {'q':q}
+        response2 = requests.get(url2, data=info)
+        if response2.status_code == 200:
+            data2 = response2.json()
+        else:
+            return None
 
-    FilteredProducts = []
-    for product in data:
-        if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
-            FilteredProducts.append(product)
-    actualFilteredProducts = []
-    for product in FilteredProducts:
-        for shopProduct in data2:
-            if product['id'] == shopProduct['produto']:
-                if shopProduct['preco_a_granel']==None:
-                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade",'id':shopProduct['id'],'categoria':product['categoria']['nome']})
-                else:
-                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel",'id':shopProduct['id'],'categoria':product['categoria']['nome']})
+        FilteredProducts = []
+        for product in data:
+            if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
+                FilteredProducts.append(product)
+        actualFilteredProducts = []
+        for product in FilteredProducts:
+            for shopProduct in data2:
+                if product['id'] == shopProduct['produto']:
+                    if shopProduct['preco_a_granel']==None:
+                        actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade",'id':shopProduct['id'],'categoria':product['categoria']['nome']})
+                    else:
+                        actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel",'id':shopProduct['id'],'categoria':product['categoria']['nome']})
 
-    context={'produtos_precos':actualFilteredProducts,'termo_pesquisa':q}
-    return render(request, 'loja/shop.html', context)
+        context={'produtos_precos':actualFilteredProducts,'termo_pesquisa':q}
+        return render(request, 'loja/shop.html', context)
+    return redirect('loja-home')
 
 # def adicionar_ao_carrinho(request, produto_id):
 #     quantidade = request.GET.get('quantidade')
@@ -798,7 +800,7 @@ def carrinho(request):
     url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
     resposta = sessao.get(url)
     conteudo = resposta.json()
-    print(conteudo)
+    #print(conteudo)
     carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
     produtos_carrinho = carrinho.produtos_carrinho.all()
 
@@ -806,8 +808,6 @@ def carrinho(request):
     total_price = sum(produto_carrinho.preco if produto_carrinho.preco is not None else 0 for produto_carrinho in produtos_carrinho)
 
     
-
-
 
     context = {
         'carrinho': carrinho,
@@ -817,49 +817,132 @@ def carrinho(request):
     return render(request, 'loja/carrinho.html', context)
 
 def adicionar_ao_carrinho(request, produto_id):
+    """
+    Adiciona um produto a um carrinho
+
+    Args:
+        request (_type_): request do browser
+        produto_id (_type_): id de um ProdutoUnidadeProdução. NÃO É A FK da coluna produto na tabela ProdutoUnidadeProducao, 
+                            é a coluna id. (produto = ProdutoUnidadeProducao.objects.get(id=produto_id)) 
+
+    Returns:
+        _type_: _description_
+    """
     data = request.GET.get('preco')
     split_values = data.split('?')
-    valor = float(split_values[0])
-    quantidade = int(split_values[1].split('=')[1])
+    valor = Decimal(split_values[0])
+    quantidade = Decimal(split_values[1].split('=')[1])
     preco_atualizado = Decimal(str(valor * quantidade))
 
     if request.user.is_authenticated and request.user.is_consumidor:
-        produto = ProdutoUnidadeProducao.objects.get(id=produto_id)
-        carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
-        produto_carrinho, created = ProdutosCarrinho.objects.get_or_create(carrinho=carrinho, produto=produto)
 
-        if created:
+        url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/produtoUP/{produto_id}/'
+    
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
+
+        csrf_token = get_token(request)
+        headers = {'X-CSRFToken':csrf_token}
+
+        resposta = sessao.get(url, headers=headers)
+        if resposta.status_code == 200:
+            content = resposta.json()
+            idProdutoNoCarrinho = content.get('id')
+            # idCarrinho = content.get('carrinho')
+            produtoUnidadeProducao = content.get('produto')
+            idProdutoUnidadeProducao = produtoUnidadeProducao.get('id')
+            quantidade_updated = Decimal(content.get('quantidade')) + quantidade
+            print("Quantidade antiga:", content.get('quantidade'))
+            print("Quantidade update:", quantidade_updated)
             
-            produto_carrinho.quantidade = quantidade
-            produto_carrinho.preco = preco_atualizado
-            produto_carrinho.precoKilo = valor
-            produto_carrinho.save()
-            messages.success(request, 'O produto foi adicionado ao carrinho com sucesso.')
+            atualizar_carrinho_dict_info = {
+                'produto': idProdutoUnidadeProducao,
+                'quantidade' : quantidade_updated
+            }
+            # # print(atualizar_carrinho_dict_info)
+            
+            urlAtualizar = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/{idProdutoNoCarrinho}/'
+            respostaUpdate = sessao.put(urlAtualizar, headers=headers, data = atualizar_carrinho_dict_info)
+            
+            print("VALORES ATUALIZADOS:", respostaUpdate.json())
         else:
-            # O produto já está no carrinho, então atualize a quantidade e o preço
-            produto_carrinho.quantidade += quantidade
-            produto_carrinho.preco += preco_atualizado
-            produto_carrinho.save()
-            messages.success(request, 'O produto foi atualizado com sucesso.')
+            sessao = requests.Session()
+            sessao.cookies.update(request.COOKIES)
 
+            csrf_token = get_token(request)
+            headers = {'X-CSRFToken':csrf_token}
+            
+            
+            
+                        
+            atualizar_carrinho_dict_info = {
+                'produto': produto_id,
+                'quantidade' : quantidade
+            }
+            
+            
+            urlAtualizar = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/'
+            respostaUpdate = sessao.post(urlAtualizar, headers=headers, data = atualizar_carrinho_dict_info)
+        
+        # produto = ProdutoUnidadeProducao.objects.get(id=produto_id)
+        # carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+        # produto_carrinho, created = ProdutosCarrinho.objects.get_or_create(carrinho=carrinho, produto=produto)
+
+        # if created:
+            
+        #     produto_carrinho.quantidade = quantidade
+        #     produto_carrinho.preco = preco_atualizado
+        #     produto_carrinho.precoKilo = valor
+        #     produto_carrinho.save()
+        #     messages.success(request, 'O produto foi adicionado ao carrinho com sucesso.')
+        # else:
+        #     # O produto já está no carrinho, então atualize a quantidade e o preço
+        #     produto_carrinho.quantidade += quantidade
+        #     produto_carrinho.preco += preco_atualizado
+        #     produto_carrinho.save()
+        #     messages.success(request, 'O produto foi atualizado com sucesso.')
+    elif request.user.is_authenticated and request.user.is_fornecedor:
+        return redirect('loja-home')
+        
        
     return redirect('loja-ver_produtos')
-
+    
 
 from django.shortcuts import get_object_or_404, redirect
 from .models import Carrinho, ProdutosCarrinho
 
 def remover_do_carrinho(request, produto_id):
-    carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
-    produto_carrinho = get_object_or_404(ProdutosCarrinho, carrinho=carrinho, id=produto_id)
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
 
-    # Reduz a quantidade do produto no carrinho
-    # if produto_carrinho.quantidade > 1:
-    #     produto_carrinho.quantidade -= 1
-    #     produto_carrinho.save()
-    # else:
-    produto_carrinho.delete()
-    messages.success(request, 'O produto foi removido do carrinho com sucesso.')
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+
+
+
+    
+    urlDelete = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/{produto_id}/'
+    respostaDelete = sessao.delete(urlDelete, headers=headers)
+    
+
+    
+    
+    # carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+    # produto_carrinho = get_object_or_404(ProdutosCarrinho, carrinho=carrinho, id=produto_id)
+
+    # # Reduz a quantidade do produto no carrinho
+    # # if produto_carrinho.quantidade > 1:
+    # #     produto_carrinho.quantidade -= 1
+    # #     produto_carrinho.save()
+    # # else:
+    # produto_carrinho.delete()
+    if respostaDelete.status_code == 204:
+        messages.success(request, 'O produto foi removido do carrinho com sucesso.')
+    elif respostaDelete.status_code == 404:
+        mensagem_erro = respostaDelete.json().get('detail', 'Produto não encontrado no carrinho')
+        messages.error(request, mensagem_erro)
+    else:
+        messages.error(request, "Algo correu mal ao remover o produto do carrinho")
     return redirect('loja-carrinho')
 
     

@@ -141,7 +141,7 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
     class Meta:
         model = Utilizador
         #fields = ['username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador']
-        fields = ['username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
+        fields = ['id','username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
         extra_kwargs = {'password': {'required': True}}
     
 
@@ -214,7 +214,7 @@ class CategoriaSerializer(ModelSerializer):
 class CategoriaProduto(ModelSerializer):
     class Meta:
         model = Categoria
-        fields= ['nome']
+        fields= ['nome','id']
 
 
 
@@ -358,9 +358,24 @@ class ProdutosCarrinhoResponseSerializer(ModelSerializer):
         model= ProdutosCarrinho
         fields= ["carrinho", "produto", "quantidade","precoKilo","preco","id"]
         read_only = ["preco","precoKilo",'id', 'carrinho']
+
+
+class TemProdutoNoCarrinhoSerializer(ModelSerializer):
+    """"
+    Usado para responder a pedidos à API
+    """
+    produto = ProdutoUnidadeProducaoSerializer()
+    class Meta:
+        model= ProdutosCarrinho
+        fields= ["carrinho", "produto", "quantidade","precoKilo","preco","id"]
+        read_only = ["preco","precoKilo",'id', 'carrinho']
+
+
+
+
         
 class ProdutosCarrinhoRequestSerializer(ModelSerializer):
-    """Usado para fazer a API saber intrepertar pedidos
+    """Usado para fazer pedidos À API e esta saber interpreta-los
 
     Args:
         ModelSerializer (_type_): _description_
@@ -386,7 +401,11 @@ class ProdutosCarrinhoRequestSerializer(ModelSerializer):
             if parte_fracao != 0:
                 raise serializers.ValidationError(f'Produtos vendidos à unidade não podem ter quantidade não inteiras. Escolha um número sem parte fracionária')
         return data
-
+    # def __init__(self, *args, **kwargs):
+    #     super(ProdutosCarrinhoRequestSerializer, self).__init__(*args, **kwargs)
+    #     instance = getattr(self, 'instance', None)
+    #     if instance and instance.pk:
+    #         self.fields['produto'].disabled = True
 
 
 
@@ -401,7 +420,7 @@ class FornecedorNomeUtilizadorSerializer(ModelSerializer):
     utilizador = CharField(source="utilizador.nome", read_only=True)
     class Meta:
         model = Fornecedor
-        fields = ['utilizador']
+        fields = ['utilizador','id']
 
 
 

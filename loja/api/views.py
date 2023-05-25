@@ -21,9 +21,9 @@ from rest_framework.response import Response
 from decimal import Decimal
 #### DENTRO DA APP #####
 ### serializers.py ###
-from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer, ProdutoSerializerRequest
+from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer, ProdutoSerializerRequest, TemProdutoNoCarrinhoSerializer
 ### permissions.py ###
-from .permissions import IsOwnerOrReadOnly, IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly, IsConsumidorAndOwner
 ####
 from decimal import Decimal
 
@@ -679,7 +679,7 @@ class CarrinhoDetail(APIView):
             
 
 class ProdutosCarrinhoList(APIView):
-    permission_classes = [IsConsumidorAndOwnerOrReadOnly, IsAuthenticatedOrReadOnly]
+    permission_classes = [IsConsumidorAndOwner, IsAuthenticatedOrReadOnly]
     def get_object(self, carrinho):
         try:
             return ProdutosCarrinho.objects.filter(carrinho=carrinho)
@@ -708,8 +708,14 @@ class ProdutosCarrinhoList(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(serializar.data,status=status.HTTP_200_OK)
     def post(self, request, username, format=None):
+        if request.user.username != username:
+            return Response({'detail':"Não tem permissão para realizar esta ação, porque não é o utilizador dono deste carrinho!"}, status=status.HTTP_401_UNAUTHORIZED)
         carrinho = self.get_carrinho(username)
+        if 'carrinho' in request.data:
+            if int(request.data['carrinho'])!=int(carrinho.id):
+                return Response({'detail':'O ID do carrinho fornecido não corresponde ao id do carrinho do utilizador logado. Não precisa de enviar o id do carrinho, porque ele é atríbuido de acordo com o utilizador que está logado.'}, status=status.HTTP_400_BAD_REQUEST)
         serializador = ProdutosCarrinhoRequestSerializer(data=request.data)
+        print("\n\n\n",serializador,"\n\n\n")
         if serializador.is_valid():
             itemCarrinho = serializador.validated_data['produto']
             if itemCarrinho.unidade_medida in ['kg', 'g','l','ml']:
@@ -718,13 +724,13 @@ class ProdutosCarrinhoList(APIView):
             elif itemCarrinho.unidade_medida in ['un']:
                 precoKilo = itemCarrinho.preco_por_unidade
                 preco = Decimal(request.data['quantidade'])*precoKilo
-            serializador.save(carrinho=carrinho, preco=preco, precoKilo=precoKilo)
+            serializador.save(carrinho=carrinho, preco=preco, precoKilo=precoKilo) #atribui o carrinho da linha FIXME(carrinho = self.get_carrinho(username)), o preco e o preco por kilo/unidade
             response_serializer = ProdutosCarrinhoResponseSerializer(serializador.instance)
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializador.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class ProdutosCarrinhoDetail(APIView):
-    permission_classes = [IsConsumidorAndOwnerOrReadOnly, IsAuthenticated]
+    permission_classes = [IsConsumidorAndOwner, IsAuthenticated]
     def get_object(self, cart, idProdutoCart):
         try:
             return ProdutosCarrinho.objects.get(carrinho=cart, id=idProdutoCart)
@@ -745,6 +751,18 @@ class ProdutosCarrinhoDetail(APIView):
         except Utilizador.DoesNotExist:
             raise Http404
     def get(self, request, username, idProdutoCart, format=None):
+        """
+        Devolve o produto com um dado id(id da tabela ProdutoCarrinho)
+
+        Args:
+            request (_type_): _description_
+            username (_type_): _description_
+            idProdutoCart (_type_): _description_
+            format (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
         carrinho = self.get_carrinho(username)
         item_carrinho = self.get_object(carrinho, idProdutoCart)
         if item_carrinho is not None:
@@ -755,26 +773,32 @@ class ProdutosCarrinhoDetail(APIView):
     def put(self, request, username, idProdutoCart, format=None):
         carrinho = self.get_carrinho(username)
         item_carrinho = self.get_object(carrinho, idProdutoCart)
-        
+        print("\n\n\n\n",request.data,"\n\n\n\n")
         if item_carrinho is None:
             return Response({"detail": "Produto não encontrado no carrinho"},status=status.HTTP_404_NOT_FOUND)
 
         # Atualize o objeto com os novos dados
-        data = request.data
-        serializer = ProdutosCarrinhoRequestSerializer(item_carrinho, data=data)
+        data = request.data.copy()
         
+        data['produto'] = item_carrinho.produto.id
+        serializer = ProdutosCarrinhoRequestSerializer(item_carrinho, data=data)
+        #print(serializer)
         if serializer.is_valid():
+            print("peguei")
             produto = item_carrinho.produto
+            #print(serializer)
             if produto.unidade_medida in ['kg','g','l','ml']:
                 precoKilo = produto.preco_a_granel
                 preco = Decimal(request.data['quantidade']) * precoKilo
             elif produto.unidade_medida in ['un']:
                 precoKilo = produto.preco_por_unidade
                 preco = Decimal(request.data['quantidade']) * precoKilo
+            print("trinquei")
             serializer.save(preco=preco, precoKilo=precoKilo)
+            
             response_serializer = ProdutosCarrinhoResponseSerializer(serializer.instance)
             return Response(response_serializer.data, status=status.HTTP_200_OK)
-        else:
+        else:   
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     def delete(self, request, username, idProdutoCart, format=None):
         carrinho = self.get_carrinho(username)
@@ -789,4 +813,39 @@ class ProdutosCarrinhoDetail(APIView):
 
 
 
+class ProdutosCarrinhoDetailProdutoUP(APIView):
+    """_summary_
+
+    Args:
+        APIView (_type_): _description_
+    """
+    permission_classes = [IsConsumidorAndOwnerOrReadOnly]
+    def get_object(self, cart, idProdutoUnidadeProducao):
+        try:
+            return ProdutosCarrinho.objects.get(carrinho=cart, produto=idProdutoUnidadeProducao)
+        except ProdutosCarrinho.DoesNotExist:
+            return None
+
+    def get_carrinho(self, username):
+        try:
+            utilizador_temp = Utilizador.objects.get(username=username)
+            try:
+                consumidor_temp = Consumidor.objects.get(utilizador = utilizador_temp)
+                try:
+                    return Carrinho.objects.get(consumidor=consumidor_temp)
+                except Carrinho.DoesNotExist:
+                    raise Http404
+            except Consumidor.DoesNotExist:
+                raise Http404
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get(self, request, username, idProdutoUnidadeProducao, format=None):
+        carrinho = self.get_carrinho(username)
+        item_carrinho = self.get_object(carrinho, idProdutoUnidadeProducao)
+        if item_carrinho is not None:
+            serializar = TemProdutoNoCarrinhoSerializer(item_carrinho, many=False) #serializer para responder
+            return Response(serializar.data,status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Produto não encontrado no carrinho"},status=status.HTTP_404_NOT_FOUND)
+    
 
