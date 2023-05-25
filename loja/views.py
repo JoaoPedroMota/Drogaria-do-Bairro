@@ -3,7 +3,7 @@ from django.urls import reverse
 import requests
 from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo, Carrinho,Categoria, Produto
 from django.contrib import messages
-from django.contrib.auth import authenticate, login as AuthLogin, logout
+from django.contrib.auth import authenticate, login, logout
 from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
@@ -19,6 +19,8 @@ from django.conf import settings
 from django.shortcuts import redirect, render, redirect
 from django.urls import reverse
 from urllib.parse import quote_plus, urlencode
+
+from loja.api.serializers import UtilizadorSerializer
 
 oauth = OAuth()
 
@@ -93,7 +95,7 @@ def confirm_password_view(request):
     context = {'form': form}
     return render(request, 'password_confirm.html', context)
 
-def login(request):
+def loginUtilizador(request):
     return oauth.auth0.authorize_redirect(
         request, request.build_absolute_uri(reverse("loja-callback"))
     )
@@ -102,30 +104,33 @@ def callback(request):
     token = oauth.auth0.authorize_access_token(request)
     request.session["user"] = token
 
-    # email = token['userinfo']['email']
+    email = token['userinfo']['email']
 
-    # user, created = Utilizador.objects.get_or_create(username= token['userinfo']['nickname'] ,email=email)
+    user, created = Utilizador.objects.get_or_create(email=email)
 
-    # AuthLogin(request, user)
+    login(request, user)
 
-    # if created:
-    #     return redirect("auth0")
-    # else:
-    #     return redirect(request.build_absolute_uri(reverse("loja-home")))
-
-    username = token['userinfo']['nickname']
-
-    # url = f'http://127.0.0.1:8000/api/utilizadores/{username}'
-    url = f'http://127.0.0.1:8000/api/utilizadores/ninfante'
-    
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        user = Utilizador(**response.json())
-        AuthLogin(request, user)
-        return redirect(request.build_absolute_uri(reverse("loja-home")))
+    if created:
+        return redirect("auth0")
     else:
-        pass
+        return redirect(request.build_absolute_uri(reverse("loja-home")))
+
+    # username = token['userinfo']['nickname']
+
+    # # url = f'http://127.0.0.1:8000/api/utilizadores/{username}'
+    # url = f'http://127.0.0.1:8000/api/utilizadores/ninfante'
+    
+    # response = requests.get(url)
+
+    # if response.status_code == 200:
+    #     print('AAAA\n\n')
+    #     print(response.json())
+    #     utilizador = UtilizadorSerializer(data=response.json())
+    #     login(request, utilizador)
+    #     return redirect(request.build_absolute_uri(reverse("loja-home")))
+    # else:
+    #     print('BBBB\n\n')
+
 
 def logout(request):
     request.session.clear()
