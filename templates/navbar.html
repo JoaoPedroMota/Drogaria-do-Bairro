@@ -50,9 +50,7 @@
               </li>
               <li><a href="/contacts">Contactos</a></li>
               {% if request.user.is_authenticated %}
-                {% if request.user.is_consumidor %}
               <li><a href="/shop">Produtos</a></li>
-              {% endif %}
               <li><a href="#">@{{request.user.username}}</a>
                 <ul>
                   <li><a class="dropdown-item" href="{% url 'loja-perfil' request.user.username %}">Perfil</a></li>
