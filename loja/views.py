@@ -793,27 +793,31 @@ def carrinho(request):
 
         respostaProdutoUP = requests.get(urlProdutoUP)
         conteudoProdutoUP = respostaProdutoUP.json()
+    context = {}
+    if request.user.is_authenticated:
     
-    
-    sessao = requests.Session()
-    sessao.cookies.update(request.COOKIES)
-    url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
-    resposta = sessao.get(url)
-    conteudo = resposta.json()
-    #print(conteudo)
-    carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
-    produtos_carrinho = carrinho.produtos_carrinho.all()
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
+        url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
+        resposta = sessao.get(url)
+        
+        
+        if resposta.content:
+            conteudo = resposta.json()
+            #print(conteudo)
+            carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+            produtos_carrinho = carrinho.produtos_carrinho.all()
 
 
-    total_price = sum(produto_carrinho.preco if produto_carrinho.preco is not None else 0 for produto_carrinho in produtos_carrinho)
+            total_price = sum(produto_carrinho.preco if produto_carrinho.preco is not None else 0 for produto_carrinho in produtos_carrinho)
 
-    
+            
 
-    context = {
-        'carrinho': carrinho,
-        'produtos_carrinho': produtos_carrinho,
-        'total': total_price
-    }
+            context = {
+                'carrinho': carrinho,
+                'produtos_carrinho': produtos_carrinho,
+                'total': total_price
+            }
     return render(request, 'loja/carrinho.html', context)
 
 def adicionar_ao_carrinho(request, produto_id):
@@ -833,7 +837,6 @@ def adicionar_ao_carrinho(request, produto_id):
     valor = Decimal(split_values[0])
     quantidade = Decimal(split_values[1].split('=')[1])
     preco_atualizado = Decimal(str(valor * quantidade))
-
     if request.user.is_authenticated and request.user.is_consumidor:
 
         url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/produtoUP/{produto_id}/'

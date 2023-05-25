@@ -616,6 +616,15 @@ class ProdutosCarrinho(models.Model):
         verbose_name = "Produtos num Carrinho"
         verbose_name_plural = "Produtos num Carrinho"
         ordering = ['id']
+    def save(self, *args, **kwargs):
+        produto = ProdutoUnidadeProducao.objects.get(id=self.produto.id)
+        if produto.unidade_medida in ['g', 'kg', 'ml', 'l']:
+            self.precoKilo = produto.preco_a_granel
+            self.preco = self.quantidade * self.precoKilo
+        elif produto.unidade_medida == 'un':
+            self.precoKilo = produto.preco_por_unidade
+            self.preco = self.quantidade * self.precoKilo
+        super(ProdutosCarrinho, self).save(*args, **kwargs)
 
 
 
