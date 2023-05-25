@@ -6,14 +6,35 @@
     .product-section h1 {
         color: black;
         }
-        .mais-informacao {
-        display: none;
-    }
+        
 
     .descricao-toggle.expandido i {
         transform: rotate(-180deg);
     }
    
+    .imagem{
+            display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        }
+        .preçoRange{
+    font-size: 20px;
+    font-weight: normal;
+  }
+  .preçoRange1{
+    font-size: 20px;
+    font-weight: bold;
+  }
+   .preçoRange2{
+   
+    font-weight: bold ;
+  }
+  .preco{
+    font-size: 20px !important;
+    font-weight: bold !important;
+  }
+  
 
     
 </style>
@@ -40,83 +61,136 @@
 <h3>{{categoria}}</h3> -->
 
 <div class="product-section mt-150 mb-150">
+    <a class="imagem">
+        {% if filtered_products.0.nome == "Morango" %}
+        <img src="{% static 'website/assets/img/products/morango.jpg' %}" alt="Morango">
+        {% elif filtered_products.0.nome == "Alface" %}
+        <img src="{% static 'website/assets/img/products/alface.jpg' %}" alt="Alface">
+        {% elif filtered_products.0.nome == "Tomate Chucha" %}
+        <img src="{% static 'website/assets/img/products/tomate.jpg' %}" alt="Tomate Chucha">
+        {% elif filtered_products.0.nome == "Gelado Chocolate" %}
+        <img src="{% static 'website/assets/img/products/gelado_choco.png' %}" alt="Gelado Chocolate">
+        {% elif filtered_products.0.nome == "Gelado Laranja" %}
+        <img src="{% static 'website/assets/img/products/gelado_laranja.jpg' %}" alt="Gelado Chocolate">
+        {% elif filtered_products.0.nome == "Gelado de Sardinha" %}
+        <img src="{% static 'website/assets/img/products/gelado_sardinha.jpg' %}" alt="Gelado Sardinha">
+        {% elif filtered_products.0.nome == "Gelado Banana" %}
+        <img src="{% static 'website/assets/img/products/gelado_banana.jpg' %}" alt="Gelado Banana">
+        {% elif filtered_products.0.nome == "Gelado Abacaxi" %}
+        <img src="{% static 'website/assets/img/products/gelado_abacaxi.jpg' %}" alt="Gelado Abacaxi">
+        {% elif  filtered_products.0.nome|striptags|default:"" == "O Senhor dos Anéis: As Duas Torres" %}
+        
+        <img src="{% static 'website/assets/img/products/duas_torres.jpg' %}" alt="Duas Torres">
+        {% elif filtered_products.0.nome == "Gelado Nata" %}
+        <img src="{% static 'website/assets/img/products/gelado_nata.png' %}" alt="Gelado Nata">
+        {% else %}
+        <img src="{% static 'website/assets/img/products/default.jpg' %}" alt="Default">
+        {% endif %}
+        
+    </a>
+    <h1>{{ filtered_products.0.nome }}</h1>
+    <br>
     <div class="row product-lists">
+        {% for produto in filtered_products %}
         <div class="col-lg-4 col-md-6 text-center mx-auto">
             <div class="single-product-item">
-                <a>
-                    {% if produto_info == "Morango" %}
-                    <img src="{% static 'website/assets/img/products/morango.jpg' %}" alt="Morango">
-                    {% elif produto_info == "Alface" %}
-                    <img src="{% static 'website/assets/img/products/alface.jpg' %}" alt="Alface">
-                    {% elif produto_info == "Tomate Chucha" %}
-                    <img src="{% static 'website/assets/img/products/tomate.jpg' %}" alt="Tomate Chucha">
-                    {% elif produto_info == "Gelado Chocolate" %}
-                    <img src="{% static 'website/assets/img/products/gelado_choco.png' %}" alt="Gelado Chocolate">
-                    {% elif produto_info == "Gelado Laranja" %}
-                    <img src="{% static 'website/assets/img/products/gelado_laranja.jpg' %}" alt="Gelado Chocolate">
-                    {% else %}
-                    <img src="{% static 'website/assets/img/products/default.jpg' %}" alt="Default">
-                    {% endif %}
-                </a>
-    
-                <h3>{{ produto_info }}</h3>
-                {% if unidade is null %}
-                <p class="container">
-                    <span>Preço por {{ unidadeM }}: {{ granel }}€</span>
-                    <input type="number" class="styled-input" step="0.5" min="0" max="50" placeholder="1 Kg" onblur="atualizarPreco(this, {{ granel }}); alterarParaMaximo(this)" onchange="atualizarPreco(this, {{ produto.preco }}); alterarParaMaximo(this)">
-                    <span class="preco">{{ granel }}€</span>
-                </p>
-                {% else %}
-                <p class="container">
-                    <span>Preço por {{ unidadeM }}: {{ unidade }}€</span>
-                    <input type="number" class="styled-input" step="0.5" min="0" max="50" placeholder="1 Kg" onblur="atualizarPreco(this, {{ unidade }}); alterarParaMaximo(this)" onchange="atualizarPreco(this, {{ produto.preco }}); alterarParaMaximo(this)">
-                    <span class="preco">{{ unidade }}€</span>
-                </p>
+               
+               
 
-                {% endif %} 
-                   
-                <br>
-                <a href="cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
+
+
+
+                <div>
+                    
+                        <div class="mais-informacao">
+                            <br>
+                            <p>Categoria: {{ produto.categoria }}</p>
+                            <hr>
+                            <p>Fornecedor: {{ produto.fornecedor }}</p>
+                            <hr>
+                            <p>Unidade de Produção: {{ produto.up }}</p>
+                            <hr>
+                            <p>Morada: {{ produto.morada }} {{ produto.pais }}{{ produto.cidade }}</p>
+                           
+                            <hr>
+                            <p>{{ produto.descricao }}</p>
+                            <hr>
+                            <p>Data de Produção: {{ produto.dataP }}</p>
+                            <hr>
+                            
+                            <p>Marca: {{ produto.marca }}</p>
+                        <br>
+                        </div>
+                        {% if produto.precoG == null %}
+                        <span class="preçoRange"> Por Unidade: <span class="preçoRange2">{{ produto.precoU }}€ </span> </span>
+                    
+                        {% elif produto.precoU == null %}
+                        <span class="preçoRange"> Por Kilograma: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
+                     
+                        {% else %}
+                        
+                        <span class="preçoRange"> Por Unidade: <span class="preçoRange2">{{ produto.precoU }}€ ||</span> </span>
+                        
+                        <span class="preçoRange">  Por Kilograma: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
+                        
+                        {% endif %}
+
+                        {% if produto.precoU == null %}
+                        
+                        <p class="container">
+                            <br>
+                            <input type="number" class="styled-input" step="0.5" min="0" max="50" placeholder="1 Kg" name="quantidade" value="1" oninput="atualizarPreco(this, {{ produto.precoG }})">
+                            <span class="preco" name="preco">{{ produto.precoG}}€</span>
+                        </p>
+                        <br>
+                        <a href="{% url 'loja-adicionar-ao-carrinho' produto_id=produto.id %}?preco={{ produto.precoG }}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1" data-price="{{ produto.precoG }}">
+                            <i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
+                        {% else %}
+                        <p class="container">
+                            <br>
+                            <input type="number" class="styled-input" step="0.5" min="0" max="50" placeholder="1 Kg" name="quantidade" value="1" oninput="atualizarPreco(this, {{ produto.precoU }})">
+                            <span class="preco" name="preco">{{ produto.precoU }}€</span>
+                        </p>
+                        <br>
+                        <a href="{% url 'loja-adicionar-ao-carrinho' produto_id=produto.id %}?preco={{ produto.precoU }}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1" data-price="{{ produto.precoU }}">
+                            <i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
+                        {% endif %}
+                        
+                </div>
+            </div> 
+        </div>
+            {% endfor %}  
+     </div>  
+       
 </div>
+
 
 <!-- end products -->
 
 <!-- logo carousel -->
 
-</div>
-<div>
-    <div class ="ola">
+<script>
     
-        <h1 class="descricao-toggle">
-            Descrição sobre o artigo
-            <i class="fas fa-chevron-down"></i>
-        </h1>
-        <div class="mais-informacao">
-            <br>
-            <p>Categoria: {{ categoria }}</p>
-            
-            <hr>
-            <p>Fornecedor: {{ fornecedor }}</p>
-            <hr>
-            <p>Unidade de Produção: {{ up }}</p>
-            <hr>
-            <p>Morada: {{ morada }} {{ pais }}{{ cidade }}</p>
-           
-            <hr>
-            <p>{{ descricao }}</p>
-            <hr>
-            <p>Data de Produção: {{ data_producao }}</p>
-            <hr>
-            {% if marca != None %}
-            <p>Marca: {{ marca }}</p>
-            {% else %}
-            <p>Marca: Não atribuída </p>
-            {% endif %}
-        </div>
+
+    function adicionarAoCarrinho(event, link) {
+        event.preventDefault();
+        var quantidade = element.getAttribute("data-quantidade");
+        var preco = element.getAttribute("data-price");
+        var url = element.href;
         
+        // Adicione o parâmetro de consulta "quantidade" e "preco" à URL
+        url += "?quantidade=" + quantidade + "&preco=" + preco;
         
-        </div>
-</div>
+        // Redirecionar para a URL modificada
+        window.location.href = url;
+    }
+    function atualizarPreco(input, preco) {
+  var valor = input.value;
+  var novoPreco = valor * preco;
+  var precoElement = input.parentNode.querySelector('.preco');
+  precoElement.innerText = novoPreco.toFixed(2) + "€";
+}
+</script>
 {% endblock content %}
 
 
