@@ -90,7 +90,7 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
     tipo_utilizador = TipoUtilizadorField()
     password = CharField(write_only=True, required=False)
     nome = CharField(read_only=True)
-    # imagem_perfil = ImageField(required=False)
+    imagem_perfil = ImageField(required=False)
     def create(self, validated_data):
         if 'password' not in validated_data:
             raise ValidationError("password is required")
@@ -139,8 +139,8 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
 
     class Meta:
         model = Utilizador
-        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador']
-        # fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
+        # fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador']
+        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
         extra_kwargs = {'password': {'required': True}}
     
 

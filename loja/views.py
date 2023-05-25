@@ -46,10 +46,8 @@ oauth.register(
 
 # Create your views here.
 def loja(request):
-    context = {
-        "session": request.session.get("user")
-    }
-    return render(request, 'loja/loja.html', context)
+    context = {}
+    return render(request, 'loja/loja.html', context)   
 
 def auth0(request):
     context = {
@@ -104,14 +102,15 @@ def callback(request):
     token = oauth.auth0.authorize_access_token(request)
     request.session["user"] = token
 
+    username = token['userinfo']['nickname']
     email = token['userinfo']['email']
 
-    user, created = Utilizador.objects.get_or_create(email=email)
+    user, created = Utilizador.objects.get_or_create(username=username, email=email)
 
     login(request, user)
 
     if created:
-        return redirect("auth0")
+        return redirect('auth0')
     else:
         return redirect(request.build_absolute_uri(reverse("loja-home")))
 
@@ -158,7 +157,7 @@ def registerUtilizador(request):
             utilizador.cidade = utilizador.cidade.upper()
             utilizador.nome = utilizador.first_name+' '+ utilizador.last_name
             utilizador.save()
-            AuthLogin(request,utilizador)
+            login(request,utilizador)
             if utilizador.tipo_utilizador == "C":
                 consumidor = Consumidor.objects.create(utilizador=utilizador)
                 carrinho = Carrinho.objects.create(consumidor=consumidor)
@@ -242,7 +241,6 @@ def apagarConta(request, pk):
 
 @login_required(login_url='loja-login')
 def perfil(request, userName):
-    print(request.session.get("user"))
     utilizadorPerfil = Utilizador.objects.get(username=userName)
     pagina = 'perfil'
     context={'pagina':pagina, 'utilizadorView': utilizadorPerfil}
