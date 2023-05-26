@@ -98,7 +98,7 @@
                                     <td>{{ up.morada }}</td>
                                     <td>{{ up.get_tipo_unidade_display }}</td>
                                     <td>
-                                        <form action="{% url 'loja-editarUnidadeProducao' userName=request.user.username id=up.id %}" method="post">
+                                        <form action="{% url 'loja-editarUnidadeProducao' userName=request.user.username id=up.id %}" method="get">
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-info btn-sm">Editar</button>
                                         </form>

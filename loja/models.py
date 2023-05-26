@@ -1,5 +1,5 @@
 import phonenumbers
-from django.db import models
+from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser
 from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.auth.validators import ASCIIUsernameValidator
@@ -95,7 +95,7 @@ class Utilizador(AbstractUser):
     ]
     
     # Campos personalizados
-    nome = models.CharField(max_length=200, null=True)
+    nome = models.CharField(max_length=200, null=True, blank=True)
     email = models.EmailField(unique=True, null=True, blank=False, error_messages={'unique': 'Já existe um utilizador com esse e-mail.'})
     username = models.CharField(max_length=20, unique=True, null=True, blank=False, validators=[ASCIIUsernameValidator()], help_text='Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ ', error_messages={ 'unique': 'Já existe um utilizador com esse nome de utilizador.',},)
     pais = CountryField(null=True, blank=False, default='PT')
@@ -376,7 +376,7 @@ def generate_slug(name):
 class Categoria(models.Model):
     nome = models.CharField(max_length=50, unique=True) 
     #slug = models.SlugField(max_length=50, unique=True)                               #default=1,
-    categoria_pai = models.ForeignKey('Categoria', on_delete=models.SET_NULL,  null=True, blank=True)
+    categoria_pai = models.ForeignKey('Categoria', on_delete=models.SET_NULL,  null=True, blank=True, related_name="categorias_filhas")
     def __str__(self):
         return self.nome
     
@@ -426,6 +426,7 @@ class ProdutoUnidadeProducao(models.Model):
         ('g', 'Grama'),
         ('l', 'Litro'),
         ('ml', 'Mililitro'),
+        ('un', 'Unidade')
     )
     
     ### produto e unidade de produção
@@ -442,7 +443,7 @@ class ProdutoUnidadeProducao(models.Model):
     preco_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)])  
     # outras cenas
     data_producao = models.DateField( null=True,blank=True, default=timezone.now)
-    marca = models.CharField(max_length=100, null=True)
+    marca = models.CharField(max_length=100, null=True, blank=True)
 
     def get_imagem(self):
         from .imagem import Imagem
@@ -454,6 +455,14 @@ class ProdutoUnidadeProducao(models.Model):
         verbose_name_plural = "Produtos por Unidade Producao"
         verbose_name = "Produto por Unidade Producao"
         ordering=['id','produto','unidade_producao']
+        unique_together = ('produto', 'unidade_producao')
+
+    
+    def save(self, *args, **kwargs):
+        try:
+            super().save(*args, **kwargs)
+        except IntegrityError:
+            raise ValidationError(f"Já existe este produto ({self.produto}) nesta unidade de produção ({self.unidade_producao}). Não pode ter o mesmo produto na mesma unidade de produção. Altere um dos campos.")
     
     def clean(self):
         super().clean()
@@ -489,7 +498,7 @@ class ProdutoUnidadeProducao(models.Model):
             elif self.unidade_medida in ['kg', 'g', 'l', 'ml']:
                 if self.preco_a_granel is None:
                    raise ValidationError('O preço a granel é obrigatório para produtos vendidos por peso ou volume. Preencha o campo: Preço a granel.') 
-                
+    
                 
                 
 # class Imagem(models.Model):
@@ -607,6 +616,15 @@ class ProdutosCarrinho(models.Model):
         verbose_name = "Produtos num Carrinho"
         verbose_name_plural = "Produtos num Carrinho"
         ordering = ['id']
+    def save(self, *args, **kwargs):
+        produto = ProdutoUnidadeProducao.objects.get(id=self.produto.id)
+        if produto.unidade_medida in ['g', 'kg', 'ml', 'l']:
+            self.precoKilo = produto.preco_a_granel
+            self.preco = self.quantidade * self.precoKilo
+        elif produto.unidade_medida == 'un':
+            self.precoKilo = produto.preco_por_unidade
+            self.preco = self.quantidade * self.precoKilo
+        super(ProdutosCarrinho, self).save(*args, **kwargs)
 
 
 
