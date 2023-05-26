@@ -51,11 +51,11 @@
                     <p>O seu perfil</p>
                     <br>
                     <div id="imagemPerfil">
-                        <img class="imagens" id='imagem-perfil-perfil' src="{{utilizadorView.imagem_perfil.url}}"
+                        <img class="imagens" id='imagem-perfil-perfil' src="{{request.user.imagem_perfil.url}}"
                             style="width:150px;height: 150px;border-radius: 100%;" />
                     </div>
                     <h1>Bem Vindo</h1>
-
+                    
                     <h2>{{utilizadorView.nome}}</h2>
                     <br>
                     {% if request.user == utilizadorView %}

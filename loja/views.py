@@ -10,7 +10,7 @@ from django.middleware.csrf import get_token
 from .models import *
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import PasswordConfirmForm, ProdutoUnidadeProducaoForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario
+from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
@@ -21,7 +21,28 @@ from loja.api.serializers import *
 from .utils import fornecedor_required
 
 
- 
+import json
+from authlib.integrations.django_client import OAuth
+from django.conf import settings
+from django.shortcuts import redirect, render, redirect
+from django.urls import reverse
+from urllib.parse import quote_plus, urlencode
+
+from loja.api.serializers import UtilizadorSerializer
+
+oauth = OAuth()
+
+oauth.register(
+    "auth0",
+    client_id=settings.AUTH0_CLIENT_ID,
+    client_secret=settings.AUTH0_CLIENT_SECRET,
+    client_kwargs={
+        "scope": "openid profile email",
+    },
+    server_metadata_url = f"http://{settings.AUTH0_DOMAIN}/.well-known/openid-configuration",
+)
+
+
 #     if request.user != utilizador:
 #         return HttpResponse('Você não deveria estar aqui!')
 #     if request.method == 'POST':
@@ -35,6 +56,9 @@ from .utils import fornecedor_required
 def loja(request):
     context = {}
     return render(request, 'loja/loja.html', context)
+def contacts(request):
+    context = {}
+    return render(request, 'loja/contacts.html', context)
 def about(request):
     context = {}
     return render(request, 'loja/about.html', context)
@@ -53,6 +77,12 @@ def about(request):
 def checkout(request):
     context = {}
     return render(request, 'loja/checkout.html', context)
+def news(request):
+    context = {}
+    return render(request, 'loja/news.html', context)
+
+
+
 
 def confirm_password_view(request):
     if request.method == 'POST':
@@ -75,54 +105,85 @@ def confirm_password_view(request):
     return render(request, 'password_confirm.html', context)
 
 def loginUtilizador(request):
-    pagina='login'
-    if request.user.is_authenticated:
-        return redirect('loja-home')
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        try:
-            utilizador = Utilizador.objects.get(email=email)
-        except:
-            messages.error(request,"Este email não corresponde a nenhum utilizador registado")
-        utilizador = authenticate(request, email=email, password=password)
-        if utilizador is not None:
-            
-            login(request, utilizador)
-            return redirect('loja-home')
-        else:
-            messages.error(request,"Utilizador ou password errados")  
-    context = {'pagina':pagina}
-    return render(request, 'loja/login_register.html', context)
+    return oauth.auth0.authorize_redirect(
+        request, request.build_absolute_uri(reverse("loja-callback"))
+    )
 
-def registerUtilizador(request):
-    pagina = 'registo'
-    form = UtilizadorFormulario()
+def callback(request):
+    token = oauth.auth0.authorize_access_token(request)
+    request.session["user"] = token
+
+    username = token['userinfo']['nickname']
+    email = token['userinfo']['email']
+
+    user, created = Utilizador.objects.get_or_create(username=username, email=email)
+
+    login(request, user)
+
+    if created:
+        return redirect('loja-completarPerfil')
+    else:
+        return redirect(request.build_absolute_uri(reverse("loja-home")))
+
+    # username = token['userinfo']['nickname']
+
+    # # url = f'http://127.0.0.1:8000/api/utilizadores/{username}'
+    # url = f'http://127.0.0.1:8000/api/utilizadores/ninfante'
     
-    if request.method == 'POST':
-        formulario = UtilizadorFormulario(request.POST, request.FILES)
-        if formulario.is_valid():
-            utilizador = formulario.save(commit=False)
-            utilizador.username = utilizador.username.lower()
-            utilizador.cidade = utilizador.cidade.upper()
-            utilizador.nome = utilizador.first_name+' '+ utilizador.last_name
-            utilizador.save()
-            login(request,utilizador)
-            if utilizador.tipo_utilizador == "C":
-                consumidor = Consumidor.objects.create(utilizador=utilizador)
-                carrinho = Carrinho.objects.create(consumidor=consumidor)
-                return redirect('loja-home')
-            else:
-                Fornecedor.objects.create(utilizador=utilizador)
-                return redirect('loja-home')
+    # response = requests.get(url)
+
+    # if response.status_code == 200:
+    #     print('AAAA\n\n')
+    #     print(response.json())
+    #     utilizador = UtilizadorSerializer(data=response.json())
+    #     login(request, utilizador)
+    #     return redirect(request.build_absolute_uri(reverse("loja-home")))
+    # else:
+    #     print('BBBB\n\n')
+
+
+def logout(request):
+    request.session.clear()
+
+    return redirect(
+        f"https://{settings.AUTH0_DOMAIN}/v2/logout?"
+        + urlencode(
+            {
+                "returnTo": request.build_absolute_uri(reverse("loja-home")),
+                "client_id": settings.AUTH0_CLIENT_ID,
+            },
+            quote_via=quote_plus,
+        ),
+    )
+
+# def registerUtilizador(request):
+#     pagina = 'registo'
+#     form = UtilizadorFormulario()
+    
+#     if request.method == 'POST':
+#         formulario = UtilizadorFormulario(request.POST, request.FILES)
+#         if formulario.is_valid():
+#             utilizador = formulario.save(commit=False)
+#             utilizador.username = utilizador.username.lower()
+#             utilizador.cidade = utilizador.cidade.upper()
+#             utilizador.nome = utilizador.first_name+' '+ utilizador.last_name
+#             utilizador.save()
+#             login(request,utilizador)
+#             if utilizador.tipo_utilizador == "C":
+#                 consumidor = Consumidor.objects.create(utilizador=utilizador)
+#                 carrinho = Carrinho.objects.create(consumidor=consumidor)
+#                 return redirect('loja-home')
+#             else:
+#                 Fornecedor.objects.create(utilizador=utilizador)
+#                 return redirect('loja-home')
 
             
-        else:
-            messages.error(request,'Ocorreu um erro durante o processo de registo.')
-            form = formulario  # reatribui o formulário com erros
+#         else:
+#             messages.error(request,'Ocorreu um erro durante o processo de registo.')
+#             form = formulario  # reatribui o formulário com erros
 
-    context = {'pagina': pagina, 'form': form}
-    return render(request,'loja/login_register.html', context)
+#     context = {'pagina': pagina, 'form': form}
+#     return render(request,'loja/login_register.html', context)
 
 def formFornecedor(request):
     form = FornecedorFormulario()
@@ -138,12 +199,6 @@ def formFornecedor(request):
             messages.error(request,'Ocorreu um erro durante o processo de registo')
     context = {'form':form}
     return render(request,'loja/register_fornecedor.html' ,context)
-
-def logutUtilizador(request):
-    logout(request)
-    return redirect('loja-home')
-
-
 
 @login_required(login_url='loja-login')
 def editarPerfil(request):
@@ -173,6 +228,38 @@ def editarPerfil(request):
     context = {'form':form, 'pagina':pagina}
     return render(request, 'loja/editarUtilizador.html', context)
 
+@login_required(login_url='loja-login')
+def completarPerfil(request):
+    utilizador = request.user
+    form = CompletarPerfil(instance=utilizador)
+    if request.method == 'POST':
+        form = EditarPerfil(request.POST, request.FILES,instance = utilizador)
+        username = request.POST.get('username')
+        utilizador.first_name = request.POST.get('first_name')
+        utilizador.last_name = request.POST.get('last_name')
+        utilizador.nome = utilizador.first_name + ' ' + utilizador.last_name
+        utilizador.email = request.POST.get('email')
+        utilizador.pais = request.POST.get('pais')
+        utilizador.cidade = request.POST.get('cidade')
+        utilizador.telemovel = request.POST.get('telemovel')
+        utilizador.imagem_perfil = request.POST.get('imagem_perfil')
+        utilizador.tipo_utilizador = request.POST.get('tipo_utilizador')
+        utilizador.username = username
+
+        if utilizador.tipo_utilizador == "C":
+            consumidor = Consumidor.objects.create(utilizador=utilizador)
+            carrinho = Carrinho.objects.create(consumidor=consumidor)
+        else:
+            Fornecedor.objects.create(utilizador=utilizador)
+        if form.is_valid():
+            utilizador = form.save(commit=False)
+            utilizador.username = username.lower()
+            utilizador.cidade = utilizador.cidade.upper()
+            utilizador.save()
+            messages.success(request, 'Perfil atualizado com sucesso.')
+            return redirect('loja-home')
+    context = {'form':form}
+    return render(request, 'loja/completarPerfil.html', context)
 
 @login_required(login_url='loja-login')
 def apagarConta(request, pk):

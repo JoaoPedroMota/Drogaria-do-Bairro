@@ -1,0 +1,82 @@
+{% extends 'main.html' %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="{%static 'website/assets/css/responsiveC.css' %}">
+<style>
+    
+</style>
+<div class="breadcrumb-section breadcrumb-bg">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2 text-center">
+                <div class="breadcrumb-text">
+                   
+                    <p>Complete o seu perfil</p>
+                    <br>
+                <div>
+                    <form action="" method="POST" class="form-wrapper" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% for field in form %}
+                          {% if field.field.widget.input_type == 'select' %}
+                            <select name="{{ field.name }}" {% if field.required %}required{% endif %}>
+                              {% for choice in field.field.choices %}
+                                <option value="{{ choice.0 }}" {% if choice.0 == field.value %}selected{% endif %}>{{ choice.1 }}</option>
+                              {% endfor %}
+                            </select>
+                          {% else %}
+                            <input type="{{ field.field.widget.input_type }}"
+                                   name="{{ field.name }}"
+                                   value="{{ field.value }}"
+                                   placeholder="{{ field.label }}"
+                                   {% if field.required %}required{% endif %}
+                                   {% if field.id %}id="{{ field.id }}"{% endif %}>
+                          {% endif %}
+                        {% endfor %}
+                        
+                        <input type="submit" id="login" value="GUARDAR">
+                      </form>
+                    
+                    
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+<!-- end breadcrumb section -->
+
+
+           
+    </div>
+</div>
+<!-- end cart -->
+
+<!-- logo carousel -->
+<div class="logo-carousel-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="logo-carousel-inner">
+                    <div class="single-logo-item">
+                        <img src="{%static 'website/assets/img/company-logos/1.png' %}" alt="">
+                    </div>
+                    <div class="single-logo-item">
+                        <img src="{%static 'website/assets/img/company-logos/2.png' %}" alt="">
+                    </div>
+                    <div class="single-logo-item">
+                        <img src="{%static 'website/assets/img/company-logos/3.png' %}" alt="">
+                    </div>
+                    <div class="single-logo-item">
+                        <img src="{%static 'website/assets/img/company-logos/4.png' %}" alt="">
+                    </div>
+                    <div class="single-logo-item">
+                        <img src="{%static 'website/assets/img/company-logos/5.png' %}" alt="">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
