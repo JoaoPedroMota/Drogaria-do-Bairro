@@ -5,9 +5,6 @@ from .views import removerUnidadeProducao, removerVeiculo, criar_produto, ver_pr
 urlpatterns = [
     path('api/', include('loja.api.urls')),
     path('', views.loja, name='loja-home'),
-
-    path('auth0', views.auth0, name='auth0'),
-
     path('about/', views.about, name='about'),
     path('contacts/', views.contacts, name='contacts'),
     path('news/', views.news, name='news'),
@@ -16,9 +13,10 @@ urlpatterns = [
     path('login/', views.loginUtilizador, name='loja-login'),
     path('logout', views.logout, name='loja-logout'),
     path('callback', views.callback, name='loja-callback'),
-    path('register/', views.registerUtilizador, name='loja-register-Utilizador'),
-    #path('form-fornecedor/', views.formFornecedor, name='loja-form-forcedor'),
+    # path('register/', views.registerUtilizador, name='loja-register-Utilizador'),
+    # path('form-fornecedor/', views.formFornecedor, name='loja-form-forcedor'),
     path('editarPerfil/', views.editarPerfil, name='loja-editarPerfil'),
+    path('completarPerfil/', views.completarPerfil, name='loja-completarPerfil'),
     path('apagar-conta/<str:pk>/', views.apagarConta, name='loja-delete-conta'),
     path('perfil/<str:userName>/', views.perfil, name='loja-perfil'),
     path('perfil/<str:userName>/criarUP/', views.criarUP, name='loja-criarUP'),

@@ -49,13 +49,6 @@ def loja(request):
     context = {}
     return render(request, 'loja/loja.html', context)   
 
-def auth0(request):
-    context = {
-        "session": request.session.get("user"),
-        "pretty": json.dumps(request.session.get("user"), indent=4),
-    }
-    return render(request, 'loja/auth0.html', context)
-
 def contacts(request):
     context = {}
     return render(request, 'loja/contacts.html', context)
@@ -110,7 +103,7 @@ def callback(request):
     login(request, user)
 
     if created:
-        return redirect('auth0')
+        return redirect('loja-completarPerfil')
     else:
         return redirect(request.build_absolute_uri(reverse("loja-home")))
 
@@ -145,34 +138,34 @@ def logout(request):
         ),
     )
 
-def registerUtilizador(request):
-    pagina = 'registo'
-    form = UtilizadorFormulario()
+# def registerUtilizador(request):
+#     pagina = 'registo'
+#     form = UtilizadorFormulario()
     
-    if request.method == 'POST':
-        formulario = UtilizadorFormulario(request.POST, request.FILES)
-        if formulario.is_valid():
-            utilizador = formulario.save(commit=False)
-            utilizador.username = utilizador.username.lower()
-            utilizador.cidade = utilizador.cidade.upper()
-            utilizador.nome = utilizador.first_name+' '+ utilizador.last_name
-            utilizador.save()
-            login(request,utilizador)
-            if utilizador.tipo_utilizador == "C":
-                consumidor = Consumidor.objects.create(utilizador=utilizador)
-                carrinho = Carrinho.objects.create(consumidor=consumidor)
-                return redirect('loja-home')
-            else:
-                Fornecedor.objects.create(utilizador=utilizador)
-                return redirect('loja-home')
+#     if request.method == 'POST':
+#         formulario = UtilizadorFormulario(request.POST, request.FILES)
+#         if formulario.is_valid():
+#             utilizador = formulario.save(commit=False)
+#             utilizador.username = utilizador.username.lower()
+#             utilizador.cidade = utilizador.cidade.upper()
+#             utilizador.nome = utilizador.first_name+' '+ utilizador.last_name
+#             utilizador.save()
+#             login(request,utilizador)
+#             if utilizador.tipo_utilizador == "C":
+#                 consumidor = Consumidor.objects.create(utilizador=utilizador)
+#                 carrinho = Carrinho.objects.create(consumidor=consumidor)
+#                 return redirect('loja-home')
+#             else:
+#                 Fornecedor.objects.create(utilizador=utilizador)
+#                 return redirect('loja-home')
 
             
-        else:
-            messages.error(request,'Ocorreu um erro durante o processo de registo.')
-            form = formulario  # reatribui o formulário com erros
+#         else:
+#             messages.error(request,'Ocorreu um erro durante o processo de registo.')
+#             form = formulario  # reatribui o formulário com erros
 
-    context = {'pagina': pagina, 'form': form}
-    return render(request,'loja/login_register.html', context)
+#     context = {'pagina': pagina, 'form': form}
+#     return render(request,'loja/login_register.html', context)
 
 def formFornecedor(request):
     form = FornecedorFormulario()
@@ -232,7 +225,9 @@ def completarPerfil(request):
         utilizador.cidade = request.POST.get('cidade')
         utilizador.telemovel = request.POST.get('telemovel')
         utilizador.imagem_perfil = request.POST.get('imagem_perfil')
+        utilizador.tipo_utilizador = request.POST.get('tipo_utilizador')
         utilizador.username = username
+
         if utilizador.tipo_utilizador == "C":
             consumidor = Consumidor.objects.create(utilizador=utilizador)
             carrinho = Carrinho.objects.create(consumidor=consumidor)
@@ -244,10 +239,9 @@ def completarPerfil(request):
             utilizador.cidade = utilizador.cidade.upper()
             utilizador.save()
             messages.success(request, 'Perfil atualizado com sucesso.')
-            link = reverse('loja-perfil', args=[request.user.username])
-            return redirect(link)
+            return redirect('loja-home')
     context = {'form':form}
-    return render(request, 'loja/completarUtilizador.html', context)
+    return render(request, 'loja/completarPerfil.html', context)
 
 @login_required(login_url='loja-login')
 def apagarConta(request, pk):
