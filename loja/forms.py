@@ -20,6 +20,11 @@ class EditarPerfil(ModelForm):
     class Meta:
         model = Utilizador
         fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','telemovel','imagem_perfil',]
+
+class CompletarPerfil(ModelForm):
+    class Meta:
+        model = Utilizador
+        fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','telemovel','tipo_utilizador', 'imagem_perfil',]
  
 class criarUnidadeProducaoFormulario(ModelForm):
     class Meta:

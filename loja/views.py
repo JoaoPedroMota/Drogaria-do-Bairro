@@ -4,7 +4,7 @@ import requests
 from .models import Utilizador, Fornecedor, Consumidor, UnidadeProducao, Veiculo, Carrinho,Categoria, Produto
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario
+from .forms import PasswordConfirmForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario, CompletarPerfil
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
@@ -217,6 +217,37 @@ def editarPerfil(request):
     context = {'form':form, 'pagina':pagina}
     return render(request, 'loja/editarUtilizador.html', context)
 
+@login_required(login_url='loja-login')
+def completarPerfil(request):
+    utilizador = request.user
+    form = CompletarPerfil(instance=utilizador)
+    if request.method == 'POST':
+        form = EditarPerfil(request.POST, request.FILES,instance = utilizador)
+        username = request.POST.get('username')
+        utilizador.first_name = request.POST.get('first_name')
+        utilizador.last_name = request.POST.get('last_name')
+        utilizador.nome = utilizador.first_name + ' ' + utilizador.last_name
+        utilizador.email = request.POST.get('email')
+        utilizador.pais = request.POST.get('pais')
+        utilizador.cidade = request.POST.get('cidade')
+        utilizador.telemovel = request.POST.get('telemovel')
+        utilizador.imagem_perfil = request.POST.get('imagem_perfil')
+        utilizador.username = username
+        if utilizador.tipo_utilizador == "C":
+            consumidor = Consumidor.objects.create(utilizador=utilizador)
+            carrinho = Carrinho.objects.create(consumidor=consumidor)
+        else:
+            Fornecedor.objects.create(utilizador=utilizador)
+        if form.is_valid():
+            utilizador = form.save(commit=False)
+            utilizador.username = username.lower()
+            utilizador.cidade = utilizador.cidade.upper()
+            utilizador.save()
+            messages.success(request, 'Perfil atualizado com sucesso.')
+            link = reverse('loja-perfil', args=[request.user.username])
+            return redirect(link)
+    context = {'form':form}
+    return render(request, 'loja/completarUtilizador.html', context)
 
 @login_required(login_url='loja-login')
 def apagarConta(request, pk):
