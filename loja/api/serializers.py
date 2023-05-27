@@ -167,8 +167,8 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
 
     class Meta:
         model = Utilizador
-        #fields = ['username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador']
-        fields = ['id','username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
+        # fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador']
+        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
         extra_kwargs = {'password': {'required': True}}
     
 
@@ -343,7 +343,6 @@ class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
         unidade_Medida_Por_Unidade = data.get('unidade_Medida_Por_Unidade')
         quantidade_por_unidade = data.get('quantidade_por_unidade')
         preco_por_unidade = data.get('preco_por_unidade')
-
         produto = data.get('produto')
         unidade_producao = data.get('unidade_producao')
         

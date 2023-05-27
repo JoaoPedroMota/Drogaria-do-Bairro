@@ -46,26 +46,22 @@
               </li>
               <li><a href="/about">Sobre Nós</a></li>
               </li>
-              {% if not  request.user.is_fornecedor %}
-              <li><a href="/shop">Produtos</a></li>
-              {% endif %}
-              
-              {% if not request.user.is_authenticated %}
-              <li class="nav-item active">
-                <a href="{% url 'loja-login' %}">Entrar </a>
-              </li>
-              {% endif %}
+              <li><a href="/contacts">Contactos</a></li>
               {% if request.user.is_authenticated %}
              
               <li><a href="#">@{{request.user.username}}</a>
                 <ul>
-                  <li><a class="dropdown-item" href="{% url 'loja-perfil' request.user.username  %}">Perfil</a></li>
+                  <li><a class="dropdown-item" href="{% url 'loja-perfil' request.user.username %}">Perfil</a></li>
                   <li><a class="dropdown-item" href="{% url 'loja-logout' %}">Logout</a></li>
                 </ul>
               </li>
               
               <li><img class="imagens" id='imagem-perfil' src="{{request.user.imagem_perfil.url}}"
                 style="width:50px;height: 40px;border-radius: 100%;" /></li>
+              {% else %}
+              <li class="nav-item active">
+                <a href="{% url 'loja-login' %}">Entrar </a>
+              </li>
               {% endif %}
               {% if not request.user.is_authenticated or request.user.is_consumidor%}
               <li>

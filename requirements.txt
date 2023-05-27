@@ -1,6 +1,6 @@
 asgiref==3.6.0
 astroid==2.14.2
-Authlib==1.2.0
+authlib==1.2.0
 certifi==2022.12.7
 cffi==1.15.1
 charset-normalizer==3.1.0
@@ -9,7 +9,7 @@ cryptography==40.0.1
 defusedxml==0.7.1
 dill==0.3.6
 distlib==0.3.6
-Django==4.1.7
+django==4.1.7
 django-allauth==0.53.1
 django-cors-headers==3.14.0
 django-countries==7.5.1
