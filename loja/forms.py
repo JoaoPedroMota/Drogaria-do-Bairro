@@ -81,7 +81,7 @@ class ProdutoUnidadeProducaoForm(forms.ModelForm):
     unidade_producao = forms.ModelChoiceField(queryset=UnidadeProducao.objects.filter())
     class Meta:
         model = ProdutoUnidadeProducao
-        fields = ["produto", "unidade_producao", "descricao","stock" ,"unidade_medida", "preco_a_granel","unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade","data_producao","marca" ]
+        fields = ["produto", "unidade_producao", "descricao","stock" ,"unidade_medida", "preco_a_granel","unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade","data_producao","marca", "imagem_produto"]
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)
         super(ProdutoUnidadeProducaoForm, self).__init__(*args, **kwargs)

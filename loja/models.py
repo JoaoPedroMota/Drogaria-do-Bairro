@@ -103,7 +103,7 @@ class Utilizador(AbstractUser):
     #morada = models.CharField(max_length=200, null=True, blank=False)
     telemovel = PhoneNumberField(null=True, blank=True, unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
     tipo_utilizador = models.CharField(max_length=1, choices=TIPO_UTILIZADOR, default='', null=True)
-    imagem_perfil = models.ImageField(null=True, default="avatar.svg", validators=[validar_extensao_imagens, validar_tamanho_imagens])
+    imagem_perfil = models.ImageField(null=True, default="avatar.svg", upload_to='imagens_perfil/',validators=[validar_extensao_imagens, validar_tamanho_imagens])
     updated = models.DateTimeField(auto_now=True, null=True, blank=False)
     created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
     
@@ -414,6 +414,15 @@ class Produto(models.Model):
         ordering = ("id","nome")
 
 class ProdutoUnidadeProducao(models.Model):
+    def validar_extensao_imagens(value):
+        ext = value.name.split('.')[-1].lower()
+        allowed_extensions = ['jpg','png','svg','gif']
+        if ext not in allowed_extensions:
+            raise ValidationError((f'Tipo de ficheiro inválido. Extensões válidas: {allowed_extensions}'))
+    def validar_tamanho_imagens(value):
+        max_size = 2 * 1024 * 1024
+        if value.size > max_size:
+            raise ValidationError((f'Ficheiro grande de mais. Tamanho máximo 2MB'))
     UNIDADES_MEDIDA_CHOICES = (
         ('kg', 'Quilograma'),
         ('g', 'Grama'),
@@ -444,7 +453,7 @@ class ProdutoUnidadeProducao(models.Model):
     # outras cenas
     data_producao = models.DateField( null=True,blank=True, default=timezone.now)
     marca = models.CharField(max_length=100, null=True, blank=True)
-
+    imagem_produto = models.ImageField(null=True, blank=False,upload_to='products/', validators=[validar_extensao_imagens, validar_tamanho_imagens])
     def get_imagem(self):
         from .imagem import Imagem
         return Imagem.objects.get(produto=self)

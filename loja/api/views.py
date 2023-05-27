@@ -112,19 +112,19 @@ class UtilizadoresDetail(APIView):
         serializar = UtilizadorSerializer(utilizador, many=False)
         return Response(serializar.data)
     
-    def put(self, request, idUtilizador, format=None):
-        utilizador = self.get_object(idUtilizador)
+    def put(self, request, username, format=None):
+        utilizador = self.get_object(username)
         deserializar = UtilizadorSerializer(utilizador, data = request.data)
         if deserializar.is_valid():
             deserializar.save()
             return Response(deserializar.data)
         return Response(deserializar.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    def delete(self,request, idUtilizador, format=None):
+    def delete(self,request, username, format=None):
         # if 'password' not in request.data:
         #     return Response("Password Required", status=status.HTTP_400_BAD_REQUEST)
         # password = request.data['password']
-        utilizador = self.get_object(idUtilizador)
+        utilizador = self.get_object(username)
         # if not check_password(password, utilizador.password):
         #     return Response("Password is incorrect", status=status.HTTP_401_UNAUTHORIZED)
         utilizador.delete()
@@ -419,7 +419,7 @@ class ProdutoDetailID(APIView):
         return Response(serializar.data, status=status.HTTP_200_OK)
 
 class ProdutoUnidadeProducaoList(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]
+    #permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]
     def get_produtos_up(self, username, identifierUP):
         try:
             user = Utilizador.objects.get(username=username)
@@ -473,6 +473,7 @@ class ProdutoUnidadeProducaoList(APIView):
         if serializar.is_valid():
             serializar.save()
             return Response(serializar.data, status=status.HTTP_201_CREATED)
+        print(serializar.errors)
         return Response(serializar.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -715,7 +716,6 @@ class ProdutosCarrinhoList(APIView):
             if int(request.data['carrinho'])!=int(carrinho.id):
                 return Response({'detail':'O ID do carrinho fornecido não corresponde ao id do carrinho do utilizador logado. Não precisa de enviar o id do carrinho, porque ele é atríbuido de acordo com o utilizador que está logado.'}, status=status.HTTP_400_BAD_REQUEST)
         serializador = ProdutosCarrinhoRequestSerializer(data=request.data)
-        print("\n\n\n",serializador,"\n\n\n")
         if serializador.is_valid():
             itemCarrinho = serializador.validated_data['produto']
             if itemCarrinho.unidade_medida in ['kg', 'g','l','ml']:
@@ -773,7 +773,6 @@ class ProdutosCarrinhoDetail(APIView):
     def put(self, request, username, idProdutoCart, format=None):
         carrinho = self.get_carrinho(username)
         item_carrinho = self.get_object(carrinho, idProdutoCart)
-        print("\n\n\n\n",request.data,"\n\n\n\n")
         if item_carrinho is None:
             return Response({"detail": "Produto não encontrado no carrinho"},status=status.HTTP_404_NOT_FOUND)
 
@@ -782,18 +781,14 @@ class ProdutosCarrinhoDetail(APIView):
         
         data['produto'] = item_carrinho.produto.id
         serializer = ProdutosCarrinhoRequestSerializer(item_carrinho, data=data)
-        #print(serializer)
         if serializer.is_valid():
-            print("peguei")
             produto = item_carrinho.produto
-            #print(serializer)
             if produto.unidade_medida in ['kg','g','l','ml']:
                 precoKilo = produto.preco_a_granel
                 preco = Decimal(request.data['quantidade']) * precoKilo
             elif produto.unidade_medida in ['un']:
                 precoKilo = produto.preco_por_unidade
                 preco = Decimal(request.data['quantidade']) * precoKilo
-            print("trinquei")
             serializer.save(preco=preco, precoKilo=precoKilo)
             
             response_serializer = ProdutosCarrinhoResponseSerializer(serializer.instance)

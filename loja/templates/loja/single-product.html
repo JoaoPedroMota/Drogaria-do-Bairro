@@ -1,6 +1,7 @@
 {% extends 'main.html' %}
 {% load static %}
-{% block content%}
+{% block content %}
+
 
 <style>
     .product-section h1 {
@@ -110,10 +111,14 @@
                             <hr>
                             <p>Unidade de Produção: {{ produto.up }}</p>
                             <hr>
-                            <p>Morada: {{ produto.morada }} {{ produto.pais }}{{ produto.cidade }}</p>
+                            <p>Morada: {{ produto.morada }}, {{ produto.cidade }}, {{ produto.pais}}</p>
                            
                             <hr>
-                            <p>{{ produto.descricao }}</p>
+                            {% if produto.descricao is not None %}
+                                <p>Descrição: {{ produto.descricao }}</p>
+                            {% else %}
+                                <p>Descrição: Não foi fornecida nenhuma descrição.</p>
+                            {% endif %}
                             <hr>
                             <p>Data de Produção: {{ produto.dataP }}</p>
                             <hr>

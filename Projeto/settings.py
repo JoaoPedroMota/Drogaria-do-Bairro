@@ -158,7 +158,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = '/static/'
-MEDIA_URL = '/images/' #imagens e fotos perfil
+MEDIA_URL = '/website/assets/img/' #imagens e fotos perfil
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
@@ -167,7 +167,7 @@ STATICFILES_DIRS = [
 
 
 
-MEDIA_ROOT = BASE_DIR / 'static/images' #imagens e fotos perfil
+MEDIA_ROOT = BASE_DIR / 'static/website/assets/img/' #imagens e fotos perfil
 
 
 
@@ -193,8 +193,7 @@ CORS_ALLOW_ALL_ORIGINS = True # cuidado!!!! verificar quando estiver no sercvido
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = '/static/'
-MEDIA_URL = '/images/' #imagens e fotos perfil
+
 
 
 

@@ -12,6 +12,11 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password as django_validate_password
 from rest_framework.serializers import CharField
 from rest_framework import serializers
+from django.core.files.base import ContentFile
+import base64
+
+
+
 class TipoUtilizadorField(Field):
     def to_representation(self, value):
         return dict(Utilizador.TIPO_UTILIZADOR).get(value)
@@ -91,7 +96,7 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
     tipo_utilizador = TipoUtilizadorField()
     password = CharField(write_only=True, required=False)
     nome = CharField(read_only=True)
-    imagem_perfil = ImageField(required=False)
+    imagem_perfil = serializers.ImageField(required=False)
     def create(self, validated_data):
         if 'password' not in validated_data:
             raise ValidationError("password is required")
@@ -107,6 +112,10 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
             raise ValidationError("cidade is required")
         if "telemovel" not in validated_data:
             raise ValidationError("telemovel is required")
+        
+        
+    
+            validated_data['imagem_perfil'] = ContentFile(imagem_descodificada, '')
         validated_data['nome'] = f"{validated_data['first_name']} {validated_data['last_name']}"
         validated_data['cidade'] = validated_data['cidade'].upper()
         validated_data['password'] = make_password(validated_data['password'])
@@ -116,6 +125,10 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
             raise ValidationError(" 'tipo_utilizador' : 'Não se pode alterar o campo tipo_utilizador' ")
         if 'password' in validated_data:
             raise ValidationError(" Ainda não é possível editar o campo de palavra passe ")
+
+        
+        
+        
         instance.username = validated_data.get('username', instance.username).lower()
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
@@ -127,6 +140,20 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
 
         instance.save()
         return instance
+    def validate_imagem_perfil(self, value):
+        max_size = 2 * 1024 * 1024  # Tamanho máximo em bytes (2MB)
+        allowed_extensions = ['jpg', 'png', 'svg', 'gif']
+
+        # Verificar a extensão do arquivo
+        ext = value.name.split('.')[-1].lower()
+        if ext not in allowed_extensions:
+            raise serializers.ValidationError(f'Tipo de ficheiro inválido. Extensões válidas: {allowed_extensions}')
+
+        # Verificar o tamanho do arquivo
+        if value.size > max_size:
+            raise serializers.ValidationError('Ficheiro grande de mais. Tamanho máximo 2MB')
+
+        return value
     
     
     def validate_password(self, value):
@@ -268,9 +295,10 @@ class CarrinhoSerializer(ModelSerializer):
 logger = logging.getLogger(__name__)
 
 class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
+    imagem_produto = serializers.ImageField(required=True)
     class Meta:
         model = ProdutoUnidadeProducao
-        fields = ["id", "produto", "unidade_producao", "stock", "descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca"]
+        fields = ["id", "produto", "unidade_producao", "stock", "descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca", "imagem_produto"]
         read_only_fields = ['id']
 
     def verificar_existencia_associacao(self, produto, unidade_producao):
@@ -285,6 +313,20 @@ class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
             existe_associacao = queryset.exists()
 
         return existe_associacao
+    def validate_imagem_produto(self, value):
+        max_size = 2 * 1024 * 1024  # Tamanho máximo em bytes (2MB)
+        allowed_extensions = ['jpg', 'png', 'svg', 'gif']
+
+        # Verificar a extensão do arquivo
+        ext = value.name.split('.')[-1].lower()
+        if ext not in allowed_extensions:
+            raise serializers.ValidationError(f'Tipo de ficheiro inválido. Extensões válidas: {allowed_extensions}')
+
+        # Verificar o tamanho do arquivo
+        if value.size > max_size:
+            raise serializers.ValidationError('Ficheiro grande de mais. Tamanho máximo 2MB')
+
+        return value
     
     
     
@@ -429,6 +471,7 @@ class UnidadeProducaoSingleProdutoSerializer(ModelSerializer):
     Serializador de auxilio a Single Product Serializer. Devolve o id, o fornecedor, isto é o nome do fornecedor da UP, a morada, cidade e pais da UP
     """
     fornecedor = FornecedorNomeUtilizadorSerializer(read_only=True)
+    pais = campoPaisSerializador()
     class Meta:
         model = UnidadeProducao
         fields = ['id','fornecedor', 'nome', 'morada', 'cidade', 'pais']
