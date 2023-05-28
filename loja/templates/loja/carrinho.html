@@ -58,7 +58,7 @@
         </td>
         <td class="product-name">{{ produto.nomeProduto }}</td>
         <td class="product-quantity">{{produto.precoKilo}}€/{{produto.produto.unidade_medida}}</td>    
-        <td class="product-price">{{produto.preco}}€</td>
+        <td class="product-price">{{produto.preco|floatformat:2}}€</td>
         <td class="">{{ produto.quantidade|floatformat:1 }} {{produto.produto.unidade_medida}}</td>
     </tr>
 </tbody>
@@ -79,7 +79,7 @@
                         <tbody>
                             <tr class="total-data">
                                 <td><strong>Subtotal: </strong></td>
-                                <td>{{ total|floatformat:2 }}€</td>
+                                <td>{{ total|floatformat:2}}€</td>
                             </tr>
                             <tr class="total-data">
                                 <td><strong>Shipping: </strong></td>
