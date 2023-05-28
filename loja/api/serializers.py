@@ -484,7 +484,7 @@ class SingleProdutoPaginaSerializer(ModelSerializer):
     produto = ProdutoSerializer()
     class Meta:
         model = ProdutoUnidadeProducao
-        fields = ["id","produto", "unidade_producao", "stock","descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca"]
+        fields = ["id","produto", "unidade_producao", "stock","descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca","imagem_produto"]
         read_only_fields = ['id']
 
 

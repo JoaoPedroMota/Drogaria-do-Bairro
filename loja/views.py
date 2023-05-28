@@ -239,30 +239,27 @@ def completarPerfil(request):
     utilizador = request.user
     form = CompletarPerfil(instance=utilizador)
     if request.method == 'POST':
-        form = EditarPerfil(request.POST, request.FILES,instance = utilizador)
-        username = request.POST.get('username')
-        utilizador.first_name = request.POST.get('first_name')
-        utilizador.last_name = request.POST.get('last_name')
-        utilizador.nome = utilizador.first_name + ' ' + utilizador.last_name
-        utilizador.email = request.POST.get('email')
-        utilizador.pais = request.POST.get('pais')
-        utilizador.cidade = request.POST.get('cidade')
-        utilizador.telemovel = request.POST.get('telemovel')
-        utilizador.imagem_perfil = request.POST.get('imagem_perfil')
-        utilizador.tipo_utilizador = request.POST.get('tipo_utilizador')
-        utilizador.username = username
-
-        if utilizador.tipo_utilizador == "C":
-            consumidor = Consumidor.objects.create(utilizador=utilizador)
-            carrinho = Carrinho.objects.create(consumidor=consumidor)
-        else:
-            Fornecedor.objects.create(utilizador=utilizador)
+        form = CompletarPerfil(request.POST, request.FILES,instance = utilizador)
         if form.is_valid():
             utilizador = form.save(commit=False)
-            utilizador.username = username.lower()
-            utilizador.cidade = utilizador.cidade.upper()
+            utilizador.username = request.POST.get('username').lower()
+            utilizador.first_name = request.POST.get('first_name')
+            utilizador.last_name = request.POST.get('last_name')
+            utilizador.nome = utilizador.first_name + ' ' + utilizador.last_name
+            utilizador.pais = request.POST.get('pais')
+            utilizador.cidade = request.POST.get('cidade').lower()
+            utilizador.telemovel = request.POST.get('telemovel')
+            if request.POST.get('imagem_perfil'):
+                utilizador.imagem_perfil = request.POST.get('imagem_perfil')
+            utilizador.tipo_utilizador = request.POST.get('tipo_utilizador')
             utilizador.save()
-            messages.success(request, 'Perfil atualizado com sucesso.')
+            if utilizador.tipo_utilizador == "C":
+                consumidor = Consumidor.objects.create(utilizador=utilizador)
+                carrinho = Carrinho.objects.create(consumidor=consumidor)
+            else:
+                Fornecedor.objects.create(utilizador=utilizador)
+
+
             return redirect('loja-home')
     context = {'form':form}
     return render(request, 'loja/completarPerfil.html', context)
@@ -823,8 +820,13 @@ def sP(request,produto_id):
                         'dataP': infoSingleProduct['data_producao'],
                         'marca': infoSingleProduct['marca'],
                         'precoU':infoSingleProduct['preco_por_unidade'],
-                        'precoG':infoSingleProduct['preco_a_granel']
+                        'precoG':infoSingleProduct['preco_a_granel'],
+                        'unidade_medida': infoSingleProduct['unidade_medida'],
+                        'quantidade_por_unidade': infoSingleProduct['quantidade_por_unidade'] if infoSingleProduct['quantidade_por_unidade'] is not None else '',
+                        'unidade_Medida_Por_Unidade': infoSingleProduct['unidade_Medida_Por_Unidade'],
+                        'imagem_produto': infoSingleProduct['imagem_produto'],
                     })
+
         else:
             return None
 
@@ -924,58 +926,78 @@ def ver_produtos(request):
 ##################################################
 
 def carrinho(request):
-    if request.session.get('carrinho') is not None and request.session.get('carrinho') != {}:
-        print(request.session['carrinho'])
-    def criar_instancia_produto_carrinho(json):
-        """Tentar criar uma instância do produto carrinho
-
-        Args:
-            json (dict): json convertido num dicionário.
-        """
-        idCarrinho = json["carrinho"]["id"]
-        idProdutoUP = json['produto']['id']
-        quantidade = Decimal(json["quantidade"])
-        preco = Decimal(json["preco"])
-        precoKilo = Decimal(json["precoKilo"])
-        
-        urlCarrinho = f"http://127.0.0.1:8000/api/consumidores/carrinho/{idCarrinho}"
-        urlProdutoUP = f"http://127.0.0.1:8000/api/produtos_loja/{idProdutoUP}/"
-        
-        respostaCarrinho = requests.get(urlCarrinho)
-        conteudoCarrinho = respostaCarrinho.json()
-
-        respostaProdutoUP = requests.get(urlProdutoUP)
-        conteudoProdutoUP = respostaProdutoUP.json()
+    # if request.session.get('carrinho') is not None and request.session.get('carrinho') != {}:
+    #     print(request.session['carrinho'])
     context = {}
     if request.user.is_authenticated:
-    
         sessao = requests.Session()
         sessao.cookies.update(request.COOKIES)
         url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
         resposta = sessao.get(url)
-        
-        
         if resposta.content:
             conteudo = resposta.json()
-            print(conteudo)
-            
-            
-            
-            carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
-            produtos_carrinho = carrinho.produtos_carrinho.all()
-
-
-            total_price = sum(produto_carrinho.preco if produto_carrinho.preco is not None else 0 for produto_carrinho in produtos_carrinho)
-
-            
-
+            total= Decimal(0)
+            produtos = []
+            for produto in conteudo:
+                produtoUP = produto['produto']
+                idParaReceberNome = produtoUP['produto']
+                urlNomeProduto = f'http://127.0.0.1:8000/api/produtosID/{idParaReceberNome}/'
+                resposta = sessao.get(urlNomeProduto)
+                nome = resposta.json()
+                nomeProduto = nome['nome']
+                quantidade = produto['quantidade']
+                precoKilo = produto['precoKilo']
+                preco = produto['preco']
+                idProdutoNoCarrinho = produto['id']
+                total+=Decimal(preco)
+                produtos.append({
+                    'produto' : produtoUP,
+                    'nomeProduto': nomeProduto,
+                    'quantidade':quantidade,
+                    'precoKilo':precoKilo,
+                    'preco':preco,
+                    'idNoCarrinho':idProdutoNoCarrinho
+                })
+            # carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+            # produtos_carrinho = carrinho.produtos_carrinho.all()
+            #total_price = sum(produto_carrinho.preco if produto_carrinho.preco is not None else 0 for produto_carrinho in produtos_carrinho)
             context = {
-                'carrinho': carrinho,
-                'produtos_carrinho': produtos_carrinho,
-                'total': total_price
+                'produtos': produtos,
+                'total': total
             }
     elif not request.user.is_authenticated:
-        pass
+        carrinho = request.session.get('carrinho')
+        print(carrinho)
+        total= Decimal(0)
+        produtos = []
+        chaves = carrinho.keys()
+        for chave in chaves:
+            urlProdutoUP = f'http://127.0.0.1:8000/api/produtos_loja/{chave}/'
+            resposta = requests.get(urlProdutoUP)
+            
+            
+            
+            produtoUP = resposta.json()
+            nomeProduto = produtoUP['produto']['nome']
+            quantidade = carrinho[chave]['quantidade']
+            precoKilo = produtoUP['preco_a_granel'] if produtoUP['unidade_medida'] != 'un' else produtoUP['preco_por_unidade']
+            preco = carrinho[chave]['precoQuantidade']
+            total+=Decimal(preco)
+            produtos.append({
+                'produto' : produtoUP,
+                'nomeProduto': nomeProduto,
+                'quantidade':quantidade,
+                'precoKilo':precoKilo,
+                'preco':preco,
+                'idNoCarrinho':chave
+            })
+        # carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+        # produtos_carrinho = carrinho.produtos_carrinho.all()
+        #total_price = sum(produto_carrinho.preco if produto_carrinho.preco is not None else 0 for produto_carrinho in produtos_carrinho)
+        context = {
+            'produtos': produtos,
+            'total': total
+        }
     return render(request, 'loja/carrinho.html', context)
 
 def adicionar_ao_carrinho(request, produto_id):
@@ -1095,37 +1117,49 @@ from django.shortcuts import get_object_or_404, redirect
 from .models import Carrinho, ProdutosCarrinho
 
 def remover_do_carrinho(request, produto_id):
-    sessao = requests.Session()
-    sessao.cookies.update(request.COOKIES)
+    if request.user.is_authenticated:
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
 
-    csrf_token = get_token(request)
-    headers = {'X-CSRFToken':csrf_token}
+        csrf_token = get_token(request)
+        headers = {'X-CSRFToken':csrf_token}
 
 
 
-    
-    urlDelete = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/{produto_id}/'
-    respostaDelete = sessao.delete(urlDelete, headers=headers)
-    
+        
+        urlDelete = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/{produto_id}/'
+        respostaDelete = sessao.delete(urlDelete, headers=headers)
+        
 
-    
-    
-    # carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
-    # produto_carrinho = get_object_or_404(ProdutosCarrinho, carrinho=carrinho, id=produto_id)
+        
+        
+        # carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+        # produto_carrinho = get_object_or_404(ProdutosCarrinho, carrinho=carrinho, id=produto_id)
 
-    # # Reduz a quantidade do produto no carrinho
-    # # if produto_carrinho.quantidade > 1:
-    # #     produto_carrinho.quantidade -= 1
-    # #     produto_carrinho.save()
-    # # else:
-    # produto_carrinho.delete()
-    if respostaDelete.status_code == 204:
-        messages.success(request, 'O produto foi removido do carrinho com sucesso.')
-    elif respostaDelete.status_code == 404:
-        mensagem_erro = respostaDelete.json().get('detail', 'Produto não encontrado no carrinho')
-        messages.error(request, mensagem_erro)
+        # # Reduz a quantidade do produto no carrinho
+        # # if produto_carrinho.quantidade > 1:
+        # #     produto_carrinho.quantidade -= 1
+        # #     produto_carrinho.save()
+        # # else:
+        # produto_carrinho.delete()
+        if respostaDelete.status_code == 204:
+            messages.success(request, 'O produto foi removido do carrinho com sucesso.')
+        elif respostaDelete.status_code == 404:
+            mensagem_erro = respostaDelete.json().get('detail', 'Produto não encontrado no carrinho')
+            messages.error(request, mensagem_erro)
+        else:
+            messages.error(request, "Algo correu mal ao remover o produto do carrinho")
     else:
-        messages.error(request, "Algo correu mal ao remover o produto do carrinho")
+        carrinho = request.session.get('carrinho')
+        idProdutoStr = str(produto_id)
+        if idProdutoStr in carrinho.keys():
+            carrinho.pop(idProdutoStr)
+            messages.success(request, 'O produto foi removido do carrinho com sucesso.')
+            request.session['carrinho'] = carrinho
+        else:
+            mensagem_erro = respostaDelete.json().get('detail', 'Produto não encontrado no carrinho')
+            messages.error(request, mensagem_erro)
+            
     return redirect('loja-carrinho')
 
     

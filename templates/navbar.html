@@ -41,18 +41,18 @@
           <!-- menu start -->
           <nav class="main-menu">
             <ul>
-              <li class="current-list-item"><a href="/">Casa</a>
-                
-              </li>
+              <li class="current-list-item"><a href="/">Casa</a></li>
               <li><a href="/about">Sobre Nós</a></li>
-              </li>
               <li><a href="/contacts">Contactos</a></li>
+              {% if not request.user.is_authenticated or request.user.is_consumidor%}
+              <li><a href="/shop/">Produtos</a></li>
+              {% endif %}
               {% if request.user.is_authenticated %}
              
               <li><a href="#">@{{request.user.username}}</a>
                 <ul>
-                  <li><a class="dropdown-item" href="{% url 'loja-perfil' request.user.username %}">Perfil</a></li>
-                  <li><a class="dropdown-item" href="{% url 'loja-logout' %}">Logout</a></li>
+                  <li><a class="dropdown-item" id="cenasUtilizadorDropdown" href="{% url 'loja-perfil' request.user.username %}">Perfil</a></li>
+                  <li><a class="dropdown-item" id="cenasUtilizadorDropdown" href="{% url 'loja-logout' %}">Logout</a></li>
                 </ul>
               </li>
               
@@ -70,7 +70,6 @@
                   <a class="mobile-hide search-bar-icon" href="#"><i class="fas fa-search"></i></a>
                 </div>
               </li>
-              
             </ul>
           </nav>
           <a class="mobile-show search-bar-icon" href="#"><i class="fas fa-search"></i></a>

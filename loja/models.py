@@ -12,7 +12,7 @@ from functools import partial
 from django.utils import timezone
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator
-from django_countries.widgets import CountrySelectWidget
+
 
 
 
@@ -96,14 +96,14 @@ class Utilizador(AbstractUser):
     
     # Campos personalizados
     nome = models.CharField(max_length=200, null=True, blank=True)
-    email = models.EmailField(unique=True, null=True, blank=False, error_messages={'unique': 'Já existe um utilizador com esse e-mail.'})
+    email = models.EmailField(unique=True, null=True, blank=False, error_messages={'unique': 'Já existe um utilizador com esse e-mail.'}, max_length=200)
     username = models.CharField(max_length=200, unique=True, null=True, blank=False, validators=[ASCIIUsernameValidator()], help_text='Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ ', error_messages={ 'unique': 'Já existe um utilizador com esse nome de utilizador.',},)
     pais = CountryField(null=True, blank=False, default='PT')
     cidade = models.CharField(max_length=200, blank=True, default='') 
     #morada = models.CharField(max_length=200, null=True, blank=False)
-    telemovel = PhoneNumberField(null=True, blank=True, default='', unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
+    telemovel = PhoneNumberField(null=True, blank=False, default='', unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
     tipo_utilizador = models.CharField(max_length=1, choices=TIPO_UTILIZADOR, default='', null=True)
-    imagem_perfil = models.ImageField(null=True, default="avatar.svg", upload_to='imagens_perfil/',validators=[validar_extensao_imagens, validar_tamanho_imagens])
+    imagem_perfil = models.ImageField(null=True, default="imagens_perfil\\avatar.png", upload_to='imagens_perfil/',validators=[validar_extensao_imagens, validar_tamanho_imagens])
     updated = models.DateTimeField(auto_now=True, null=True, blank=False)
     created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
     

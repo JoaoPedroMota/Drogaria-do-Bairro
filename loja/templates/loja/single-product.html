@@ -104,6 +104,7 @@
                 <div>
                     
                         <div class="mais-informacao">
+                            <img src="{% static produto.imagem_produto %}" alt="filtered_products.0.nome">
                             <br>
                             <p>Categoria: {{ produto.categoria }}</p>
                             <hr>
@@ -122,7 +123,12 @@
                             <hr>
                             <p>Data de Produção: {{ produto.dataP }}</p>
                             <hr>
-                            
+                            <p>Unidade de Medida: {{produto.unidade_medida}}</p>
+                            <hr>
+                            {% if produto.unidade_medida == 'un' %}
+                            <p>Quantidade por Unidade: {{produto.quantidade_por_unidade}} {{produto.unidade_Medida_Por_Unidade}}</p>
+                            {% endif %}
+                            <hr>
                             <p>Marca: {{ produto.marca }}</p>
                         <br>
                         </div>
@@ -130,8 +136,15 @@
                         <span class="preçoRange"> Por Unidade: <span class="preçoRange2">{{ produto.precoU }}€ </span> </span>
                     
                         {% elif produto.precoU == null %}
-                        <span class="preçoRange"> Por Kilograma: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
-                     
+                            {% if produto.unidade_medida == "ml" %}
+                                <span class="preçoRange"> Por Mililitro: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
+                            {% elif produto.unidade_medida == "l" %}
+                                <span class="preçoRange"> Por Litro: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
+                            {% elif produto.unidade_medida == "g" %}
+                                <span class="preçoRange"> Por Grama: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
+                            {% elif produto.unidade_medida == "kg" %}
+                                <span class="preçoRange"> Por Kilograma: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
+                            {% endif %}
                         {% else %}
                         
                         <span class="preçoRange"> Por Unidade: <span class="preçoRange2">{{ produto.precoU }}€ ||</span> </span>

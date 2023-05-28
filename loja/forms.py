@@ -4,6 +4,8 @@ from .models import Utilizador, Fornecedor, UnidadeProducao,Categoria , Veiculo,
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django_countries.widgets import CountrySelectWidget
+from phonenumber_field.formfields import PhoneNumberField
+from phonenumbers import is_valid_number, parse as parseTelemovel
 class UtilizadorFormulario(UserCreationForm):
     class Meta:
         model = Utilizador
@@ -23,6 +25,8 @@ class EditarPerfil(ModelForm):
         fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','telemovel','imagem_perfil',]
 
 class CompletarPerfil(ModelForm):
+    telemovel = PhoneNumberField(required=True)
+    
     class Meta:
         model = Utilizador
         fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','telemovel','tipo_utilizador', 'imagem_perfil']
