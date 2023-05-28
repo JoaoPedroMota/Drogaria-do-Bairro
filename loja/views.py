@@ -905,7 +905,8 @@ def ver_produtos(request):
                     'produto': product['nome'],
                     'min_precoG': min_price,
                     'min_precoU': min_price1,
-                    'categoria': product['categoria']['nome']
+                    'categoria': product['categoria']['nome'],
+                    'idCategoria': product['categoria']['id']
                 })
         
         context = {'produtos_precos': actualFilteredProducts, 'termo_pesquisa': q}

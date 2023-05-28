@@ -166,7 +166,7 @@
                         {% else %}
                         <p class="container">
                             <br>
-                            <input type="number" class="styled-input" step="0.5" min="0" max="50" placeholder="1 Kg" name="quantidade" value="1" oninput="atualizarPreco(this, {{ produto.precoU }})">
+                            <input type="number" class="styled-input" step="1" min="0" max="50" placeholder="1 Unidade" name="quantidade" onblur="atualizarNumero(this)" oninput="atualizarPreco(this, {{ produto.precoU }})">
                             <span class="preco" name="preco">{{ produto.precoU }}€</span>
                         </p>
                         <br>
