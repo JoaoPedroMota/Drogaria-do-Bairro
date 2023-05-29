@@ -62,33 +62,6 @@
 <h3>{{categoria}}</h3> -->
 
 <div class="product-section mt-150 mb-150">
-    <a class="imagem">
-        {% if filtered_products.0.nome == "Morango" %}
-        <img src="{% static 'website/assets/img/products/morango.jpg' %}" alt="Morango">
-        {% elif filtered_products.0.nome == "Alface" %}
-        <img src="{% static 'website/assets/img/products/alface.jpg' %}" alt="Alface">
-        {% elif filtered_products.0.nome == "Tomate Chucha" %}
-        <img src="{% static 'website/assets/img/products/tomate.jpg' %}" alt="Tomate Chucha">
-        {% elif filtered_products.0.nome == "Gelado Chocolate" %}
-        <img src="{% static 'website/assets/img/products/gelado_choco.png' %}" alt="Gelado Chocolate">
-        {% elif filtered_products.0.nome == "Gelado Laranja" %}
-        <img src="{% static 'website/assets/img/products/gelado_laranja.jpg' %}" alt="Gelado Chocolate">
-        {% elif filtered_products.0.nome == "Gelado de Sardinha" %}
-        <img src="{% static 'website/assets/img/products/gelado_sardinha.jpg' %}" alt="Gelado Sardinha">
-        {% elif filtered_products.0.nome == "Gelado Banana" %}
-        <img src="{% static 'website/assets/img/products/gelado_banana.jpg' %}" alt="Gelado Banana">
-        {% elif filtered_products.0.nome == "Gelado Abacaxi" %}
-        <img src="{% static 'website/assets/img/products/gelado_abacaxi.jpg' %}" alt="Gelado Abacaxi">
-        {% elif  filtered_products.0.nome|striptags|default:"" == "O Senhor dos Anéis: As Duas Torres" %}
-        
-        <img src="{% static 'website/assets/img/products/duas_torres.jpg' %}" alt="Duas Torres">
-        {% elif filtered_products.0.nome == "Gelado Nata" %}
-        <img src="{% static 'website/assets/img/products/gelado_nata.png' %}" alt="Gelado Nata">
-        {% else %}
-        <img src="{% static 'website/assets/img/products/default.jpg' %}" alt="Default">
-        {% endif %}
-        
-    </a>
     <h1>{{ filtered_products.0.nome }}</h1>
     <br>
     <div class="row product-lists">

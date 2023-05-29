@@ -865,27 +865,26 @@ def ver_produtos(request):
         url = 'http://127.0.0.1:8000/api/produtos/'
         info = {'q': q}
         response = requests.get(url, data=info)
-
         if response.status_code == 200:
             data = response.json()
         else:
-            return HttpResponse(status=response.status_code)
-
+            data=[]
+       
         url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
         info = {'q': q}
         response2 = requests.get(url2, data=info)
         if response2.status_code == 200:
             data2 = response2.json()
         else:
-            return HttpResponse(status=response2.status_code)
-
+            data2=[]
+        
         FilteredProducts = []
         for product in data:
             if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
                 FilteredProducts.append(product)
         
         actualFilteredProducts = []
-
+       
         for product in FilteredProducts:
             prices = []
             prices1 = []
@@ -906,9 +905,14 @@ def ver_produtos(request):
                     'min_precoG': min_price,
                     'min_precoU': min_price1,
                     'categoria': product['categoria']['nome'],
-                    'idCategoria': product['categoria']['id']
+                    'idCategoria': product['categoria']['id'],
+                    'imagem_produto': None
                 })
-        
+        for product in actualFilteredProducts:
+            for shopProduct in data2:
+                if product['id'] == shopProduct['produto']:
+                    product['imagem_produto'] = shopProduct['imagem_produto']
+
         context = {'produtos_precos': actualFilteredProducts, 'termo_pesquisa': q}
         return render(request, 'loja/shop.html', context)
 
