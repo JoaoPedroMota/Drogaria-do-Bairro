@@ -755,8 +755,8 @@ def criar_produto(request, userName):
             sessao = requests.Session()
             sessao.cookies.update(request.COOKIES)
             urlCriarProduto = f"http://127.0.0.1:8000/api/produtos/"
-            
-            headers = {"Authorization": f"Token {request.user.auth_token}"}
+            csrf_token = get_token(request)
+            headers = {'X-CSRFToken':csrf_token}
             
             
             resposta = sessao.post(urlCriarProduto, data=produto_data, headers=headers)

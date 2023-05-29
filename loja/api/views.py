@@ -354,7 +354,7 @@ class ProdutoList(APIView):
     """
     Devolve todos os produtos da loja
     """
-    permission_classes= [IsFornecedorOrReadOnly,IsAuthenticatedOrReadOnly]
+    permission_classes= [IsFornecedorOrReadOnly]#,IsAuthenticatedOrReadOnly]
     def get(self, request, format=None):
         if 'q' in request.data:
             if request.data['q'] != '':
@@ -388,6 +388,7 @@ class ProdutoList(APIView):
             resposta_produto_serializer = ProdutoSerializer(produto_temp, many=False)
             return Response(resposta_produto_serializer.data, status=status.HTTP_201_CREATED)
         #print("\n\n\n\n", produto.errors, "\n\n\n\n\n")
+        print(produto.errors)
         return Response({'detail': produto.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
