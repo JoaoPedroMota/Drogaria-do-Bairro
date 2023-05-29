@@ -899,7 +899,7 @@ def ver_produtos(request):
             min_price = min(prices) if prices and None not in prices else -1
             min_price1 = min(prices1) if prices1 and None not in prices1 else -1
             if prices or prices1:
-                actualFilteredProducts.append({
+                product_info = {
                     'id': product['id'],
                     'produto': product['nome'],
                     'min_precoG': min_price,
@@ -907,12 +907,20 @@ def ver_produtos(request):
                     'categoria': product['categoria']['nome'],
                     'idCategoria': product['categoria']['id'],
                     'imagem_produto': None
-                })
-        for product in actualFilteredProducts:
-            for shopProduct in data2:
-                if product['id'] == shopProduct['produto']:
-                    product['imagem_produto'] = shopProduct['imagem_produto']
+                }
+                lowest_price_product = None
+                if min_price != -1:
+                    lowest_price_product = next(
+                        (shopProduct for shopProduct in data2 if shopProduct['preco_a_granel'] == min_price), None)
+                elif min_price1 != -1:
+                    lowest_price_product = next(
+                        (shopProduct for shopProduct in data2 if shopProduct['preco_por_unidade'] == min_price1), None)
 
+                if lowest_price_product is not None:
+                    product_info['imagem_produto'] = lowest_price_product['imagem_produto']
+
+                actualFilteredProducts.append(product_info)
+        
         context = {'produtos_precos': actualFilteredProducts, 'termo_pesquisa': q}
         return render(request, 'loja/shop.html', context)
 
