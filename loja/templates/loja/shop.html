@@ -108,7 +108,7 @@
         <div class="col-lg-4 col-md-6 text-center {{ produto.categoria }}">
             <div class="single-product-item filtro-item">
                 <a href="{% url 'loja-single-product' produto_id=produto.id %}">
-                    <img src="{% static produto.imagem_produto %}" alt="Morango">
+                    <img src="{% static produto.imagem_produto %}" alt="Morango" width="220" height="220">
                 <h3>{{ produto.produto }}</h3>
                 </a>
                 <h4>Categoria: {{ produto.categoria }}</h4>
@@ -131,9 +131,9 @@
                 <span class="preçoRange" name="preco">  Por Kilograma: <span class="preçoRange2">{{ produto.min_precoG }}€ </span> </span>
                 
                 {% endif %}
-    </div>
-</div>
-{% endfor %}
+            </div>
+        </div>
+        {% endfor %}
     </div>
 </div>
    
