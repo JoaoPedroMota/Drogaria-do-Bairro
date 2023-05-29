@@ -804,7 +804,7 @@ def sP(request,produto_id):
             return None
 
     produtosCarrinho = quantosProdutosNoCarrinho(request)
-    context={'filtered_products':filtered_products, "produtosCarrino":produtosCarrinho}
+    context={'filtered_products':filtered_products, "produtosCarrinho":produtosCarrinho}
     return render(request, 'loja/single-product.html',context)
     # url = f'http://127.0.0.1:8000/api/produtos_loja/{p}/'
     # response = requests.get(url)
