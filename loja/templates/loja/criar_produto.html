@@ -1,15 +1,42 @@
 {% extends 'main.html' %}
+{% load static %}
 {% block content %}
+<div class="breadcrumb-section breadcrumb-bg">
+  <div class="container">
+      <div class="row">
+          <div class="col-lg-8 offset-lg-2 text-center">
+              <div class="breadcrumb-text">
+                <div class="row">
+                  <h1>Associar um produto a uma Unidade de Produção</h1>
+                  <br>
+                 
+              </div>
+              <h1>Registar novo produto</h1>
+              <br>
+              <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="form-group">
+                  {% if field.errors %}
+                  <ul class="field-error-list">
+                    {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                  </ul>
+                  {% endif %}
+                  <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.label }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
+                </div>
+                {% endfor %}
+                <input type="submit" id="login" value="SALVAR">
+              </form>
 
 
-<h1>Registar novo produto</h1>
-<form method="POST" enctype="multipart/form-data">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <!-- <div>
-    <label for="{{ form.imagem.id_for_label }}">Imagem:</label>
-    {{ form.imagem }}
-  </div> -->
-  <button type="submit">Salvar</button>
-</form>
-{% endblock %}
+
+    
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+
+  {% endblock %}

@@ -1,47 +1,87 @@
+{% extends 'main.html' %}
+{% load static %}
+{% block content %}
+
 <style>
+    .input-wrapper {
+    position: relative;
+  }
+
   .hint-formulario {
-    cursor: pointer;
-    font-size: 0.8em;
-    color: #777;
-    margin-left: 5px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgb(8, 120, 211);
+  color: #fff;
+  font-weight: bold;
+  font-size: 14px;
+}
+  .ola{
+    color: white;
   }
 
 </style>
+<div class="breadcrumb-section breadcrumb-bg">
+  <div class="container">
+      <div class="row">
+          <div class="col-lg-8 offset-lg-2 text-center">
+              <div class="breadcrumb-text">
+                <div class="row">
+                  <h1>Associar um produto a uma Unidade de Produção</h1>
+                 
+              </div>
+               
+                <!-- {% if formulario.errors %}
+                  <ul class="errorlist">
+                    {% for field in formulario %}
+                      {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                      {% endfor %}
+                    {% endfor %}
+                  </ul>
+                {% endif %} -->
+                <form method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  {% for field in formulario %}
+                  <div class="form-group">
+                    {% if field.field.widget.input_type != 'file' %}
+                    <div class="input-wrapper">
+                      <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.label }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
+                      {% if field.help_text %}
+                      <abbr title="{{ field.help_text }}" class="hint-formulario">?</abbr>
+                      {% endif %}
+                    </div>
+                    {% else %}
+                    {{ field }}
+                    {% endif %}
+                    
+                    {% if field.errors %}
+                    <ul class="field-error-list">
+                      {% for error in field.errors %}
+                      <li>{{ error }}</li>
+                      {% endfor %}
+                    </ul>
+                    {% endif %}
+                  </div>
+                  {% endfor %}
+                  
+                  <input type="submit" id="login" value="GUARDAR E ASSOCIAR">
+                </form>
+              
+                
+                  
 
-
-
-{% extends 'main.html' %}
-
-{% block content %}
-<h2>Associar um produto a uma Unidade de Produção</h2>
-<!-- {% if formulario.errors %}
-  <ul class="errorlist">
-    {% for field in formulario %}
-      {% for error in field.errors %}
-        <li>{{ error }}</li>
-      {% endfor %}
-    {% endfor %}
-  </ul>
-{% endif %} -->
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  {% for field in formulario %}
-  <div class="form-group">
-    <label for="{{ field.auto_id }}">{{ field.label }}</label>
-    {% if field.help_text %}
-      <abbr title="{{ field.help_text }}" class="hint-formulario">?</abbr>
-    {% endif %}
-    {{ field }}
-    {% if field.errors %}
-      <ul class="field-error-list">
-        {% for error in field.errors %}
-          <li>{{ error }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
+                 
+              </div>
+          </div>
+      </div>
   </div>
-{% endfor %}
+</div>
 
-  <button type="submit">Guardar e Associar</button>
-</form>
-{% endblock %}
+  {% endblock %}
