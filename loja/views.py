@@ -51,6 +51,28 @@ oauth.register(
 #     context={'objeto':utilizador, 'pagina':'apagar-conta'}
 #     return render(request,'loja/delete.html', context)
 
+def quantosProdutosNoCarrinho(request):
+    if request.user.is_authenticated and request.user.is_consumidor:
+        print("entrei!")
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
+        url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
+        resposta = sessao.get(url)
+        conteudo = resposta.json() if resposta.json() else 0
+        return len(conteudo) if len(conteudo) != 0 else 0
+    elif request.user.is_authenticated and request.user.is_fornecedor:
+        return 0
+    else:
+        
+        carrinho = request.session.get('carrinho') 
+        if carrinho is not None:
+            return len(carrinho)
+        else:
+            return 0
+
+
+
+
 # Create your views here.
 def loja(request):
     context = {}
@@ -60,30 +82,27 @@ def loja(request):
     elif request.user.is_authenticated and request.user.is_fornecedor:
         if request.session.get('carrinho') is not None and request.session.get('carrinho') !={}:
             request.session['carrinho'] = {}
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context={"produtosCarrinho":produtosCarrinho}
     return render(request, 'loja/loja.html', context)
 def contacts(request):
-    context = {}
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context = {"produtosCarrinho":produtosCarrinho}
     return render(request, 'loja/contacts.html', context)
 def about(request):
     context = {}
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context = {"produtosCarrinho":produtosCarrinho}
     return render(request, 'loja/about.html', context)
-# def carrinho(request):
 
-#     if request.user.is_authenticated:
-#             if request.user.is_consumidor:
-#                 consumidor = request.user.username
-#                 carrinho, created = Carrinho.objects.get_or_create(consumidor=consumidor, complete=False)
-#                 items = carrinho.adicionar_ao_carrinho.all()
-#     else:
-#         items = []
-#     context = {'items':ProdutosCarrinho}
-#     return render(request, 'loja/carrinho.html', context)
 
 def checkout(request):
     context = {}
     return render(request, 'loja/checkout.html', context)
 def news(request):
     context = {}
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context = {"produtosCarrinho":produtosCarrinho}
     return render(request, 'loja/news.html', context)
 
 
@@ -231,7 +250,8 @@ def editarPerfil(request):
             messages.success(request, 'Perfil atualizado com sucesso.')
             link = reverse('loja-perfil', args=[request.user.username])
             return redirect(link)
-    context = {'form':form, 'pagina':pagina}
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context = {'form':form, 'pagina':pagina, "produtosCarrinho":produtosCarrinho}
     return render(request, 'loja/editarUtilizador.html', context)
 
 @login_required(login_url='loja-login')
@@ -261,7 +281,8 @@ def completarPerfil(request):
 
 
             return redirect('loja-home')
-    context = {'form':form}
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context = {'form':form, "produtosCarrinho":produtosCarrinho}
     return render(request, 'loja/completarPerfil.html', context)
 
 @login_required(login_url='loja-login')
@@ -289,7 +310,8 @@ def apagarConta(request, pk):
 def perfil(request, userName):
     utilizadorPerfil = Utilizador.objects.get(username=userName)
     pagina = 'perfil'
-    context={'pagina':pagina, 'utilizadorView': utilizadorPerfil}
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context={'pagina':pagina, 'utilizadorView': utilizadorPerfil, "produtosCarrinho":produtosCarrinho}
     if utilizadorPerfil.is_fornecedor:
         fornecedor = utilizadorPerfil.fornecedor
         unidadesProducao = fornecedor.unidades_producao.all()
@@ -329,55 +351,6 @@ def criarUP(request, userName):
 
 
 
-# def unidadeProducao(request, userName, id):
-#     context = {}
-#     utilizador = Utilizador.objects.get(username=userName)
-#     fornecedor = utilizador.fornecedor
-#     #fornecedor.unidades_producao.all()
-#     unidadeProducao = fornecedor.unidades_producao.get(pk=id)
-#     veiculos = unidadeProducao.veiculo_set.all()
-#     print("\n\n\n\n",repr(veiculos))
-#     num_veiculos = veiculos.count()
-    
-    
-#     context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':unidadeProducao}
-#     return render(request, 'loja/unidadeProducao.html', context)
-
-#######################ZONA DE TESTE######################################################
-
-# def ver_produtos(request):
-#     q = request.GET.get('q') if request.GET.get('q') != None else ''
-#     url = 'http://127.0.0.1:8000/api/produtos/'
-#     response = requests.get(url)
-
-#     if response.status_code == 200:
-#         data = response.json()
-#     else:
-#         return None
-
-#     url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
-#     response2 = requests.get(url2)
-#     if response2.status_code == 200:
-#         data2 = response2.json()
-#     else:
-#         return None
-
-#     FilteredProducts = []
-#     for product in data:
-#         if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
-#             FilteredProducts.append(product)
-
-#     actualFilteredProducts = []
-#     for product in FilteredProducts:
-#         for shopProduct in data2:
-#             if product['id'] == shopProduct['produto']:
-#                 if shopProduct['preco_a_granel']==None:
-#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade"})
-#                 else:
-#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel"})
-
-#     context={'produtos_precos':actualFilteredProducts}
-#     return render(request, 'loja/shop.html', context)
 
 
 @fornecedor_required
@@ -830,8 +803,8 @@ def sP(request,produto_id):
         else:
             return None
 
-
-    context={'filtered_products':filtered_products}
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context={'filtered_products':filtered_products, "produtosCarrino":produtosCarrinho}
     return render(request, 'loja/single-product.html',context)
     # url = f'http://127.0.0.1:8000/api/produtos_loja/{p}/'
     # response = requests.get(url)
@@ -920,8 +893,8 @@ def ver_produtos(request):
                     product_info['imagem_produto'] = lowest_price_product['imagem_produto']
 
                 actualFilteredProducts.append(product_info)
-        
-        context = {'produtos_precos': actualFilteredProducts, 'termo_pesquisa': q}
+        produtosCarrinho = quantosProdutosNoCarrinho(request)
+        context = {'produtos_precos': actualFilteredProducts, 'termo_pesquisa': q, "produtosCarrinho":produtosCarrinho}
         return render(request, 'loja/shop.html', context)
 
 # def adicionar_ao_carrinho(request, produto_id):
@@ -930,7 +903,6 @@ def ver_produtos(request):
 #     print(quantidade)
 #     context = {}
 #     return redirect('loja-ver_produtos')
-
 
 
 
@@ -974,9 +946,11 @@ def carrinho(request):
             # carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
             # produtos_carrinho = carrinho.produtos_carrinho.all()
             #total_price = sum(produto_carrinho.preco if produto_carrinho.preco is not None else 0 for produto_carrinho in produtos_carrinho)
+            produtosCarrinho = quantosProdutosNoCarrinho(request)
             context = {
                 'produtos': produtos,
-                'total': total
+                'total': total,
+                "produtosCarrinho": produtosCarrinho
             }
     elif not request.user.is_authenticated:
         carrinho = request.session.get('carrinho')
@@ -1007,7 +981,9 @@ def carrinho(request):
         # carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
         # produtos_carrinho = carrinho.produtos_carrinho.all()
         #total_price = sum(produto_carrinho.preco if produto_carrinho.preco is not None else 0 for produto_carrinho in produtos_carrinho)
+        produtosCarrinho = quantosProdutosNoCarrinho(request)
         context = {
+            "produtosCarrinho": produtosCarrinho,
             'produtos': produtos,
             'total': total
         }
