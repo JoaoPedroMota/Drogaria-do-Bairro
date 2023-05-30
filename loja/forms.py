@@ -1,6 +1,6 @@
 from django.forms import ModelForm, ModelChoiceField
 from django import forms
-from .models import Utilizador, Fornecedor, UnidadeProducao,Categoria , Veiculo, Produto, ProdutoUnidadeProducao
+from .models import Utilizador, Fornecedor, UnidadeProducao,Categoria , Veiculo, Produto, ProdutoUnidadeProducao, DetalhesEnvio
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django_countries.widgets import CountrySelectWidget
@@ -22,14 +22,14 @@ class FornecedorFormulario(ModelForm):
 class EditarPerfil(ModelForm):
     class Meta:
         model = Utilizador
-        fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','telemovel','imagem_perfil',]
+        fields = ['first_name', 'last_name', 'username','email', 'pais','estado','cidade','telemovel','imagem_perfil',]
 
 class CompletarPerfil(ModelForm):
     telemovel = PhoneNumberField(required=True)
     
     class Meta:
         model = Utilizador
-        fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','telemovel','tipo_utilizador', 'imagem_perfil']
+        fields = ['first_name', 'last_name', 'username','email', 'pais',"estado",'cidade','telemovel','tipo_utilizador', 'imagem_perfil']
 
 class criarUnidadeProducaoFormulario(ModelForm):
     class Meta:
@@ -148,3 +148,34 @@ class ProdutoUnidadeProducaoForm(forms.ModelForm):
             elif unidade_medida in ["kg", "g", "l", "ml"]:
                 if preco_a_granel is None:
                     self.add_error("preco_a_granel", 'O preço a granel é obrigatório para produtos vendidos por peso ou volume. Preencha o campo: Preço a granel.')
+
+
+
+class DetalhesEnvioForm(forms.ModelForm):
+    class Meta:
+        model = DetalhesEnvio
+        fields = ['nome_morada', 'nome', 'pais', 'estado', 'cidade', 'morada', 'telemovel', 'email', 'instrucoes_entrega', 'usar_informacoes_utilizador']
+    
+    def __init__(self, *args, **kwargs):
+        utilizador = kwargs.pop('utilizador', None)
+        consumidor = utilizador.consumidor
+        super().__init__(*args, **kwargs)
+        self.fields['usar_informacoes_utilizador'].required = False
+        if consumidor:
+            self.initial['consumidor'] = consumidor
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        usar_informacoes_utilizador = cleaned_data.get('usar_informacoes_utilizador')
+        consumidor = self.initial.get('consumidor')
+
+        if usar_informacoes_utilizador and consumidor:
+            utilizador = consumidor.utilizador
+            cleaned_data['nome'] = utilizador.nome
+            cleaned_data['pais'] = utilizador.pais
+            cleaned_data['estado'] = utilizador.estado
+            cleaned_data['cidade'] = utilizador.cidade
+            cleaned_data['telemovel'] = utilizador.telemovel
+            cleaned_data['email'] = utilizador.email
+
+        return cleaned_data

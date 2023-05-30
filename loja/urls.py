@@ -30,7 +30,8 @@ urlpatterns = [
     path('adicionar_ao_carrinho/<int:produto_id>/', views.adicionar_ao_carrinho, name='loja-adicionar-ao-carrinho'),
     path('remover_do_carrinho/<int:produto_id>/', views.remover_do_carrinho, name='loja-remover-do-carrinho'),
     path('remover_produto_unidadeProducao/<int:idUnidadeProducao>/<int:idProdutoUnidadeProducao>/', views.removerAssociaoProdutoUP, name='loja-removerAssociaoProdutoUP'),
-    path('associar_produto_unidade_producao/', views.criarAssociacaoProdutoUP, name="loja-associarProdutoUP")
+    path('associar_produto_unidade_producao/', views.criarAssociacaoProdutoUP, name="loja-associarProdutoUP"),
+    path('detalhes_envio/', views.detalhesEnvio, name='loja-detalhesEnvio'),
 ]
 
 

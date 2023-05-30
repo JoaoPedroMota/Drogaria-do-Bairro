@@ -12,7 +12,7 @@ from functools import partial
 from django.utils import timezone
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator
-
+from django.core.validators import RegexValidator
 
 
 
@@ -85,7 +85,10 @@ class Utilizador(AbstractUser):
         max_size = 2 * 1024 * 1024
         if value.size > max_size:
             raise ValidationError((f'Ficheiro grande de mais. Tamanho máximo 2MB'))
-    
+    validar_alfabeto = RegexValidator(
+                    r'^[A-Za-z]{0,3}$',
+                    'Este campo deve conter apenas letras do alfabeto ocidental e ter no máximo 3 letras.'
+                    )
     # Definindo as opções para o campo tipo_utilizador
     CONSUMIDOR = 'C'
     FORNECEDOR = 'F'
@@ -99,8 +102,8 @@ class Utilizador(AbstractUser):
     email = models.EmailField(unique=True, null=True, blank=False, error_messages={'unique': 'Já existe um utilizador com esse e-mail.'}, max_length=200)
     username = models.CharField(max_length=200, unique=True, null=True, blank=False, validators=[ASCIIUsernameValidator()], help_text='Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ ', error_messages={ 'unique': 'Já existe um utilizador com esse nome de utilizador.',},)
     pais = CountryField(null=True, blank=False, default='PT')
+    estado = models.CharField(max_length=3, blank=True, null=False, default='', help_text='Estado ou provincia onde reside.', validators=[validar_alfabeto])
     cidade = models.CharField(max_length=200, blank=True, default='') 
-    #morada = models.CharField(max_length=200, null=True, blank=False)
     telemovel = PhoneNumberField(null=True, blank=False, default='', unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
     tipo_utilizador = models.CharField(max_length=1, choices=TIPO_UTILIZADOR, default='', null=True)
     imagem_perfil = models.ImageField(null=True, default="imagens_perfil\\avatar.png", upload_to='imagens_perfil/',validators=[validar_extensao_imagens, validar_tamanho_imagens])
@@ -653,3 +656,24 @@ class ProdutosEncomenda(models.Model):
         verbose_name = "Produtos Encomendados"
         verbose_name_plural = "Produtos Encomendados"
         ordering = ['id']
+        
+        
+        
+        
+
+class DetalhesEnvio(models.Model):
+    validar_alfabeto = RegexValidator(
+                    r'^[A-Za-z]{0,3}$',
+                    'Este campo deve conter apenas letras do alfabeto ocidental e ter no máximo 3 letras.'
+                    )
+    nome_morada = models.CharField(max_length=20, blank=True, null=True)
+    nome = models.CharField(max_length=200, null=False, blank=True)
+    pais = CountryField(blank=True, null=False, default='PT')
+    estado = models.CharField(max_length=3, blank=True, null=False, default='', help_text='Estado ou provincia onde reside.', validators=[validar_alfabeto])
+    cidade = models.CharField(max_length=200, blank=True, null=False)
+    telemovel = PhoneNumberField(null=False, blank=True, default='', error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
+    email = models.EmailField(null=False, blank=True, default='',error_messages={'unique': 'Já existe um utilizador com esse e-mail.'}, max_length=200)
+    morada = models.CharField(null=False, max_length=200)
+    instrucoes_entrega = models.TextField(null=True, blank=True, max_length=500)
+    usar_informacoes_utilizador = models.BooleanField(default=False, help_text='Usar informações guardadas ao criar conta?')
+    consumidor = models.ForeignKey(Consumidor,  null=True, blank=True, on_delete=models.CASCADE, related_name='detalhes_envio')
