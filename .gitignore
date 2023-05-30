@@ -1,9 +1,6 @@
 # Byte-compiled / optimized / DLL files
-<<<<<<< HEAD
-__pycache__/
-=======
+
 */__pycache__/*
->>>>>>> main
 *.py[cod]
 
 # C extensions
@@ -40,8 +37,5 @@ pip-delete-this-directory.txt
 .vscode/
 
 # Virtual enviroment
-<<<<<<< HEAD
 ambiente_projeto
-=======
-ambiente_projeto
->>>>>>> main
+

@@ -106,7 +106,7 @@ class Utilizador(AbstractUser):
     cidade = models.CharField(max_length=200, blank=True, default='') 
     telemovel = PhoneNumberField(null=True, blank=False, default='', unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
     tipo_utilizador = models.CharField(max_length=1, choices=TIPO_UTILIZADOR, default='', null=True)
-    imagem_perfil = models.ImageField(null=True, default="imagens_perfil\\avatar.png", upload_to='imagens_perfil/',validators=[validar_extensao_imagens, validar_tamanho_imagens])
+    imagem_perfil = models.ImageField(null=True, blank=True,default="imagens_perfil\\avatar.png", upload_to='imagens_perfil/',validators=[validar_extensao_imagens, validar_tamanho_imagens])
     updated = models.DateTimeField(auto_now=True, null=True, blank=False)
     created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
     
@@ -140,7 +140,7 @@ class Utilizador(AbstractUser):
     
     #legibilidade na bd e do objeto
     def __repr__(self):
-        return f"Utilizador(nome='{self.nome}', email='{self.email}', username='{self.username}', pais='{self.pais}', cidade='{self.cidade}', telemovel='{self.telemovel}', tipo_utilizador='{self.tipo_utilizador}', imagem_perfil='{self.imagem_perfil}', is_staff={self.is_staff}, is_admin={self.is_admin}, updated='{self.updated}', created='{self.created}')"
+        return f"Utilizador(nome='{self.nome}', email='{self.email}', username='{self.username}', pais='{self.pais}', estado='{self.estado}', cidade='{self.cidade}', telemovel='{self.telemovel}', tipo_utilizador='{self.tipo_utilizador}', imagem_perfil='{self.imagem_perfil}', is_staff={self.is_staff}, is_admin={self.is_admin}, updated='{self.updated}', created='{self.created}')"
     def __str__(self):
         return self.username
     # legibilidade humana para debug e cenas
@@ -198,7 +198,10 @@ class Consumidor(models.Model):
     def save(self, *args, **kwargs):
         if Fornecedor.objects.filter(utilizador=self.utilizador).exists():
             raise ValueError('O utilizador já está associado a um Fornecedor.')
-        super(Consumidor, self).save(*args, **kwargs)
+        if self.utilizador.is_consumidor:
+            super(Consumidor, self).save(*args, **kwargs)
+        else:
+            raise ValueError('O utilizador não é um consumidor')
     
 class Veiculo(models.Model):
     carro = 'C'
@@ -350,7 +353,10 @@ class Fornecedor(models.Model):
     def save(self, *args, **kwargs):
         if Consumidor.objects.filter(utilizador=self.utilizador).exists():
             raise ValueError('O utilizador já está associado como um Consumidor.')
-        super(Fornecedor, self).save(*args, **kwargs)
+        if self.utilizador.is_fornecedor:
+            super(Fornecedor, self).save(*args, **kwargs)
+        else:
+            raise ValueError('O utilizador não é um fornecedor')
     class Meta:
         verbose_name_plural = "Fornecedores"
         verbose_name = "Fornecedor"
