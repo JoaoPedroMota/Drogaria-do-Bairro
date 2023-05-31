@@ -125,6 +125,7 @@
                                             <th>Qnt. por Unid.</th>
                                             <th>Data de Produção</th>
                                             <th>Marca</th>
+                                            <th>Editar Produto de Unidade de Produção</th>
                                             <th>Remover Produto de Unidade de Produção</th>
                                         </tr>
                                         {% for produto in produtosUP %}
@@ -149,6 +150,16 @@
                                             {% endif %}
                                             <td> {{produto.data_producao}}</td>
                                             <td> {{produto.marca}}</td>
+
+
+                                            <td>
+                                                <form action="{% url 'loja-editarAssociacaoProdutoUP' idUnidadeProducao=unidadeProducao idProdutoUnidadeProducao=produto.id %}" method="post">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-info btn-sm">Editar</button>
+                                                </form>
+                                            </td>
+
+
                                             <td>
                                                 <form action="{% url 'loja-removerAssociaoProdutoUP' idUnidadeProducao=unidadeProducao idProdutoUnidadeProducao=produto.id %}" method="post">
                                                     {% csrf_token %}

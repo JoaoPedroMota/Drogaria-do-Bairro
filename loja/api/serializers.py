@@ -295,7 +295,7 @@ class CarrinhoSerializer(ModelSerializer):
 logger = logging.getLogger(__name__)
 
 class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
-    imagem_produto = serializers.ImageField(required=True)
+    imagem_produto = serializers.ImageField(required=False)
     class Meta:
         model = ProdutoUnidadeProducao
         fields = ["id", "produto", "unidade_producao", "stock", "descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca", "imagem_produto"]

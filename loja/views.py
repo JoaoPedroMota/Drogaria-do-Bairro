@@ -9,7 +9,7 @@ from django.middleware.csrf import get_token
 from .models import *
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import PasswordConfirmForm, ProdutoUnidadeProducaoForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario, CompletarPerfil
+from .forms import PasswordConfirmForm, ProdutoUnidadeProducaoForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario, CompletarPerfil, editarProdutoUnidadeProducaoForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
@@ -756,7 +756,8 @@ def criar_produto(request, userName):
             sessao.cookies.update(request.COOKIES)
             urlCriarProduto = f"http://127.0.0.1:8000/api/produtos/"
             
-            headers = {"Authorization": f"Token {request.user.auth_token}"}
+            csrf_token = get_token(request)
+            headers = {'X-CSRFToken':csrf_token}
             
             
             resposta = sessao.post(urlCriarProduto, data=produto_data, headers=headers)
@@ -1310,3 +1311,60 @@ def adicionarProdutosCarrinhoDpsDeLogar(request):
             url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/'
             respostaUpdate = sessao.post(url, headers=headers, data = atualizar_carrinho_dict_info)
     request.session['carrinho'] = {}
+
+
+def editarAssociacaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProducao):
+    formulario = editarProdutoUnidadeProducaoForm(user=request.user)
+    if request.method == 'POST':
+        form = editarProdutoUnidadeProducaoForm(request.POST, request.FILES,user=request.user)
+        if form.is_valid():
+            imagem = form.cleaned_data['imagem_produto']
+            descricao = form.cleaned_data['descricao']
+            stock = form.cleaned_data['stock']
+            unidade_medida = form.cleaned_data['unidade_medida']
+            preco_a_granel = form.cleaned_data['preco_a_granel']
+            unidade_Medida_Por_Unidade = form.cleaned_data['unidade_Medida_Por_Unidade']
+            quantidade_por_unidade = form.cleaned_data['quantidade_por_unidade']
+            preco_por_unidade = form.cleaned_data['preco_por_unidade']
+            data_producao = form.cleaned_data['data_producao']
+            marca = form.cleaned_data['marca']
+
+            sessao = requests.Session()
+            sessao.cookies.update(request.COOKIES)
+            
+            csrf_token = get_token(request)
+            headers = {'X-CSRFToken':csrf_token}
+
+            url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/produtos/{idProdutoUnidadeProducao}/'
+            response = sessao.get(url, headers=headers)
+
+            idProduto = response.json()['produto']
+            
+            produto_up_data= {
+                "descricao": descricao,
+                "stock": float(stock),
+                "unidade_medida": unidade_medida,
+                "preco_a_granel": float(preco_a_granel) if preco_a_granel is not None else None,
+                "unidade_Medida_Por_Unidade": unidade_Medida_Por_Unidade,
+                "quantidade_por_unidade": float(quantidade_por_unidade) if quantidade_por_unidade is not None else None,
+                "preco_por_unidade": float(preco_por_unidade) if preco_por_unidade is not None else None,
+                "data_producao": data_producao.isoformat() if isinstance(data_producao, date) else None,
+                "marca":marca
+            }
+            
+            if imagem:
+                resposta = sessao.put(url, headers=headers,data=produto_up_data, files={"imagem_produto":imagem})
+            else:
+                resposta = sessao.put(url, headers=headers,data=produto_up_data)
+
+            
+
+            if resposta.status_code == 200:
+                #messages.success(request, 'Produto criado com sucesso.')
+                return redirect('loja-perfil', userName=request.user.username)
+            else:
+                if resposta.status_code == 400:
+                    error_code = resposta.json().get('error_code')
+
+    context = {'formulario': formulario}
+    return render(request, 'loja/editarAssociacaoProdutoUP.html', context)

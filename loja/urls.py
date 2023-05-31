@@ -29,6 +29,7 @@ urlpatterns = [
     path('carrinho/', views.carrinho, name='loja-carrinho'),
     path('adicionar_ao_carrinho/<int:produto_id>/', views.adicionar_ao_carrinho, name='loja-adicionar-ao-carrinho'),
     path('remover_do_carrinho/<int:produto_id>/', views.remover_do_carrinho, name='loja-remover-do-carrinho'),
+    path('editar_produto_unidadeProducao/<int:idUnidadeProducao>/<int:idProdutoUnidadeProducao>/', views.editarAssociacaoProdutoUP, name='loja-editarAssociacaoProdutoUP'),
     path('remover_produto_unidadeProducao/<int:idUnidadeProducao>/<int:idProdutoUnidadeProducao>/', views.removerAssociaoProdutoUP, name='loja-removerAssociaoProdutoUP'),
     path('associar_produto_unidade_producao/', views.criarAssociacaoProdutoUP, name="loja-associarProdutoUP")
 ]

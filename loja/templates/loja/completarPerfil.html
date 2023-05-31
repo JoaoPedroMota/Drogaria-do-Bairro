@@ -3,7 +3,13 @@
 {% block content %}
 <link rel="stylesheet" href="{%static 'website/assets/css/responsiveC.css' %}">
 <style>
-    
+    .invalid-feedback{
+        font-weight: bold;
+        color: yellow;
+        
+       
+       
+    }
 </style>
 <div class="breadcrumb-section breadcrumb-bg">
     <div class="container">
@@ -32,6 +38,9 @@
                                    {% if field.required %}required{% endif %}
                                    {% if field.id %}id="{{ field.id }}"{% endif %}>
                           {% endif %}
+                          {% for error in field.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
                         {% endfor %}
                         
                         <input type="submit" id="login" value="GUARDAR">

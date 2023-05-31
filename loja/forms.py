@@ -6,6 +6,7 @@ from django import forms
 from django_countries.widgets import CountrySelectWidget
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumbers import is_valid_number, parse as parseTelemovel
+
 class UtilizadorFormulario(UserCreationForm):
     class Meta:
         model = Utilizador
@@ -16,9 +17,7 @@ class FornecedorFormulario(ModelForm):
     # class Meta:
     #     model = Fornecedor
     #     fields = ['descricao']
-        
-        
-        
+         
 class EditarPerfil(ModelForm):
     class Meta:
         model = Utilizador
@@ -26,6 +25,8 @@ class EditarPerfil(ModelForm):
 
 class CompletarPerfil(ModelForm):
     telemovel = PhoneNumberField(required=True)
+    first_name = forms.CharField(required=True)
+    last_name = forms.CharField(required=True)
     
     class Meta:
         model = Utilizador
@@ -60,9 +61,6 @@ class ConfirmacaoForm(forms.Form):
 class PasswordConfirmForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
     confirm_password = forms.CharField(widget=forms.PasswordInput)
-
-
-
 
 class ProdutoAPIForm(forms.ModelForm):
     categoria = ModelChoiceField(queryset=Categoria.objects.exclude(id__in=Categoria.objects.values_list('categoria_pai', flat=True).filter(categoria_pai__isnull=False)))
@@ -148,3 +146,13 @@ class ProdutoUnidadeProducaoForm(forms.ModelForm):
             elif unidade_medida in ["kg", "g", "l", "ml"]:
                 if preco_a_granel is None:
                     self.add_error("preco_a_granel", 'O preço a granel é obrigatório para produtos vendidos por peso ou volume. Preencha o campo: Preço a granel.')
+
+class editarProdutoUnidadeProducaoForm(forms.ModelForm):
+    data_producao = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
+    imagem_produto = forms.ImageField(required=False)
+    class Meta:
+        model = ProdutoUnidadeProducao
+        fields = ["descricao","stock" ,"unidade_medida", "preco_a_granel","unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade","data_producao","marca", "imagem_produto"]
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super(editarProdutoUnidadeProducaoForm, self).__init__(*args, **kwargs)
