@@ -78,6 +78,21 @@ class IsConsumidorAndOwner(permissions.BasePermission):
                     return False
         raise PermissionDenied(detail='Não pode ver ou editar os produtos que estão no carrinho de outro consumidor. Não é o consumidor dono deste carrinho')
 
+class IsConsumidorAndOwner2(permissions.BasePermission):
+    def has_permission(self,request, view):
+        if request.user.is_authenticated:
+            if not request.user.is_consumidor:
+                raise PermissionDenied(detail="Não é um consumidor autenticado")
+            if request.user.is_consumidor:
+                username = view.kwargs.get('username')
+                user = Utilizador.objects.get(username=username)
+                userLogadoConsumidor = request.user.consumidor
+                userConsumidorRequestURL = user.consumidor
+                return int(userLogadoConsumidor.id) == int(userConsumidorRequestURL.id)
+        raise PermissionDenied(detail='Não pode aceder/criar esta informações. Não lhe pertence/tem autorização. Autentique-se com a conta do seu consumidor!')
+                
+
+
 
 class IsConsumidorAndOwnerOrReadOnly(permissions.BasePermission):
     def has_permission(self,request, view):

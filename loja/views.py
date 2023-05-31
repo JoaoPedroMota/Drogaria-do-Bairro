@@ -58,7 +58,10 @@ def quantosProdutosNoCarrinho(request):
         sessao.cookies.update(request.COOKIES)
         url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
         resposta = sessao.get(url)
-        conteudo = resposta.json() if resposta.json() else 0
+        if resposta.content:
+            conteudo = resposta.json() if resposta.json() else 0
+        else:
+            return 0
         return len(conteudo) if len(conteudo) != 0 else 0
     elif request.user.is_authenticated and request.user.is_fornecedor:
         return 0
@@ -85,6 +88,8 @@ def loja(request):
     produtosCarrinho = quantosProdutosNoCarrinho(request)
     context={"produtosCarrinho":produtosCarrinho}
     return render(request, 'loja/loja.html', context)
+
+
 def contacts(request):
     produtosCarrinho = quantosProdutosNoCarrinho(request)
     context = {"produtosCarrinho":produtosCarrinho}
@@ -267,7 +272,7 @@ def completarPerfil(request):
             utilizador.last_name = request.POST.get('last_name')
             utilizador.nome = utilizador.first_name + ' ' + utilizador.last_name
             utilizador.pais = request.POST.get('pais')
-            utilizador.cidade = request.POST.get('cidade').lower()
+            utilizador.cidade = request.POST.get('cidade').upper()
             utilizador.telemovel = request.POST.get('telemovel')
             if request.POST.get('imagem_perfil'):
                 utilizador.imagem_perfil = request.POST.get('imagem_perfil')
@@ -1116,7 +1121,7 @@ def adicionar_ao_carrinho(request, produto_id):
             }
         
         request.session['carrinho'] = carrinho
-    return redirect('loja-ver_produtos')
+    return redirect('loja-ver-produtos')
     
 
 from django.shortcuts import get_object_or_404, redirect

@@ -1,6 +1,6 @@
 ### APP loja #####
 ### models.py ###
-from loja.models import Utilizador, Consumidor, Fornecedor, UnidadeProducao, Veiculo, Categoria, Produto, Carrinho, ProdutoUnidadeProducao, ProdutosCarrinho
+from loja.models import Utilizador, Consumidor, Fornecedor, UnidadeProducao, Veiculo, Categoria, Produto, Carrinho, ProdutoUnidadeProducao, ProdutosCarrinho, DetalhesEnvio
 from .utilidades_api import categorias_nao_pai
 #### DJANGO ######
 from django.http import Http404
@@ -21,9 +21,9 @@ from rest_framework.response import Response
 from decimal import Decimal
 #### DENTRO DA APP #####
 ### serializers.py ###
-from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer, ProdutoSerializerRequest, TemProdutoNoCarrinhoSerializer
+from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer, ProdutoSerializerRequest, TemProdutoNoCarrinhoSerializer, DetalhesEnvioSerializer
 ### permissions.py ###
-from .permissions import IsOwnerOrReadOnly, IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly, IsConsumidorAndOwner
+from .permissions import IsOwnerOrReadOnly, IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly, IsConsumidorAndOwner, IsConsumidorAndOwner2
 ####
 from decimal import Decimal
 
@@ -845,3 +845,48 @@ class ProdutosCarrinhoDetailProdutoUP(APIView):
             return Response({"detail": "Produto não encontrado no carrinho"},status=status.HTTP_404_NOT_FOUND)
     
 
+
+class DetalhesEnvioList(APIView):
+    permission_classes = [IsConsumidorAndOwner2]
+    def get_object(self, instance):
+        try:
+            return DetalhesEnvio.objects.filter(consumidor=instance)
+        except DetalhesEnvio.DoesNotExist:
+            raise Http404
+
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_consumidor(self, utilizador):
+        try:
+            return Consumidor.objects.get(utilizador=utilizador)
+        except Consumidor.DoesNotExist:
+            raise Http404
+    def get(self, request, username, format=None):
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        detalhes_envio_objetos = self.get_object(consumidor)
+        if detalhes_envio_objetos.exists():
+            serializar = DetalhesEnvioSerializer(detalhes_envio_objetos, many=True)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data,status=status.HTTP_200_OK)
+    def post(self, request, username, format=None):
+        utilizador = self.get_utilizador(username)
+        data2 = request.data.copy()
+        if data2['usar_informacoes_utilizador'] == True:
+            data2['nome'] = utilizador.nome
+            data2['pais'] = utilizador.pais
+            data2['estado'] = utilizador.estado
+            data2['cidade'] = utilizador.cidade
+            data2['telemovel'] = utilizador.telemovel
+            data2['email'] = utilizador.email
+        deserializer = DetalhesEnvioSerializer(data=data2)
+        if deserializer.is_valid():
+            deserializer.save()
+            return Response(deserializer.data, status=status.HTTP_201_CREATED)
+        return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        

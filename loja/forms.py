@@ -161,8 +161,17 @@ class DetalhesEnvioForm(forms.ModelForm):
         consumidor = utilizador.consumidor
         super().__init__(*args, **kwargs)
         self.fields['usar_informacoes_utilizador'].required = False
+        self.fields['usar_informacoes_utilizador'].inital = True
         if consumidor:
             self.initial['consumidor'] = consumidor
+        if self.fields['usar_informacoes_utilizador']:
+            utilizador = self.initial['consumidor'].utilizador
+            self.fields['nome'].initial = utilizador.nome
+            self.fields['pais'].initial = utilizador.pais
+            self.fields['estado'].initial = utilizador.estado
+            self.fields['cidade'].initial = utilizador.cidade
+            self.fields['telemovel'].initial = utilizador.telemovel
+            self.fields['email'].initial = utilizador.email
     
     def clean(self):
         cleaned_data = super().clean()

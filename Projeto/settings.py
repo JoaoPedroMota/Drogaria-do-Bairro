@@ -29,7 +29,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["0.0.0.0", "127.0.0.1", "34.0.207.66", "drogariadobairro.pt"]
 
-
 # Application definition
 
 INSTALLED_APPS = [
