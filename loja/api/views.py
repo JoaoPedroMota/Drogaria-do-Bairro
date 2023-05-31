@@ -21,7 +21,7 @@ from rest_framework.response import Response
 from decimal import Decimal
 #### DENTRO DA APP #####
 ### serializers.py ###
-from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer, ProdutoSerializerRequest, TemProdutoNoCarrinhoSerializer, DetalhesEnvioSerializer
+from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer, ProdutoSerializerRequest, TemProdutoNoCarrinhoSerializer, DetalhesEnvioSerializerRequest, DetalhesEnvioSerializerResponse
 ### permissions.py ###
 from .permissions import IsOwnerOrReadOnly,IsOwner ,IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly, IsConsumidorAndOwner, IsConsumidorAndOwner2
 ####
@@ -881,6 +881,11 @@ class DetalhesEnvioList(APIView):
             data2['nome'] = utilizador.nome
             data2['pais'] = utilizador.pais
             data2['cidade'] = utilizador.cidade
+            
+            if utilizador.morada is not None and data2['morada'] is None:
+                data2['morada'] = utilizador.morada
+            
+            
             ### campo telemovel
             telemovel = utilizador.telemovel
             ####converter telemovel para formato internacional
@@ -891,13 +896,14 @@ class DetalhesEnvioList(APIView):
             data2['telemovel'] = telemovel_international_str
             
             data2['email'] = utilizador.email
-        print("Cheguei aqui!")
-        deserializer = DetalhesEnvioSerializer(data=data2)
+        deserializer = DetalhesEnvioSerializerRequest(data=data2)
         print("Cheguei aqui! 2")
         if deserializer.is_valid():
-            print("Cheguei aqui! 3")
+            if data2['guardar_esta_morada'] == True:
+                utilizador.morada = data2['morada']            
             deserializer.save()
-            return Response(deserializer.data, status=status.HTTP_201_CREATED)
+            respostaSerializar = DetalhesEnvioSerializerResponse(data=data2)
+            return Response(respostaSerializar.data, status=status.HTTP_201_CREATED)
         print(deserializer.errors)
         return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
         

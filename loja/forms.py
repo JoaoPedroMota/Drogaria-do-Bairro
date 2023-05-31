@@ -154,7 +154,7 @@ class ProdutoUnidadeProducaoForm(forms.ModelForm):
 class DetalhesEnvioForm(forms.ModelForm):
     class Meta:
         model = DetalhesEnvio
-        fields = ['nome_morada', 'nome', 'pais', 'cidade', 'morada', 'telemovel', 'email', 'instrucoes_entrega', 'usar_informacoes_utilizador']
+        fields = ['nome_morada', 'nome', 'pais', 'cidade', 'morada', 'telemovel', 'email', 'instrucoes_entrega', 'usar_informacoes_utilizador', 'guardar_esta_morada']
     
     def __init__(self, *args, **kwargs):
         utilizador = kwargs.pop('utilizador', None)

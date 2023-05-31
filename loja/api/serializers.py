@@ -487,11 +487,18 @@ class SingleProdutoPaginaSerializer(ModelSerializer):
         read_only_fields = ['id']
 
 
-class DetalhesEnvioSerializer(ModelSerializer):
+class DetalhesEnvioSerializerRequest(ModelSerializer):
     pais = campoPaisSerializador()
     class Meta:
         model = DetalhesEnvio
-        fields = ["nome_morada", 'nome', 'pais', 'cidade', 'telemovel', 'email', 'morada', 'instrucoes_entrega', 'usar_informacoes_utilizador']#,"consumidor"]
+        fields = ["nome_morada", 'nome', 'pais', 'cidade', 'telemovel', 'email', 'morada', 'instrucoes_entrega', 'usar_informacoes_utilizador', 'guardar_esta_morada']#,"consumidor"]
+        
+        
+class DetalhesEnvioSerializerResponse(ModelSerializer):
+    pais = campoPaisSerializador()
+    class Meta:
+        model = DetalhesEnvio
+        fields = ["nome_morada", 'nome', 'pais', 'cidade', 'telemovel', 'email', 'morada', 'instrucoes_entrega']#,"consumidor"]
          
 
 

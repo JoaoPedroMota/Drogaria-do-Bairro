@@ -692,5 +692,5 @@ class DetalhesEnvio(models.Model):
     morada = models.CharField(null=False, max_length=200, default='')
     instrucoes_entrega = models.TextField(null=True, blank=True, max_length=500)
     usar_informacoes_utilizador = models.BooleanField(default=True, help_text='Usar informações guardadas ao criar conta?')
-    guardar_morada = models.BooleanField(default=False, help_text='Deseja guardar esta morada para futuras encomendas?')
+    guardar_esta_morada = models.BooleanField(default=False, help_text='Deseja guardar esta morada para futuras encomendas?')
     consumidor = models.ForeignKey(Consumidor,  null=True, blank=True, on_delete=models.CASCADE, related_name='detalhes_envio')
