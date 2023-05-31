@@ -2,6 +2,16 @@ from rest_framework import permissions
 from rest_framework.exceptions import PermissionDenied
 from loja.models import *
 
+class IsOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+
+        username = view.kwargs.get('username')
+        if username != request.user.username:
+            raise PermissionDenied(detail="Não pode ler/atualizar/apagar um utilizador que não o seu.")
+        return True
+        
+
+
 class IsOwnerOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:

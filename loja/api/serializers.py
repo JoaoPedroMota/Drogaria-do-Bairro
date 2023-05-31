@@ -168,7 +168,7 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
     class Meta:
         model = Utilizador
         # fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais','estado' ,'cidade', 'nome', 'telemovel', 'tipo_utilizador']
-        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais',"estado",'cidade', 'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
+        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais','cidade','morada' ,'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
         extra_kwargs = {'password': {'required': True}}
     
 
@@ -491,7 +491,7 @@ class DetalhesEnvioSerializer(ModelSerializer):
     pais = campoPaisSerializador()
     class Meta:
         model = DetalhesEnvio
-        fields = ["nome_morada", 'nome', 'pais', 'estado', 'cidade', 'telemovel', 'email', 'morada', 'instrucoes_entrega', 'usar_informacoes_utilizador']#,"consumidor"]
+        fields = ["nome_morada", 'nome', 'pais', 'cidade', 'telemovel', 'email', 'morada', 'instrucoes_entrega', 'usar_informacoes_utilizador']#,"consumidor"]
          
 
 

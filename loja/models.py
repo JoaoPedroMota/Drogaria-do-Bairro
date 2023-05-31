@@ -102,8 +102,8 @@ class Utilizador(AbstractUser):
     email = models.EmailField(unique=True, null=True, blank=False, error_messages={'unique': 'Já existe um utilizador com esse e-mail.'}, max_length=200)
     username = models.CharField(max_length=200, unique=True, null=True, blank=False, validators=[ASCIIUsernameValidator()], help_text='Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ ', error_messages={ 'unique': 'Já existe um utilizador com esse nome de utilizador.',},)
     pais = CountryField(null=True, blank=False, default='PT')
-    estado = models.CharField(max_length=3, blank=True, null=False, default='', help_text='Estado ou provincia onde reside.', validators=[validar_alfabeto])
     cidade = models.CharField(max_length=200, blank=True, default='') 
+    morada = models.CharField(max_length=200, null=True, blank=True, default='')
     telemovel = PhoneNumberField(null=True, blank=False, default='', unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
     tipo_utilizador = models.CharField(max_length=1, choices=TIPO_UTILIZADOR, default='', null=True)
     imagem_perfil = models.ImageField(null=True, blank=True,default="imagens_perfil\\avatar.png", upload_to='imagens_perfil/',validators=[validar_extensao_imagens, validar_tamanho_imagens])
@@ -140,7 +140,7 @@ class Utilizador(AbstractUser):
     
     #legibilidade na bd e do objeto
     def __repr__(self):
-        return f"Utilizador(nome='{self.nome}', email='{self.email}', username='{self.username}', pais='{self.pais}', estado='{self.estado}', cidade='{self.cidade}', telemovel='{self.telemovel}', tipo_utilizador='{self.tipo_utilizador}', imagem_perfil='{self.imagem_perfil}', is_staff={self.is_staff}, is_admin={self.is_admin}, updated='{self.updated}', created='{self.created}')"
+        return f"Utilizador(nome='{self.nome}', email='{self.email}', username='{self.username}', pais='{self.pais}', cidade='{self.cidade}', telemovel='{self.telemovel}', tipo_utilizador='{self.tipo_utilizador}', imagem_perfil='{self.imagem_perfil}', is_staff={self.is_staff}, is_admin={self.is_admin}, updated='{self.updated}', created='{self.created}')"
     def __str__(self):
         return self.username
     # legibilidade humana para debug e cenas
@@ -686,11 +686,11 @@ class DetalhesEnvio(models.Model):
     nome_morada = models.CharField(max_length=20, blank=True, null=True)
     nome = models.CharField(max_length=200, null=False, blank=True)
     pais = CountryField(blank=True, null=False, default='PT')
-    estado = models.CharField(max_length=3, blank=True, null=False, default='', help_text='Estado ou provincia onde reside.', validators=[validar_alfabeto])
     cidade = models.CharField(max_length=200, blank=True, null=False)
     telemovel = PhoneNumberField(null=False, blank=True, default='', error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
     email = models.EmailField(null=False, blank=True, default='',error_messages={'unique': 'Já existe um utilizador com esse e-mail.'}, max_length=200)
-    morada = models.CharField(null=False, max_length=200)
+    morada = models.CharField(null=False, max_length=200, default='')
     instrucoes_entrega = models.TextField(null=True, blank=True, max_length=500)
-    usar_informacoes_utilizador = models.BooleanField(default=False, help_text='Usar informações guardadas ao criar conta?')
+    usar_informacoes_utilizador = models.BooleanField(default=True, help_text='Usar informações guardadas ao criar conta?')
+    guardar_morada = models.BooleanField(default=False, help_text='Deseja guardar esta morada para futuras encomendas?')
     consumidor = models.ForeignKey(Consumidor,  null=True, blank=True, on_delete=models.CASCADE, related_name='detalhes_envio')

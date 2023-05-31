@@ -22,14 +22,14 @@ class FornecedorFormulario(ModelForm):
 class EditarPerfil(ModelForm):
     class Meta:
         model = Utilizador
-        fields = ['first_name', 'last_name', 'username','email', 'pais','estado','cidade','telemovel','imagem_perfil',]
+        fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','telemovel','imagem_perfil',]
 
 class CompletarPerfil(ModelForm):
     telemovel = PhoneNumberField(required=True)
     
     class Meta:
         model = Utilizador
-        fields = ['first_name', 'last_name', 'username','email', 'pais',"estado",'cidade','telemovel','tipo_utilizador', 'imagem_perfil']
+        fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','telemovel','tipo_utilizador', 'imagem_perfil']
 
 class criarUnidadeProducaoFormulario(ModelForm):
     class Meta:
@@ -154,22 +154,23 @@ class ProdutoUnidadeProducaoForm(forms.ModelForm):
 class DetalhesEnvioForm(forms.ModelForm):
     class Meta:
         model = DetalhesEnvio
-        fields = ['nome_morada', 'nome', 'pais', 'estado', 'cidade', 'morada', 'telemovel', 'email', 'instrucoes_entrega', 'usar_informacoes_utilizador']
+        fields = ['nome_morada', 'nome', 'pais', 'cidade', 'morada', 'telemovel', 'email', 'instrucoes_entrega', 'usar_informacoes_utilizador']
     
     def __init__(self, *args, **kwargs):
         utilizador = kwargs.pop('utilizador', None)
         consumidor = utilizador.consumidor
         super().__init__(*args, **kwargs)
         self.fields['usar_informacoes_utilizador'].required = False
-        self.fields['usar_informacoes_utilizador'].inital = True
+        self.fields['usar_informacoes_utilizador'].initial = True
         if consumidor:
             self.initial['consumidor'] = consumidor
         if self.fields['usar_informacoes_utilizador']:
             utilizador = self.initial['consumidor'].utilizador
             self.fields['nome'].initial = utilizador.nome
             self.fields['pais'].initial = utilizador.pais
-            self.fields['estado'].initial = utilizador.estado
             self.fields['cidade'].initial = utilizador.cidade
+            if utilizador.morada is not None:
+                self.fields['morada'].initial = utilizador.morada
             self.fields['telemovel'].initial = utilizador.telemovel
             self.fields['email'].initial = utilizador.email
     
@@ -182,7 +183,6 @@ class DetalhesEnvioForm(forms.ModelForm):
             utilizador = consumidor.utilizador
             cleaned_data['nome'] = utilizador.nome
             cleaned_data['pais'] = utilizador.pais
-            cleaned_data['estado'] = utilizador.estado
             cleaned_data['cidade'] = utilizador.cidade
             cleaned_data['telemovel'] = utilizador.telemovel
             cleaned_data['email'] = utilizador.email

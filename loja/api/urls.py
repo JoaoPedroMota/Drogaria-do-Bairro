@@ -22,7 +22,7 @@ urlpatterns = [
     path('<str:username>/consumidor/carrinho/', views.ProdutosCarrinhoList.as_view()),
     path('<str:username>/consumidor/carrinho/<int:idProdutoCart>/', views.ProdutosCarrinhoDetail.as_view()),
     path('<str:username>/consumidor/carrinho/produtoUP/<int:idProdutoUnidadeProducao>/', views.ProdutosCarrinhoDetailProdutoUP.as_view()),
-    
+    path('<str:username>/consumidor/detalhes_envio/', views.DetalhesEnvioList.as_view()),
     
     
     

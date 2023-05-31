@@ -154,7 +154,7 @@
         
                 {% elif request.user.is_consumidor %}
                 <div id="Consumidor">
-                    <!-- ESPAÇO PARA COISAS DE UM CONSUMIDOR -->
+                    <a href="{% url 'loja-detalhesEnvio'%}" id='login' class="btn btn-primary" id="lo">Os meus detalhes de envio</a>
                 </div>
         
                 {% endif %}

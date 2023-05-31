@@ -23,9 +23,10 @@ from decimal import Decimal
 ### serializers.py ###
 from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer, ProdutoSerializerRequest, TemProdutoNoCarrinhoSerializer, DetalhesEnvioSerializer
 ### permissions.py ###
-from .permissions import IsOwnerOrReadOnly, IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly, IsConsumidorAndOwner, IsConsumidorAndOwner2
+from .permissions import IsOwnerOrReadOnly,IsOwner ,IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly, IsConsumidorAndOwner, IsConsumidorAndOwner2
 ####
 from decimal import Decimal
+import phonenumbers
 
 
 
@@ -100,8 +101,7 @@ class UtilizadoresDetail(APIView):
     """
     Devolve, atualiza ou apaga uma instância de Utilizador
     """
-    #parser_classes = (MultiPartParser, FormParser)
-    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly, IsAuthenticated]
     def get_object(self, identifier):
         try:
             return Utilizador.objects.get(username=identifier)
@@ -877,16 +877,28 @@ class DetalhesEnvioList(APIView):
         utilizador = self.get_utilizador(username)
         data2 = request.data.copy()
         if data2['usar_informacoes_utilizador'] == True:
+            
             data2['nome'] = utilizador.nome
             data2['pais'] = utilizador.pais
-            data2['estado'] = utilizador.estado
             data2['cidade'] = utilizador.cidade
-            data2['telemovel'] = utilizador.telemovel
+            ### campo telemovel
+            telemovel = utilizador.telemovel
+            ####converter telemovel para formato internacional
+            international_phone_number = phonenumbers.format_number(telemovel, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+            ### converte para str
+            telemovel_international_str = str(international_phone_number)
+            #### atribui str ao dicionario, pq JSON  n suporta PhoneNumber
+            data2['telemovel'] = telemovel_international_str
+            
             data2['email'] = utilizador.email
+        print("Cheguei aqui!")
         deserializer = DetalhesEnvioSerializer(data=data2)
+        print("Cheguei aqui! 2")
         if deserializer.is_valid():
+            print("Cheguei aqui! 3")
             deserializer.save()
             return Response(deserializer.data, status=status.HTTP_201_CREATED)
+        print(deserializer.errors)
         return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         

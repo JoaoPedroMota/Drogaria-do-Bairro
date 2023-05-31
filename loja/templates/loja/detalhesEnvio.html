@@ -44,7 +44,8 @@
                   <div class="form-group">
                     {% if field.field.widget.input_type != 'file' %}
                     <div class="input-wrapper">
-                        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.name }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
+                        
+                        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.field.label }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
                         {% if field.help_text %}
                             <abbr title="{{ field.help_text }}" class="hint-formulario">?</abbr>
                         {% endif %}

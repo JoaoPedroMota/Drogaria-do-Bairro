@@ -12,7 +12,6 @@ class UtilizadorModelTesting(TestCase):
             nome='Consumidor Caso de Teste',  # Adicionado manualmente
             username='testconsumidor',
             pais='PT',
-            estado='',
             cidade='Lisboa',
             telemovel='+351912345678',
             tipo_utilizador=Utilizador.CONSUMIDOR
@@ -24,7 +23,6 @@ class UtilizadorModelTesting(TestCase):
             nome='Fornecedor Caso de Teste',  # Adicionado manualmente
             username='testFornecedor',
             pais='PT',
-            estado='',
             cidade='Lisboa',
             telemovel='+351912345679',
             tipo_utilizador=Utilizador.FORNECEDOR
@@ -52,7 +50,7 @@ class UtilizadorModelTesting(TestCase):
     def test_utilizador_str(self):
         self.assertEqual(str(self.utilizadorConsumidor), 'testconsumidor')
     def test_utilizador_repr(self):
-        representacao = f"Utilizador(nome='{self.utilizadorConsumidor.nome}', email='{self.utilizadorConsumidor.email}', username='{self.utilizadorConsumidor.username}', pais='{self.utilizadorConsumidor.pais}', estado='{self.utilizadorConsumidor.estado}', cidade='{self.utilizadorConsumidor.cidade}', telemovel='{self.utilizadorConsumidor.telemovel}', tipo_utilizador='{self.utilizadorConsumidor.tipo_utilizador}', imagem_perfil='{self.utilizadorConsumidor.imagem_perfil}', is_staff={self.utilizadorConsumidor.is_staff}, is_admin={self.utilizadorConsumidor.is_admin}, updated='{self.utilizadorConsumidor.updated}', created='{self.utilizadorConsumidor.created}')"
+        representacao = f"Utilizador(nome='{self.utilizadorConsumidor.nome}', email='{self.utilizadorConsumidor.email}', username='{self.utilizadorConsumidor.username}', pais='{self.utilizadorConsumidor.pais}', cidade='{self.utilizadorConsumidor.cidade}', telemovel='{self.utilizadorConsumidor.telemovel}', tipo_utilizador='{self.utilizadorConsumidor.tipo_utilizador}', imagem_perfil='{self.utilizadorConsumidor.imagem_perfil}', is_staff={self.utilizadorConsumidor.is_staff}, is_admin={self.utilizadorConsumidor.is_admin}, updated='{self.utilizadorConsumidor.updated}', created='{self.utilizadorConsumidor.created}')"
         self.assertEquals(repr(self.utilizadorConsumidor), representacao)
     def test_cria_utilizador_fornecedor_(self):
         self.assertIsInstance(self.utilizadorFornecedor, Utilizador)
@@ -71,7 +69,6 @@ class ConsumidorTesting(TestCase):
             nome='Consumidor Caso de Teste',  # Adicionado manualmente
             username='testconsumidorclasse',
             pais='PT',
-            estado='',
             cidade='Lisboa',
             telemovel='+351912345679',
             tipo_utilizador=Utilizador.CONSUMIDOR
@@ -89,7 +86,6 @@ class ConsumidorTesting(TestCase):
             nome='Consumidor Caso de Teste',  # Adicionado manualmente
             username='testconsumidorclassetemp',
             pais='PT',
-            estado='',
             cidade='Lisboa',
             telemovel='+351912345680',
             tipo_utilizador=Utilizador.FORNECEDOR
@@ -106,7 +102,6 @@ class ConsumidorTesting(TestCase):
             nome='Consumidor Caso de Teste',  # Adicionado manualmente
             username='testconsumidorclassetemp2',
             pais='PT',
-            estado='',
             cidade='Lisboa',
             telemovel='+351912345681',
             tipo_utilizador=Utilizador.FORNECEDOR
@@ -128,7 +123,6 @@ class FornecedorTesting(TestCase):
             nome='Fornecedor Caso de Teste',  # Adicionado manualmente
             username='testFornecedorclasse',
             pais='PT',
-            estado='',
             cidade='Lisboa',
             telemovel='+351912345682',
             tipo_utilizador=Utilizador.FORNECEDOR
@@ -146,7 +140,6 @@ class FornecedorTesting(TestCase):
             nome='Fornecedor Caso de Teste',  # Adicionado manualmente
             username='testfornecedorclassetemp',
             pais='PT',
-            estado='',
             cidade='Lisboa',
             telemovel='+351912345683',
             tipo_utilizador=Utilizador.CONSUMIDOR
@@ -163,7 +156,6 @@ class FornecedorTesting(TestCase):
             nome='Fornecedor Caso de Teste',  # Adicionado manualmente
             username='testfornecedorclassetemp2',
             pais='PT',
-            estado='',
             cidade='Lisboa',
             telemovel='+351912345684',
             tipo_utilizador=Utilizador.CONSUMIDOR

@@ -367,6 +367,11 @@ def unidadeProducao(request, userName, id):
         semaforo = 0
         #print("\n\n\n\nPRODUTOS RECEBIDOS. VIERAM DA API:",produtosUPRespostaJSON)
         for produto in produtosUPRespostaJSON:
+
+                
+            
+            
+            
             ### TABELA PRODUTO
             idProduto = produto.get('produto')
             urlProduto = f'http://127.0.0.1:8000/api/produtosID/{idProduto}/'
@@ -420,16 +425,21 @@ def unidadeProducao(request, userName, id):
             ##### TABELA FORNECEDORES
             usernameFornecedor = upDicionario['fornecedor']['utilizador']
             
+            
+            
+            sessao = requests.Session()
+            sessao.cookies.update(request.COOKIES)
+            
             urlFornecedor = f'http://127.0.0.1:8000/api/{usernameFornecedor}/fornecedor/'
             urlUtilizadorFornecedor = f'http://127.0.0.1:8000/api/{usernameFornecedor}/utilizadores/'
             
             
-            respostaFornecedor = requests.get(urlFornecedor)
-            respostaUtilizador = requests.get(urlUtilizadorFornecedor)
+            respostaFornecedor = sessao.get(urlFornecedor)
+            respostaUtilizador = sessao.get(urlUtilizadorFornecedor)
             
             dicionarioFornecedor = respostaFornecedor.json()
             dicionarioUtilizador = respostaUtilizador.json()
-            
+            print(dicionarioUtilizador)
             
             
             user_temp = Utilizador(**dicionarioUtilizador)
@@ -1324,10 +1334,11 @@ def adicionarProdutosCarrinhoDpsDeLogar(request):
     
 @login_required(login_url='loja-login')
 def detalhesEnvio(request):
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context = {"produtosCarrinho":produtosCarrinho}
     if request.user.is_authenticated and request.user.is_consumidor:
-        print("Sou consumidor!!!\n\n\n\n")
         formulario = DetalhesEnvioForm(utilizador=request.user)
-        context = {'formulario': formulario}
+        context['formulario'] = formulario
         return render(request, 'loja/detalhesEnvio.html', context)
     else:
         return redirect('loja-home')
