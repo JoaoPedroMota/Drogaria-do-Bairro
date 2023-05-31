@@ -1,6 +1,6 @@
 ### APP loja #####
 ### models.py ###
-from loja.models import Utilizador, Consumidor, Fornecedor, UnidadeProducao, Veiculo, Categoria, Produto, Carrinho, ProdutoUnidadeProducao, ProdutosCarrinho
+from loja.models import Utilizador, Consumidor, Fornecedor, UnidadeProducao, Veiculo, Categoria, Produto, Carrinho, ProdutoUnidadeProducao, ProdutosCarrinho, DetalhesEnvio
 from .utilidades_api import categorias_nao_pai
 #### DJANGO ######
 from django.http import Http404
@@ -21,11 +21,12 @@ from rest_framework.response import Response
 from decimal import Decimal
 #### DENTRO DA APP #####
 ### serializers.py ###
-from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer, ProdutoSerializerRequest, TemProdutoNoCarrinhoSerializer
+from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer, ProdutoSerializerRequest, TemProdutoNoCarrinhoSerializer, DetalhesEnvioSerializerRequest, DetalhesEnvioSerializerResponse
 ### permissions.py ###
-from .permissions import IsOwnerOrReadOnly, IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly, IsConsumidorAndOwner
+from .permissions import IsOwnerOrReadOnly,IsOwner ,IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly, IsConsumidorAndOwner, IsConsumidorAndOwner2
 ####
 from decimal import Decimal
+import phonenumbers
 
 
 
@@ -100,8 +101,7 @@ class UtilizadoresDetail(APIView):
     """
     Devolve, atualiza ou apaga uma instância de Utilizador
     """
-    #parser_classes = (MultiPartParser, FormParser)
-    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly, IsAuthenticated]
     def get_object(self, identifier):
         try:
             return Utilizador.objects.get(username=identifier)
@@ -354,7 +354,7 @@ class ProdutoList(APIView):
     """
     Devolve todos os produtos da loja
     """
-    permission_classes= [IsFornecedorOrReadOnly,IsAuthenticatedOrReadOnly]
+    permission_classes= [IsFornecedorOrReadOnly]#,IsAuthenticatedOrReadOnly]
     def get(self, request, format=None):
         if 'q' in request.data:
             if request.data['q'] != '':
@@ -388,6 +388,7 @@ class ProdutoList(APIView):
             resposta_produto_serializer = ProdutoSerializer(produto_temp, many=False)
             return Response(resposta_produto_serializer.data, status=status.HTTP_201_CREATED)
         #print("\n\n\n\n", produto.errors, "\n\n\n\n\n")
+        print(produto.errors)
         return Response({'detail': produto.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -849,3 +850,66 @@ class ProdutosCarrinhoDetailProdutoUP(APIView):
             return Response({"detail": "Produto não encontrado no carrinho"},status=status.HTTP_404_NOT_FOUND)
     
 
+
+class DetalhesEnvioList(APIView):
+    permission_classes = [IsConsumidorAndOwner2]
+    def get_object(self, instance):
+        try:
+            return DetalhesEnvio.objects.filter(consumidor=instance)
+        except DetalhesEnvio.DoesNotExist:
+            raise Http404
+
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_consumidor(self, utilizador):
+        try:
+            return Consumidor.objects.get(utilizador=utilizador)
+        except Consumidor.DoesNotExist:
+            raise Http404
+    def get(self, request, username, format=None):
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        detalhes_envio_objetos = self.get_object(consumidor)
+        if detalhes_envio_objetos.exists():
+            serializar = DetalhesEnvioSerializer(detalhes_envio_objetos, many=True)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data,status=status.HTTP_200_OK)
+    def post(self, request, username, format=None):
+        utilizador = self.get_utilizador(username)
+        data2 = request.data.copy()
+        if data2['usar_informacoes_utilizador'] == True:
+            
+            data2['nome'] = utilizador.nome
+            data2['pais'] = utilizador.pais
+            data2['cidade'] = utilizador.cidade
+            
+            if utilizador.morada is not None and data2['morada'] is None:
+                data2['morada'] = utilizador.morada
+            
+            
+            ### campo telemovel
+            telemovel = utilizador.telemovel
+            ####converter telemovel para formato internacional
+            international_phone_number = phonenumbers.format_number(telemovel, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+            ### converte para str
+            telemovel_international_str = str(international_phone_number)
+            #### atribui str ao dicionario, pq JSON  n suporta PhoneNumber
+            data2['telemovel'] = telemovel_international_str
+            
+            data2['email'] = utilizador.email
+        deserializer = DetalhesEnvioSerializerRequest(data=data2)
+        print("Cheguei aqui! 2")
+        if deserializer.is_valid():
+            if data2['guardar_esta_morada'] == True:
+                utilizador.morada = data2['morada']            
+            deserializer.save()
+            respostaSerializar = DetalhesEnvioSerializerResponse(data=data2)
+            return Response(respostaSerializar.data, status=status.HTTP_201_CREATED)
+        print(deserializer.errors)
+        return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        

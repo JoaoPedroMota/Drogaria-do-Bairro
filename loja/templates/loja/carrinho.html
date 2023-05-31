@@ -41,6 +41,7 @@
                         <thead class="cart-table-head">
                             <tr class="table-head-row">
                                 <th class="product-remove"></th>
+                                <th class="numeroCarrinhoSoTabela">Item</th>
                                 <th class="product-image">Imagem</th>
                                 <th class="product-name">Nome</th>
                                 <th class="product-price">Preço Unitário</th>
@@ -51,17 +52,20 @@
                         </thead>
     <tbody>
     {% for produto in produtos %}
-    <tr class="table-body-row">
-        <td class="product-remove"><a href="{% url 'loja-remover-do-carrinho' produto.idNoCarrinho %}"><i class="far fa-window-close"></i></a></td>
-        <td class="product-image">
-            <img src="{% static produto.produto.imagem_produto %}" alt="produto.nomeProduto">
-        </td>
-        <td class="product-name">{{ produto.nomeProduto }}</td>
-        <td class="product-quantity">{{produto.precoKilo}}€/{{produto.produto.unidade_medida}}</td>    
-        <td class="product-price">{{produto.preco|floatformat:2}}€</td>
-        <td class="">{{ produto.quantidade|floatformat:1 }} {{produto.produto.unidade_medida}}</td>
-    </tr>
-</tbody>
+    {% with i=forloop.counter0|add:1 %}
+        <tr class="table-body-row">
+            <td class="product-remove"><a href="{% url 'loja-remover-do-carrinho' produto.idNoCarrinho %}"><i class="far fa-window-close"></i></a></td>
+            <td class="numeroCarrinhoSoTabela">{{i}}</td>
+            <td class="product-image">
+                <img src="{% static produto.produto.imagem_produto %}" alt="produto.nomeProduto">
+            </td>
+            <td class="product-name">{{ produto.nomeProduto }}</td>
+            <td class="product-quantity">{{produto.precoKilo}}€/{{produto.produto.unidade_medida}}</td>    
+            <td class="product-price">{{produto.preco|floatformat:2}}€</td>
+            <td class="">{{ produto.quantidade|floatformat:1 }} {{produto.produto.unidade_medida}}</td>
+            {% endwith %}
+        </tr>
+    </tbody>
 {% endfor %}
                     </table>
                 </div>

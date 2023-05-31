@@ -1,6 +1,6 @@
 from django.forms import ModelForm, ModelChoiceField
 from django import forms
-from .models import Utilizador, Fornecedor, UnidadeProducao,Categoria , Veiculo, Produto, ProdutoUnidadeProducao
+from .models import Utilizador, Fornecedor, UnidadeProducao,Categoria , Veiculo, Produto, ProdutoUnidadeProducao, DetalhesEnvio
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django_countries.widgets import CountrySelectWidget
@@ -156,3 +156,42 @@ class editarProdutoUnidadeProducaoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)
         super(editarProdutoUnidadeProducaoForm, self).__init__(*args, **kwargs)
+
+
+class DetalhesEnvioForm(forms.ModelForm):
+    class Meta:
+        model = DetalhesEnvio
+        fields = ['nome_morada', 'nome', 'pais', 'cidade', 'morada', 'telemovel', 'email', 'instrucoes_entrega', 'usar_informacoes_utilizador', 'guardar_esta_morada']
+    
+    def __init__(self, *args, **kwargs):
+        utilizador = kwargs.pop('utilizador', None)
+        consumidor = utilizador.consumidor
+        super().__init__(*args, **kwargs)
+        self.fields['usar_informacoes_utilizador'].required = False
+        self.fields['usar_informacoes_utilizador'].initial = True
+        if consumidor:
+            self.initial['consumidor'] = consumidor
+        if self.fields['usar_informacoes_utilizador']:
+            utilizador = self.initial['consumidor'].utilizador
+            self.fields['nome'].initial = utilizador.nome
+            self.fields['pais'].initial = utilizador.pais
+            self.fields['cidade'].initial = utilizador.cidade
+            if utilizador.morada is not None:
+                self.fields['morada'].initial = utilizador.morada
+            self.fields['telemovel'].initial = utilizador.telemovel
+            self.fields['email'].initial = utilizador.email
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        usar_informacoes_utilizador = cleaned_data.get('usar_informacoes_utilizador')
+        consumidor = self.initial.get('consumidor')
+
+        if usar_informacoes_utilizador and consumidor:
+            utilizador = consumidor.utilizador
+            cleaned_data['nome'] = utilizador.nome
+            cleaned_data['pais'] = utilizador.pais
+            cleaned_data['cidade'] = utilizador.cidade
+            cleaned_data['telemovel'] = utilizador.telemovel
+            cleaned_data['email'] = utilizador.email
+
+        return cleaned_data

@@ -23,6 +23,19 @@
 .main-menu ul ul a {
   padding: 10px;
 }
+
+#bolinha-vermelha {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-color: rgb(242, 129, 35);
+  color: white;
+  border-radius: 100%;
+  margin-right: 2px;
+  position: absolute;
+  top: -2px;
+  text-align: center;
+}
 </style>
 
 <div class="top-header-area" id="sticker">
@@ -45,7 +58,7 @@
               <li><a href="/about">Sobre Nós</a></li>
               <li><a href="/contacts">Contactos</a></li>
               {% if not request.user.is_authenticated or request.user.is_consumidor%}
-              <li><a href="/shop/">Produtos</a></li>
+              <li><a href="{% url 'loja-ver-produtos' %}">Produtos</a></li>
               {% endif %}
               {% if request.user.is_authenticated %}
              
@@ -66,7 +79,7 @@
               {% if not request.user.is_authenticated or request.user.is_consumidor%}
               <li>
                 <div class="header-icons">
-                  <a class="shopping-cart" href="/carrinho"><i class="fas fa-shopping-cart"></i></a>
+                  <a class="shopping-cart" href="{% url 'loja-carrinho' %}"><i class="fas fa-shopping-cart"></i><span id="bolinha-vermelha">{{produtosCarrinho}}</span></a>
                   <a class="mobile-hide search-bar-icon" href="#"><i class="fas fa-search"></i></a>
                 </div>
               </li>

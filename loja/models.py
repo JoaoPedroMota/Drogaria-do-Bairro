@@ -12,7 +12,7 @@ from functools import partial
 from django.utils import timezone
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator
-
+from django.core.validators import RegexValidator
 
 
 
@@ -85,7 +85,10 @@ class Utilizador(AbstractUser):
         max_size = 2 * 1024 * 1024
         if value.size > max_size:
             raise ValidationError((f'Ficheiro grande de mais. Tamanho máximo 2MB'))
-    
+    validar_alfabeto = RegexValidator(
+                    r'^[A-Za-z]{0,3}$',
+                    'Este campo deve conter apenas letras do alfabeto ocidental e ter no máximo 3 letras.'
+                    )
     # Definindo as opções para o campo tipo_utilizador
     CONSUMIDOR = 'C'
     FORNECEDOR = 'F'
@@ -100,10 +103,10 @@ class Utilizador(AbstractUser):
     username = models.CharField(max_length=200, unique=True, null=True, blank=False, validators=[ASCIIUsernameValidator()], help_text='Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ ', error_messages={ 'unique': 'Já existe um utilizador com esse nome de utilizador.',},)
     pais = CountryField(null=True, blank=False, default='PT')
     cidade = models.CharField(max_length=200, blank=True, default='') 
-    #morada = models.CharField(max_length=200, null=True, blank=False)
+    morada = models.CharField(max_length=200, null=True, blank=True, default='')
     telemovel = PhoneNumberField(null=True, blank=False, default='', unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
     tipo_utilizador = models.CharField(max_length=1, choices=TIPO_UTILIZADOR, default='', null=True)
-    imagem_perfil = models.ImageField(null=True, default="imagens_perfil\\avatar.png", upload_to='imagens_perfil/',validators=[validar_extensao_imagens, validar_tamanho_imagens])
+    imagem_perfil = models.ImageField(null=True, blank=True,default="imagens_perfil\\avatar.png", upload_to='imagens_perfil/',validators=[validar_extensao_imagens, validar_tamanho_imagens])
     updated = models.DateTimeField(auto_now=True, null=True, blank=False)
     created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
     
@@ -174,7 +177,18 @@ class Utilizador(AbstractUser):
             return produtosNoCarrinho
         else:
             raise ValueError("Apenas os utilizadores que são consumidores têm carrinho, e só estes podem aceder aos produtos que têm no carrinho.")
+    def save(self, *args, **kwargs):
+        # Transformar o username em lower case
+        self.username = self.username.lower()
 
+        # Combinar o first_name e last_name para formar o nome completo
+        self.nome = f'{self.first_name} {self.last_name}'
+
+        # Transformar a cidade em uppercase
+        self.cidade = self.cidade.upper()
+
+        # Chamar o método save padrão do modelo
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Utilizador'
@@ -195,7 +209,10 @@ class Consumidor(models.Model):
     def save(self, *args, **kwargs):
         if Fornecedor.objects.filter(utilizador=self.utilizador).exists():
             raise ValueError('O utilizador já está associado a um Fornecedor.')
-        super(Consumidor, self).save(*args, **kwargs)
+        if self.utilizador.is_consumidor:
+            super(Consumidor, self).save(*args, **kwargs)
+        else:
+            raise ValueError('O utilizador não é um consumidor')
     
 class Veiculo(models.Model):
     carro = 'C'
@@ -347,7 +364,10 @@ class Fornecedor(models.Model):
     def save(self, *args, **kwargs):
         if Consumidor.objects.filter(utilizador=self.utilizador).exists():
             raise ValueError('O utilizador já está associado como um Consumidor.')
-        super(Fornecedor, self).save(*args, **kwargs)
+        if self.utilizador.is_fornecedor:
+            super(Fornecedor, self).save(*args, **kwargs)
+        else:
+            raise ValueError('O utilizador não é um fornecedor')
     class Meta:
         verbose_name_plural = "Fornecedores"
         verbose_name = "Fornecedor"
@@ -447,8 +467,8 @@ class ProdutoUnidadeProducao(models.Model):
     unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES, null=False, blank=False)
     preco_a_granel = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
     ###cenas à unidade
-    unidade_Medida_Por_Unidade = models.CharField(max_length=2,choices=UNIDADES_MEDIDA_CHOICES_unidade, null=True, blank=True)
-    quantidade_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)])
+    unidade_Medida_Por_Unidade = models.CharField(max_length=2,choices=UNIDADES_MEDIDA_CHOICES_unidade, null=True, blank=True, help_text='Caso o produto seja vendido à unidade, qual é a unidade de medida dessa unidade? Por exemplo, se for uma posta de carne/peixe, que unidade de medida tem essa posta (quanto pesa a posta). Ou se forem produtos que não precisam de dizer quanto tem de peso/volume, como um brinquedo/filme, selecione unidade')
+    quantidade_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)], help_text='Quanto tem o produto que vende à unidade? Quanto pesa a posta de carne/peixe? Ou se forem berlindes, quantos berlindes vende de uma vez?')
     preco_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)])  
     # outras cenas
     data_producao = models.DateField( null=True,blank=True, default=timezone.now)
@@ -653,3 +673,24 @@ class ProdutosEncomenda(models.Model):
         verbose_name = "Produtos Encomendados"
         verbose_name_plural = "Produtos Encomendados"
         ordering = ['id']
+        
+        
+        
+        
+
+class DetalhesEnvio(models.Model):
+    validar_alfabeto = RegexValidator(
+                    r'^[A-Za-z]{0,3}$',
+                    'Este campo deve conter apenas letras do alfabeto ocidental e ter no máximo 3 letras.'
+                    )
+    nome_morada = models.CharField(max_length=20, blank=True, null=True)
+    nome = models.CharField(max_length=200, null=False, blank=True)
+    pais = CountryField(blank=True, null=False, default='PT')
+    cidade = models.CharField(max_length=200, blank=True, null=False)
+    telemovel = PhoneNumberField(null=False, blank=True, default='', error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
+    email = models.EmailField(null=False, blank=True, default='',error_messages={'unique': 'Já existe um utilizador com esse e-mail.'}, max_length=200)
+    morada = models.CharField(null=False, max_length=200, default='')
+    instrucoes_entrega = models.TextField(null=True, blank=True, max_length=500)
+    usar_informacoes_utilizador = models.BooleanField(default=True, help_text='Usar informações guardadas ao criar conta?')
+    guardar_esta_morada = models.BooleanField(default=False, help_text='Deseja guardar esta morada para futuras encomendas?')
+    consumidor = models.ForeignKey(Consumidor,  null=True, blank=True, on_delete=models.CASCADE, related_name='detalhes_envio')

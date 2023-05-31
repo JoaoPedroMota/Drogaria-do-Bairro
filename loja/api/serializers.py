@@ -2,7 +2,7 @@ import logging
 from rest_framework.serializers import ModelSerializer, Field, SerializerMethodField, ValidationError
 from rest_framework.fields import ImageField
 #### MODELOS ####
-from loja.models import Utilizador, Consumidor, UnidadeProducao, Fornecedor, Veiculo, Produto, Categoria, Carrinho, ProdutosCarrinho, ProdutoUnidadeProducao
+from loja.models import Utilizador, Consumidor, UnidadeProducao, Fornecedor, Veiculo, Produto, Categoria, Carrinho, ProdutosCarrinho, ProdutoUnidadeProducao, DetalhesEnvio
 from .utilidades_api import categorias_nao_pai
 #######
 from django_countries.fields import CountryField
@@ -167,8 +167,8 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
 
     class Meta:
         model = Utilizador
-        # fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador']
-        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
+        # fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais','estado' ,'cidade', 'nome', 'telemovel', 'tipo_utilizador']
+        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais','cidade','morada' ,'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
         extra_kwargs = {'password': {'required': True}}
     
 
@@ -335,9 +335,7 @@ class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
         """
         A mesma coisa que o clean() no modelo ProdutoUnidadeProducao, mas para o serializador
         """
-        
-        
-        
+
         unidade_medida = data.get('unidade_medida')
         preco_a_granel = data.get('preco_a_granel')
         unidade_Medida_Por_Unidade = data.get('unidade_Medida_Por_Unidade')
@@ -478,7 +476,8 @@ class UnidadeProducaoSingleProdutoSerializer(ModelSerializer):
 
 
 class SingleProdutoPaginaSerializer(ModelSerializer):
-    """Devolve um só produto da tabela ProdutoUnidadeProducao
+    """
+    Devolve um só produto da tabela ProdutoUnidadeProducao
     """
     unidade_producao = UnidadeProducaoSingleProdutoSerializer(read_only=True)
     produto = ProdutoSerializer()
@@ -487,5 +486,19 @@ class SingleProdutoPaginaSerializer(ModelSerializer):
         fields = ["id","produto", "unidade_producao", "stock","descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca","imagem_produto"]
         read_only_fields = ['id']
 
+
+class DetalhesEnvioSerializerRequest(ModelSerializer):
+    pais = campoPaisSerializador()
+    class Meta:
+        model = DetalhesEnvio
+        fields = ["nome_morada", 'nome', 'pais', 'cidade', 'telemovel', 'email', 'morada', 'instrucoes_entrega', 'usar_informacoes_utilizador', 'guardar_esta_morada']#,"consumidor"]
+        
+        
+class DetalhesEnvioSerializerResponse(ModelSerializer):
+    pais = campoPaisSerializador()
+    class Meta:
+        model = DetalhesEnvio
+        fields = ["nome_morada", 'nome', 'pais', 'cidade', 'telemovel', 'email', 'morada', 'instrucoes_entrega']#,"consumidor"]
+         
 
 
