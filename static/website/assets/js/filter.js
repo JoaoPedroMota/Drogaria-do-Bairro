@@ -33,6 +33,9 @@ function atualizarNumero(input) {
   if (numero > input.max) {
     numero = parseFloat(input.max);
   }
+  if (numero < input.min) {
+    numero = parseFloat(input.min);
+  }
 
   // Arredonda para o número inteiro mais próximo
   numero = Math.round(numero);
@@ -40,6 +43,40 @@ function atualizarNumero(input) {
   // Define o valor do campo como o número arredondado
   input.value = isNaN(numero) ? '' : numero;
 }
+
+
+function atualizarNumeroComVirgula(input) {
+  // Remove espaços em branco
+  input.value = input.value.trim();
+
+  // Remove caracteres não numéricos, exceto ponto e vírgula
+  input.value = input.value.replace(/[^0-9.,]/g, '');
+
+  // Substitui a vírgula por ponto
+  input.value = input.value.replace(',', '.');
+
+  // Converte para número
+  let numero = parseFloat(input.value);
+
+  // Verifica se o número está fora dos limites mínimo e máximo
+  if (numero > parseFloat(input.max)) {
+    numero = parseFloat(input.max);
+  }
+  if (numero < parseFloat(input.min)) {
+    numero = parseFloat(input.min);
+  }
+
+  // Define o valor do campo como o número formatado com as casas decimais
+  input.value = isNaN(numero) ? '' : numero.toFixed(2);
+}
+
+
+
+
+
+
+
+
 
 
 // Seleciona o elemento h4

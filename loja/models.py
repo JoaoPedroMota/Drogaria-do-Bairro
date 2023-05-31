@@ -683,14 +683,40 @@ class DetalhesEnvio(models.Model):
                     r'^[A-Za-z]{0,3}$',
                     'Este campo deve conter apenas letras do alfabeto ocidental e ter no máximo 3 letras.'
                     )
-    nome_morada = models.CharField(max_length=20, blank=True, null=True)
     nome = models.CharField(max_length=200, null=False, blank=True)
     pais = CountryField(blank=True, null=False, default='PT')
     cidade = models.CharField(max_length=200, blank=True, null=False)
-    telemovel = PhoneNumberField(null=False, blank=True, default='', error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
-    email = models.EmailField(null=False, blank=True, default='',error_messages={'unique': 'Já existe um utilizador com esse e-mail.'}, max_length=200)
-    morada = models.CharField(null=False, max_length=200, default='')
+    telemovel = PhoneNumberField(null=False, blank=False,  help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
+    email = models.EmailField(null=False, blank=False, max_length=200)
+    morada = models.CharField(null=False, blank=False,max_length=200)
     instrucoes_entrega = models.TextField(null=True, blank=True, max_length=500)
     usar_informacoes_utilizador = models.BooleanField(default=True, help_text='Usar informações guardadas ao criar conta?')
     guardar_esta_morada = models.BooleanField(default=False, help_text='Deseja guardar esta morada para futuras encomendas?')
-    consumidor = models.ForeignKey(Consumidor,  null=True, blank=True, on_delete=models.CASCADE, related_name='detalhes_envio')
+    consumidor = models.ForeignKey(Consumidor,  null=True, blank=False, on_delete=models.CASCADE, related_name='detalhes_envio')
+    def clean(self):
+        if self.usar_informacoes_utilizador:
+            utilizador = self.consumidor.utilizador
+
+            if self.nome != utilizador.nome:
+                self.usar_informacoes_utilizador = False
+                raise ValidationError({'nome': 'O nome não corresponde às informações do utilizador.'})
+
+            if self.pais != utilizador.pais:
+                self.usar_informacoes_utilizador = False
+                raise ValidationError({'pais': 'O país não corresponde às informações do utilizador.'})
+
+            if self.cidade != utilizador.cidade:
+                self.usar_informacoes_utilizador = False
+                raise ValidationError({'cidade': 'A cidade não corresponde às informações do utilizador.'})
+
+            if self.telemovel != utilizador.telemovel:
+                self.usar_informacoes_utilizador = False
+                raise ValidationError({'telemovel': 'O número de telemóvel não corresponde às informações do utilizador.'})
+
+            if self.email != utilizador.email:
+                self.usar_informacoes_utilizador = False
+                raise ValidationError({'email': 'O e-mail não corresponde às informações do utilizador.'})
+
+            if self.morada != utilizador.morada:
+                self.usar_informacoes_utilizador = False
+                raise ValidationError({'morada': 'A morada não corresponde às informações do utilizador.'})

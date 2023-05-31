@@ -491,14 +491,42 @@ class DetalhesEnvioSerializerRequest(ModelSerializer):
     pais = campoPaisSerializador()
     class Meta:
         model = DetalhesEnvio
-        fields = ["nome_morada", 'nome', 'pais', 'cidade', 'telemovel', 'email', 'morada', 'instrucoes_entrega', 'usar_informacoes_utilizador', 'guardar_esta_morada']#,"consumidor"]
-        
+        fields = ["id",'nome', 'pais', 'cidade', 'telemovel', 'email', 'morada', 'instrucoes_entrega', 'usar_informacoes_utilizador', 'guardar_esta_morada',"consumidor"]
+        read_only_fields = ['id']
+    def validate(self, attrs):
+        utilizar_informacoes = attrs.get('usar_informacoes_utilizador')
+        consumidor = attrs.get('consumidor')
+
+        if utilizar_informacoes and consumidor:
+            utilizador = consumidor.utilizador
+
+            if attrs.get('nome') != utilizador.nome:
+                raise serializers.ValidationError({'nome': 'O nome não corresponde às informações do utilizador.'})
+
+            if attrs.get('pais') != utilizador.pais:
+                raise serializers.ValidationError({'pais': 'O país não corresponde às informações do utilizador.'})
+
+            if attrs.get('cidade') != utilizador.cidade:
+                raise serializers.ValidationError({'cidade': 'A cidade não corresponde às informações do utilizador.'})
+
+            if attrs.get('telemovel') != utilizador.telemovel:
+                raise serializers.ValidationError({'telemovel': 'O número de telemóvel não corresponde às informações do utilizador.'})
+
+            if attrs.get('email') != utilizador.email:
+                raise serializers.ValidationError({'email': 'O e-mail não corresponde às informações do utilizador.'})
+
+            if utilizador.morada is not None:
+                moradita = utilizador.morada.replace(' ', '')
+                if utilizador.morada != ''  and moradita !='' and attrs.get('morada') != utilizador.morada:
+                    raise serializers.ValidationError({'morada': 'A morada não corresponde às informações do utilizador.'})
+
+        return attrs
         
 class DetalhesEnvioSerializerResponse(ModelSerializer):
     pais = campoPaisSerializador()
     class Meta:
         model = DetalhesEnvio
-        fields = ["nome_morada", 'nome', 'pais', 'cidade', 'telemovel', 'email', 'morada', 'instrucoes_entrega']#,"consumidor"]
+        fields = ["id",'nome', 'pais', 'cidade', 'telemovel', 'email', 'morada', 'instrucoes_entrega', 'usar_informacoes_utilizador', 'guardar_esta_morada']
          
 
 

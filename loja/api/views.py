@@ -869,42 +869,196 @@ class DetalhesEnvioList(APIView):
         consumidor = self.get_consumidor(utilizador)
         detalhes_envio_objetos = self.get_object(consumidor)
         if detalhes_envio_objetos.exists():
-            serializar = DetalhesEnvioSerializer(detalhes_envio_objetos, many=True)
+            serializar = DetalhesEnvioSerializerResponse(detalhes_envio_objetos, many=True)
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(serializar.data,status=status.HTTP_200_OK)
     def post(self, request, username, format=None):
         utilizador = self.get_utilizador(username)
         data2 = request.data.copy()
+        consumidor = self.get_consumidor(utilizador)
+        data2['consumidor'] = consumidor.id
+        
+        if 'guardar_esta_morada' not in data2.keys():
+            data2['guardar_esta_morada'] = False
+        
+        
+        if 'usar_informacoes_utilizador' not in data2.keys():
+            data2['usar_informacoes_utilizador'] = False
+        
+        nome = True if data2.get('nome') is not None else False
+        pais = True if data2.get('pais') is not None else False
+        cidade = True if data2.get('cidade') is not None else False
+        morada = True if data2.get('morada') is not None else False
+        telemovel_bool = True if data2.get('telemovel') is not None else False
+        email = True if data2.get('email') is not None else False
+        
+        if data2['usar_informacoes_utilizador'] == True and (nome == True or pais == True or cidade == True or telemovel_bool == True or email == True or (morada == True and utilizador.morada is not None )):
+            erroString = "Escolheu usar as informações do utilizador, mas está a definir os campos: "
+            erroString+= "nome, " if nome else ''
+            erroString+= "pais, " if pais else ''
+            erroString+= "cidade, " if cidade else ''
+            erroString+= "morada, " if morada else ''
+            erroString+= "telemovel, " if telemovel_bool else ''
+            erroString+= "email" if email else ''
+            erroString+= ". Remova estes campos."
+            return Response({'details': erroString}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+        
         if data2['usar_informacoes_utilizador'] == True:
             
             data2['nome'] = utilizador.nome
             data2['pais'] = utilizador.pais
             data2['cidade'] = utilizador.cidade
-            
-            if utilizador.morada is not None and data2['morada'] is None:
-                data2['morada'] = utilizador.morada
-            
-            
-            ### campo telemovel
-            telemovel = utilizador.telemovel
-            ####converter telemovel para formato internacional
-            international_phone_number = phonenumbers.format_number(telemovel, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
-            ### converte para str
-            telemovel_international_str = str(international_phone_number)
-            #### atribui str ao dicionario, pq JSON  n suporta PhoneNumber
+            if utilizador.morada is not None:
+                data2['morada'] = utilizador.morada 
+            elif utilizador.morada is None and data2.get('morada') is None:
+                return Response({'details':"Escolheu usar informações do utilizador. Mas ainda não tem a sua morada guardada. Envie a sua morada, e se pretender guardar, defina 'guardar_esta_morada' igual a true!"}, status=status.HTTP_400_BAD_REQUEST)           
+            if True: #esconder esta lógica para facilitar leitura do código
+                ### campo telemovel
+                telemovel = utilizador.telemovel
+                ####converter telemovel para formato internacional
+                international_phone_number = phonenumbers.format_number(telemovel, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+                ### converte para str
+                telemovel_international_str = str(international_phone_number)
+                #### atribui str ao dicionario, pq JSON  n suporta PhoneNumber
             data2['telemovel'] = telemovel_international_str
-            
             data2['email'] = utilizador.email
+        
+        
         deserializer = DetalhesEnvioSerializerRequest(data=data2)
-        print("Cheguei aqui! 2")
         if deserializer.is_valid():
             if data2['guardar_esta_morada'] == True:
-                utilizador.morada = data2['morada']            
+                utilizador.morada = data2['morada']  
+                utilizador.save()          
             deserializer.save()
-            respostaSerializar = DetalhesEnvioSerializerResponse(data=data2)
+            respostaSerializar = DetalhesEnvioSerializerResponse(deserializer.instance)
             return Response(respostaSerializar.data, status=status.HTTP_201_CREATED)
         print(deserializer.errors)
         return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class DetalhesEnvioDetails(APIView):
+    permission_classes = [IsConsumidorAndOwner2]
+    def get_object(self, instance, id):
+        try:
+            return DetalhesEnvio.objects.get(consumidor=instance, id=id)
+        except DetalhesEnvio.DoesNotExist:
+            raise Http404
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_consumidor(self, utilizador):
+        try:
+            return Consumidor.objects.get(utilizador=utilizador)
+        except Consumidor.DoesNotExist:
+            raise Http404
+    def get(self, request, username, id):
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        detalhesEnvio = self.get_object(consumidor, int(id))
+        if detalhesEnvio is not None:
+            serializar = DetalhesEnvioSerializerResponse(detalhesEnvio, many=False)
+            return Response(serializar.data, status=status.HTTP_200_OK)
+        elif detalhesEnvio is None:
+            return Response(status.HTTP_404_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, username, id):
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        detalhesEnvio = self.get_object(consumidor, int(id))
+        if detalhesEnvio is None:
+            return Response({'detail':f'Detalhes de envio do utilizador {username} com o id {id} não encontrados'}, status=status.HTTP_404_NOT_FOUND)
+        
+        data2 = request.data.copy()
+        data2['consumidor'] = consumidor.id
         
         
+        
+        if 'guardar_esta_morada' not in data2.keys():
+            data2['guardar_esta_morada'] = False
+        
+        
+        
+        if 'usar_informacoes_utilizador' not in data2.keys():
+            data2['usar_informacoes_utilizador'] = False
+        
+        
+        ##para verificações mais à frente
+        nome = True if data2.get('nome') is not None else False
+        pais = True if data2.get('pais') is not None else False
+        cidade = True if data2.get('cidade') is not None else False
+        morada = True if data2.get('morada') is not None else False
+        telemovel_bool = True if data2.get('telemovel') is not None else False
+        email = True if data2.get('email') is not None else False
+        
+        
+        #definiu usar informações do utilizador e algum campo que vem do  utilizador
+        if data2['usar_informacoes_utilizador'] == True and (nome == True or pais == True or cidade == True or (morada == True and utilizador.morada is not None ) or telemovel_bool == True or email == True):
+            print(utilizador.nome == data2.get('nome'))
+            print(utilizador.pais.name == data2.get('pais'))
+            print(utilizador.cidade == data2.get('cidade'))
+            print(utilizador.telemovel == data2.get('telemovel'))
+            print(utilizador.email == data2.get('email'))
+            print(data2.get('morada') == utilizador.morada)
+            print(data2.get('morada') == utilizador.morada or utilizador.morada is None)
+            if utilizador.nome == data2.get('nome') and utilizador.pais.name == data2.get('pais') and utilizador.cidade == data2.get('cidade') and utilizador.telemovel == data2.get('telemovel') and utilizador.email == data2.get('email') and (data2.get('morada') == utilizador.morada or utilizador.morada is None):
+                pass
+            
+            else:
+                erroString = "Escolheu usar as informações do utilizador, mas está a definir os campos: "
+                erroString+= "nome, " if nome else ''
+                erroString+= "pais, " if pais else ''
+                erroString+= "cidade, " if cidade else ''
+                erroString+= "morada, " if morada else ''
+                erroString+= "telemovel, " if telemovel_bool else ''
+                erroString+= "email" if email else ''
+                erroString+= ". Remova estes campos."
+                return Response({'details': erroString}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # definiu usar informacoes do utilizador. definir valores guardados no utilizador
+        if data2['usar_informacoes_utilizador'] == True:
+            data2['nome'] = utilizador.nome
+            data2['pais'] = utilizador.pais
+            data2['cidade'] = utilizador.cidade
+            if utilizador.morada is not None:
+                data2['morada'] = utilizador.morada
+            elif utilizador.morada is None and data2.get('morada') is None:
+                return Response({'details':"Escolheu usar informações do utilizador. Mas ainda não tem a sua morada guardada. Envie a sua morada, e se pretender guardar, defina 'guardar_esta_morada' igual a true!"}, status=status.HTTP_400_BAD_REQUEST)
+            if True: #esconder esta lógica para facilitar leitura do código
+                ### campo telemovel
+                telemovel = utilizador.telemovel
+                ####converter telemovel para formato internacional
+                international_phone_number = phonenumbers.format_number(telemovel, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+                ### converte para str
+                telemovel_international_str = str(international_phone_number)
+                #### atribui str ao dicionario, pq JSON  n suporta PhoneNumber
+            data2['telemovel'] = telemovel_international_str
+            data2['email'] = utilizador.email
+        
+        serializer = DetalhesEnvioSerializerRequest(detalhesEnvio, data=data2)
+        if serializer.is_valid():
+            if data2['guardar_esta_morada'] == True:
+                utilizador.morada = data2['morada']  
+                utilizador.save()          
+            serializer.save()
+            respostaSerializar = DetalhesEnvioSerializerResponse(serializer.instance)
+            return Response(respostaSerializar.data, status=status.HTTP_200_OK)
+        print(serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    def delete(self, request, username, id):
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        detalhesEnvio = self.get_object(consumidor, int(id))
+        if detalhesEnvio is None:
+            return Response({'detail':f'Detalhes de envio do utilizador {username} com o id {id} não encontrados'}, status=status.HTTP_404_NOT_FOUND)
+        detalhesEnvio.delete()
+        return Response({"details":"No content! Apagado com sucesso!"},status=status.HTTP_204_NO_CONTENT)
+
+
