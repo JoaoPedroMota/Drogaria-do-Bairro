@@ -117,15 +117,26 @@ function adicionarAoCarrinho(event, link) {
   event.preventDefault(); // Impede o redirecionamento imediato ao clicar no link
   
   var quantidadeInput = link.parentNode.querySelector('input[name="quantidade"]'); // Obtém o campo "quantidade" relacionado ao link clicado
-  var quantidade = quantidadeInput.value; // Obtém o valor do campo "quantidade"
+
+
+  // Verifica se quantidadeInput.value não é null nem undefined.
+  // Se for diferente de null e diferente de undefined, atribui o valor de quantidadeInput.value à variável quantidade.
+  // Caso contrário, atribui o valor 1 à variável quantidade como valor padrão.
+  console.log(quantidadeInput.value !== null)
+  console.log(quantidadeInput.value !== undefined)
+  var quantidade = quantidadeInput.value !== null && quantidadeInput.value !== undefined && quantidadeInput.value !== '' ? quantidadeInput.value : 1;
+
   
+  console.log(quantidade, "ola");
+
   link.setAttribute("data-quantidade", quantidade); // Atualiza o atributo personalizado "data-quantidade" do link com o novo valor
   
   var url = link.href; // Obtém o URL atual do link
   
   // Adiciona o valor do campo "quantidade" ao URL como um parâmetro de consulta
-  url += "?quantidade=" + quantidade;
-  
+  //url += "?quantidade=" + quantidade;
+  url += "&quantidade="+quantidade;
+  console.log(url)
   window.location.href = url; // Redireciona para o URL modificado
 }
 

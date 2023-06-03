@@ -420,7 +420,7 @@ class ProdutoDetailID(APIView):
         return Response(serializar.data, status=status.HTTP_200_OK)
 
 class ProdutoUnidadeProducaoList(APIView):
-    #permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]
     def get_produtos_up(self, username, identifierUP):
         try:
             user = Utilizador.objects.get(username=username)
@@ -886,35 +886,57 @@ class DetalhesEnvioList(APIView):
         if 'usar_informacoes_utilizador' not in data2.keys():
             data2['usar_informacoes_utilizador'] = False
         
-        nome = True if data2.get('nome') is not None else False
-        pais = True if data2.get('pais') is not None else False
-        cidade = True if data2.get('cidade') is not None else False
-        morada = True if data2.get('morada') is not None else False
+        nome_bool = True if data2.get('nome') is not None else False
+        pais_bool = True if data2.get('pais') is not None else False
+        cidade_bool = True if data2.get('cidade') is not None else False
+        morada_bool = True if data2.get('morada') is not None else False
         telemovel_bool = True if data2.get('telemovel') is not None else False
-        email = True if data2.get('email') is not None else False
+        email_bool = True if data2.get('email') is not None else False
+        if nome_bool and pais_bool and cidade_bool and morada_bool and telemovel_bool and email_bool: #enviou todos os campos obrigatórios
+            if (data2['usar_informacoes_utilizador'] == 'True' or data2['usar_informacoes_utilizador']==True) and (utilizador.nome != data2.get('nome') or utilizador.pais != data2.get('pais') or utilizador.cidade != data2.get('cidade') or utilizador.telemovel != data2.get('telemovel') or utilizador.email != data2.get('email') or (data2.get('morada') != utilizador.morada and utilizador.morada is not None)):
+                #escolheu usar informações do utilizador mas existe algum que não está igual
+                erroString = "Escolheu usar as informações do utilizador, mas está campos diferentes aos que tem guardados. Os campos diferentes: "
+                erroString+= "nome " if utilizador.nome != data2.get('nome') else ''
+                erroString+= "pais " if utilizador.pais != data2.get('pais') else ''
+                erroString+= "cidade " if utilizador.cidade != data2.get('cidade') else ''
+                erroString+= "morada " if (data2.get('morada') != utilizador.morada and utilizador.morada is not None) else ''
+                erroString+= "telemovel " if utilizador.telemovel != data2.get('telemovel') else ''
+                erroString+= "email" if utilizador.email != data2.get('email') else ''
+                erroString+= ". Altere estes campos para o valor que tem guardado."
+                return Response({'details': erroString}, status=status.HTTP_400_BAD_REQUEST)
         
-        if data2['usar_informacoes_utilizador'] == True and (nome == True or pais == True or cidade == True or telemovel_bool == True or email == True or (morada == True and utilizador.morada is not None )):
-            erroString = "Escolheu usar as informações do utilizador, mas está a definir os campos: "
-            erroString+= "nome, " if nome else ''
-            erroString+= "pais, " if pais else ''
-            erroString+= "cidade, " if cidade else ''
-            erroString+= "morada, " if morada else ''
-            erroString+= "telemovel, " if telemovel_bool else ''
-            erroString+= "email" if email else ''
-            erroString+= ". Remova estes campos."
-            return Response({'details': erroString}, status=status.HTTP_400_BAD_REQUEST)
         
         
+        if (data2['usar_informacoes_utilizador'] == 'True' or data2['usar_informacoes_utilizador'] == True): #escolheu usar informacoes do utilizador
+            if (utilizador.nome == data2.get('nome') or utilizador.pais.name == data2.get('pais') or utilizador.cidade == data2.get('cidade')or utilizador.telemovel == data2.get('telemovel')or utilizador.email == data2.get('email') or (data2.get('morada') == utilizador.morada and utilizador.morada is not None)):
+                pass #a informacao está toda igual?
+            elif nome_bool==False and pais_bool == False and cidade_bool == False and morada_bool == False and telemovel_bool == False and email_bool == False:
+                ###escolheu usar informação do utilizador e não enviou nenhum campo obrigatório
+                data2['nome'] = utilizador.nome
+                data2['pais'] = utilizador.pais
+                data2['cidade'] = utilizador.cidade
+                
+                if utilizador.morada is not None:
+                    data2['morada'] = utilizador.morada 
+                elif utilizador.morada is None:
+                    return Response({'morada':"Escolheu usar informações do utilizador. Mas ainda não tem a sua morada guardada. Envie a sua morada, e se pretender guardar, defina 'guardar_esta_morada' igual a true!"}, status=status.HTTP_400_BAD_REQUEST)           
+                
+                
+                if True: #esconder esta lógica para facilitar leitura do código
+                    ### campo telemovel
+                    telemovel = utilizador.telemovel
+                    ####converter telemovel para formato internacional
+                    international_phone_number = phonenumbers.format_number(telemovel, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+                    ### converte para str
+                    telemovel_international_str = str(international_phone_number)
+                    #### atribui str ao dicionario, pq JSON  n suporta PhoneNumber
+                data2['telemovel'] = telemovel_international_str
+                data2['email'] = utilizador.email
         
-        if data2['usar_informacoes_utilizador'] == True:
-            
+        if (data2['usar_informacoes_utilizador'] == 'True' or data2['usar_informacoes_utilizador'] == True) and morada_bool:
             data2['nome'] = utilizador.nome
             data2['pais'] = utilizador.pais
             data2['cidade'] = utilizador.cidade
-            if utilizador.morada is not None:
-                data2['morada'] = utilizador.morada 
-            elif utilizador.morada is None and data2.get('morada') is None:
-                return Response({'details':"Escolheu usar informações do utilizador. Mas ainda não tem a sua morada guardada. Envie a sua morada, e se pretender guardar, defina 'guardar_esta_morada' igual a true!"}, status=status.HTTP_400_BAD_REQUEST)           
             if True: #esconder esta lógica para facilitar leitura do código
                 ### campo telemovel
                 telemovel = utilizador.telemovel
@@ -925,17 +947,21 @@ class DetalhesEnvioList(APIView):
                 #### atribui str ao dicionario, pq JSON  n suporta PhoneNumber
             data2['telemovel'] = telemovel_international_str
             data2['email'] = utilizador.email
-        
+            morada = data2['morada']
+            vazio = morada.replace(" ","")
+            if vazio == '':
+                return Response({'morada':"Morada inválida. Selecione uma morada que não seja uma string vazia"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        guardar_esta_morada = data2.get('guardar_esta_morada')
         
         deserializer = DetalhesEnvioSerializerRequest(data=data2)
         if deserializer.is_valid():
-            if data2['guardar_esta_morada'] == True:
+            if guardar_esta_morada==True:
                 utilizador.morada = data2['morada']  
                 utilizador.save()          
             deserializer.save()
             respostaSerializar = DetalhesEnvioSerializerResponse(deserializer.instance)
             return Response(respostaSerializar.data, status=status.HTTP_201_CREATED)
-        print(deserializer.errors)
         return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -968,67 +994,76 @@ class DetalhesEnvioDetails(APIView):
             return Response(status.HTTP_404_BAD_REQUEST)
         return Response(status=status.HTTP_400_BAD_REQUEST)
     def put(self, request, username, id):
-        utilizador = self.get_utilizador(username)
-        consumidor = self.get_consumidor(utilizador)
-        detalhesEnvio = self.get_object(consumidor, int(id))
+        utilizador = self.get_utilizador(username) #vai buscar o utlizador
+        consumidor = self.get_consumidor(utilizador) # vai buscar consumidor
+        detalhesEnvio = self.get_object(consumidor, int(id)) # vai buscar detalhes de envio
         if detalhesEnvio is None:
             return Response({'detail':f'Detalhes de envio do utilizador {username} com o id {id} não encontrados'}, status=status.HTTP_404_NOT_FOUND)
         
-        data2 = request.data.copy()
-        data2['consumidor'] = consumidor.id
+        data2 = request.data.copy() #copia o request.data para este poder ser alterado
         
         
         
-        if 'guardar_esta_morada' not in data2.keys():
-            data2['guardar_esta_morada'] = False
+
+        
+        morada_detalhesEnvio = detalhesEnvio.morada # recebe a morada já guardada
+
+        if 'guardar_esta_morada' not in data2.keys(): # se guardar_esta_morada não estiver no pedido
+            data2['guardar_esta_morada'] = False #não é para guardar
         
         
-        
-        if 'usar_informacoes_utilizador' not in data2.keys():
-            data2['usar_informacoes_utilizador'] = False
-        
+        if 'usar_informacoes_utilizador' not in data2.keys(): # se usar_informacoes_utilizador não estiver no pedido
+            data2['usar_informacoes_utilizador'] = False #não é para usar as informacoes do utilizador
         
         ##para verificações mais à frente
-        nome = True if data2.get('nome') is not None else False
-        pais = True if data2.get('pais') is not None else False
-        cidade = True if data2.get('cidade') is not None else False
-        morada = True if data2.get('morada') is not None else False
-        telemovel_bool = True if data2.get('telemovel') is not None else False
-        email = True if data2.get('email') is not None else False
-        
-        
-        #definiu usar informações do utilizador e algum campo que vem do  utilizador
-        if data2['usar_informacoes_utilizador'] == True and (nome == True or pais == True or cidade == True or (morada == True and utilizador.morada is not None ) or telemovel_bool == True or email == True):
-            print(utilizador.nome == data2.get('nome'))
-            print(utilizador.pais.name == data2.get('pais'))
-            print(utilizador.cidade == data2.get('cidade'))
-            print(utilizador.telemovel == data2.get('telemovel'))
-            print(utilizador.email == data2.get('email'))
-            print(data2.get('morada') == utilizador.morada)
-            print(data2.get('morada') == utilizador.morada or utilizador.morada is None)
+        nome_bool = True if data2.get('nome') is not None else False # foi enviado nome no pedido?
+        pais_bool = True if data2.get('pais') is not None else False # foi enviado pais no pedido?
+        cidade_bool = True if data2.get('cidade') is not None else False # foi enviado cidade no pedido?
+        morada_bool = True if data2.get('morada') is not None else False # foi enviado morada no pedido?
+        telemovel_bool = True if data2.get('telemovel') is not None else False # foi enviado telemovel no pedido?
+        email_bool = True if data2.get('email') is not None else False # foi enviado email no pedido?
+        # usar_informacoes utilizador é igual a true, e se algum dos outros campos tiver sido enviado
+        if data2['usar_informacoes_utilizador'] == True and (
+                                                            nome_bool == True or  
+                                                            pais_bool == True or 
+                                                            cidade_bool == True or 
+                                                            (morada_bool == True or utilizador.morada is not None ) #foi enviada morada ou o utilizador tem alguma morada guardada?
+                                                            or telemovel_bool == True or email_bool == True):
             if utilizador.nome == data2.get('nome') and utilizador.pais.name == data2.get('pais') and utilizador.cidade == data2.get('cidade') and utilizador.telemovel == data2.get('telemovel') and utilizador.email == data2.get('email') and (data2.get('morada') == utilizador.morada or utilizador.morada is None):
+            #(lembrar que é para usar infos do utillizador) 
+            # o nome enviado é igual ao nome do utilizador?
+            # o nome do pais enviado é igual ao guardado no utilizador?
+            # a cidade enviada é igual é igual à guardada no utilizador?
+            # o telemóvel enviado é igual ao guardada no utilizador?
+            # o email enviado é igual ao guardada no utilizador?
+            # a morada enviada é igual à guardada no utilizador ou o utilizador não tem morada guardada?
                 pass
             
             else:
-                erroString = "Escolheu usar as informações do utilizador, mas está a definir os campos: "
-                erroString+= "nome, " if nome else ''
-                erroString+= "pais, " if pais else ''
-                erroString+= "cidade, " if cidade else ''
-                erroString+= "morada, " if morada else ''
-                erroString+= "telemovel, " if telemovel_bool else ''
-                erroString+= "email" if email else ''
-                erroString+= ". Remova estes campos."
+                erroString = "Escolheu usar as informações do utilizador. \
+                            Mas está a definir valores diferentes aos guardados na criação  da conta. \
+                            Campos diferentes aos guardados na conta: "
+                erroString+= "nome, " if utilizador.nome != data2.get('nome') else ''
+                erroString+= "pais, " if utilizador.pais.name != data2.get('pais') else ''
+                erroString+= "cidade, " if utilizador.cidade != data2.get('cidade') else ''
+                erroString+= "morada, " if utilizador.morada != data2.get('morada') else ''
+                erroString+= "telemovel, " if utilizador.telemovel != data2.get('telemovel')else ''
+                erroString+= "email" if utilizador.email != data2.get('email') else ''
+                erroString+= ". Remova estes campos ou coloque os valores guardados aquando a criação da conta."
                 return Response({'details': erroString}, status=status.HTTP_400_BAD_REQUEST)
         
-        # definiu usar informacoes do utilizador. definir valores guardados no utilizador
-        if data2['usar_informacoes_utilizador'] == True:
+        # definiu usar informacoes do utilizador e não enviou nenhum campo respetivo do utilizador. definir valores guardados no utilizador
+        if data2['usar_informacoes_utilizador'] == True and nome_bool==False and pais_bool==False and cidade_bool==False and morada_bool ==False and telemovel_bool== False  and email_bool == False:
             data2['nome'] = utilizador.nome
             data2['pais'] = utilizador.pais
             data2['cidade'] = utilizador.cidade
             if utilizador.morada is not None:
                 data2['morada'] = utilizador.morada
             elif utilizador.morada is None and data2.get('morada') is None:
-                return Response({'details':"Escolheu usar informações do utilizador. Mas ainda não tem a sua morada guardada. Envie a sua morada, e se pretender guardar, defina 'guardar_esta_morada' igual a true!"}, status=status.HTTP_400_BAD_REQUEST)
+                if morada_detalhesEnvio == '' or morada_detalhesEnvio is None:
+                    return Response({'morada':"Escolheu usar informações do utilizador. Mas ainda não tem a sua morada guardada. Envie a sua morada, e se pretender guardar, defina 'guardar_esta_morada' !"}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    data2['morada'] = morada_detalhesEnvio
             if True: #esconder esta lógica para facilitar leitura do código
                 ### campo telemovel
                 telemovel = utilizador.telemovel
@@ -1040,9 +1075,12 @@ class DetalhesEnvioDetails(APIView):
             data2['telemovel'] = telemovel_international_str
             data2['email'] = utilizador.email
         
+        
+        guardar_esta_morada = True if data2.get('guardar_esta_morada')=='True' else False
+        data2['consumidor'] = consumidor.id #atribui o id do user logado ao campo consumidor 
         serializer = DetalhesEnvioSerializerRequest(detalhesEnvio, data=data2)
         if serializer.is_valid():
-            if data2['guardar_esta_morada'] == True:
+            if guardar_esta_morada:
                 utilizador.morada = data2['morada']  
                 utilizador.save()          
             serializer.save()

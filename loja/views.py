@@ -17,7 +17,7 @@ import requests
 from django.db.models import QuerySet
 from django.contrib.auth.hashers import check_password
 from loja.api.serializers import *
-from .utils import fornecedor_required
+from .utils import fornecedor_required, consumidor_required
 
 
 import json
@@ -53,7 +53,6 @@ oauth.register(
 
 def quantosProdutosNoCarrinho(request):
     if request.user.is_authenticated and request.user.is_consumidor:
-        print("entrei!")
         sessao = requests.Session()
         sessao.cookies.update(request.COOKIES)
         url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
@@ -336,12 +335,13 @@ def criarUP(request, userName):
         if request.method == 'POST':
             formulario = criarUnidadeProducaoFormulario(request.POST)
             if formulario.is_valid():
+                cidade_upper = request.POST.get('cidade')
                 UnidadeProducao.objects.create(
                     fornecedor = fornecedor_id,
                     tipo_unidade = request.POST.get('tipo_unidade'),
                     nome = request.POST.get('nome'),
                     pais = request.POST.get('pais'),
-                    cidade = request.POST.get('cidade'),
+                    cidade = cidade_upper.upper(),
                     morada = request.POST.get('morada')
                 )
                 link = reverse('loja-perfil', args=[request.user.username])
@@ -439,7 +439,7 @@ def unidadeProducao(request, userName, id):
             
             dicionarioFornecedor = respostaFornecedor.json()
             dicionarioUtilizador = respostaUtilizador.json()
-            print(dicionarioUtilizador)
+            #print(dicionarioUtilizador)
             
             
             user_temp = Utilizador(**dicionarioUtilizador)
@@ -544,7 +544,7 @@ def editarUnidadeProducao(request, userName, id):
             if form.is_valid():
                 unidadeProducao.nome = request.POST.get('nome')
                 unidadeProducao.pais = request.POST.get('pais')
-                unidadeProducao.cidade = request.POST.get('cidade')
+                unidadeProducao.cidade = request.POST.get('cidade').upper()
                 unidadeProducao.morada = request.POST.get('morada')
                 unidadeProducao.tipo_unidade = request.POST.get('tipo_unidade')
                 unidadeProducao.save()
@@ -635,7 +635,7 @@ def editarVeiculo(request, userName, id, idVeiculo):
     fornecedor= utilizador.fornecedor
     unidadeProducao = fornecedor.unidades_producao.get(pk=id)
     veiculo = Veiculo.objects.get(pk=idVeiculo)
-    form = editarVeiculoFormulario(instance=veiculo)
+    formulario = editarVeiculoFormulario(instance=veiculo)
     if request.user.is_fornecedor:
         if request.method == 'POST':
             formulario = editarVeiculoFormulario(request.POST, instance = veiculo)
@@ -752,7 +752,7 @@ def criar_produto(request, userName):
                 messages.success(request, 'Produto criado com sucesso!')
                 return redirect('loja-perfil', userName=userName)
             else:
-                print("ERRO!!!!!!!!")
+                #print("ERRO!!!!!!!!")
                 messages.error(request, 'Erro ao criar Produto!')
         else:
             for field, errors in form.errors.items():
@@ -1033,19 +1033,28 @@ def adicionar_ao_carrinho(request, produto_id):
     Returns:
         _type_: _description_
     """
-    data = request.GET.get('preco')
-    split_values = data.split('?')
-    valor = Decimal(split_values[0])
-    quantidade = Decimal(split_values[1].split('=')[1])
-    preco_atualizado = Decimal(str(valor * quantidade))
+    # data = request.GET.get('preco')
+    # split_values = data.split('?')
+    # valor = Decimal(split_values[0])
+
+    # quantidade = Decimal(split_values[1].split('=')[1])
+    print(request.GET)
+    preco = Decimal(request.GET.get('preco'))
+    quantidade = Decimal(request.GET.get('quantidade'))
+    preco_atualizado = Decimal(preco * quantidade)
+    
     carrinho = request.session.get('carrinho', {})
     if request.user.is_authenticated and request.user.is_consumidor:
-        data = request.GET.get('preco')
-        split_values = data.split('?')
-        valor = Decimal(split_values[0])
-        quantidade = Decimal(split_values[1].split('=')[1])
-        preco_atualizado = Decimal(str(valor * quantidade))
-
+        # data = request.GET.get('preco')
+        # split_values = data.split('?')
+        # valor = Decimal(split_values[0])
+        #quantidade = Decimal(split_values[1].split('=')[1])
+        #preco_atualizado = Decimal(str(valor * quantidade))
+        preco = Decimal(request.GET.get('preco'))
+        quantidade = Decimal(request.GET.get('quantidade'))
+        preco_atualizado = Decimal(preco * quantidade)
+        
+        
         url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/produtoUP/{produto_id}/'
     
         sessao = requests.Session()
@@ -1055,15 +1064,15 @@ def adicionar_ao_carrinho(request, produto_id):
         headers = {'X-CSRFToken':csrf_token}
 
         resposta = sessao.get(url, headers=headers)
-        if resposta.status_code == 200:
+        if resposta.status_code == 200: #ja existe o produto no carrinho, logo é um put
             content = resposta.json()
             idProdutoNoCarrinho = content.get('id')
             # idCarrinho = content.get('carrinho')
             produtoUnidadeProducao = content.get('produto')
             idProdutoUnidadeProducao = produtoUnidadeProducao.get('id')
             quantidade_updated = Decimal(content.get('quantidade')) + quantidade
-            print("Quantidade antiga:", content.get('quantidade'))
-            print("Quantidade update:", quantidade_updated)
+            # print("Quantidade antiga:", content.get('quantidade'))
+            # print("Quantidade update:", quantidade_updated)
             
             atualizar_carrinho_dict_info = {
                 'produto': idProdutoUnidadeProducao,
@@ -1074,8 +1083,8 @@ def adicionar_ao_carrinho(request, produto_id):
             urlAtualizar = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/{idProdutoNoCarrinho}/'
             respostaUpdate = sessao.put(urlAtualizar, headers=headers, data = atualizar_carrinho_dict_info)
             
-            print("VALORES ATUALIZADOS:", respostaUpdate.json())
-        else:
+            # print("VALORES ATUALIZADOS:", respostaUpdate.json())
+        else: ### ainda não há o produto no carrinho logo é um post
             sessao = requests.Session()
             sessao.cookies.update(request.COOKIES)
 
@@ -1094,40 +1103,47 @@ def adicionar_ao_carrinho(request, produto_id):
             urlAtualizar = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/'
             respostaUpdate = sessao.post(urlAtualizar, headers=headers, data = atualizar_carrinho_dict_info)
         
-        # produto = ProdutoUnidadeProducao.objects.get(id=produto_id)
-        # carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
-        # produto_carrinho, created = ProdutosCarrinho.objects.get_or_create(carrinho=carrinho, produto=produto)
+        
+        if True: #garbage. só para referencia futura
+            pass
+            # produto = ProdutoUnidadeProducao.objects.get(id=produto_id)
+            # carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+            # produto_carrinho, created = ProdutosCarrinho.objects.get_or_create(carrinho=carrinho, produto=produto)
 
-        # if created:
-            
-        #     produto_carrinho.quantidade = quantidade
-        #     produto_carrinho.preco = preco_atualizado
-        #     produto_carrinho.precoKilo = valor
-        #     produto_carrinho.save()
-        #     messages.success(request, 'O produto foi adicionado ao carrinho com sucesso.')
-        # else:
-        #     # O produto já está no carrinho, então atualize a quantidade e o preço
-        #     produto_carrinho.quantidade += quantidade
-        #     produto_carrinho.preco += preco_atualizado
-        #     produto_carrinho.save()
-        #     messages.success(request, 'O produto foi atualizado com sucesso.')
-    elif request.user.is_authenticated and request.user.is_fornecedor:
+            # if created:
+                
+            #     produto_carrinho.quantidade = quantidade
+            #     produto_carrinho.preco = preco_atualizado
+            #     produto_carrinho.precoKilo = valor
+            #     produto_carrinho.save()
+            #     messages.success(request, 'O produto foi adicionado ao carrinho com sucesso.')
+            # else:
+            #     # O produto já está no carrinho, então atualize a quantidade e o preço
+            #     produto_carrinho.quantidade += quantidade
+            #     produto_carrinho.preco += preco_atualizado
+            #     produto_carrinho.save()
+            #     messages.success(request, 'O produto foi atualizado com sucesso.')
+    elif request.user.is_authenticated and request.user.is_fornecedor: #é um fornecedor. não devia estar aqui. sai fora
         return redirect('loja-home')
-    else:
-        data = request.GET.get('preco')
-        split_values = data.split('?')
-        valor = float(split_values[0])
-        quantidade = float(split_values[1].split('=')[1])
-        preco_atualizado = valor * quantidade
+    else: #utilizador não autenticado
+        # data = request.GET.get('preco')
+        # split_values = data.split('?')
+        # valor = float(split_values[0])
+        # quantidade = float(split_values[1].split('=')[1])
+        preco = Decimal(request.GET.get('preco'))
+        quantidade = Decimal(request.GET.get('quantidade'))
+        # preco_atualizado = Decimal(preco * quantidade)
+        
+        preco_atualizado = preco * quantidade
         produto_id_nao_autent = str(produto_id)
 
         if produto_id_nao_autent in carrinho.keys():
-            carrinho[produto_id_nao_autent]['quantidade'] += quantidade
-            carrinho[produto_id_nao_autent]['precoQuantidade'] += preco_atualizado
+            carrinho[produto_id_nao_autent]['quantidade'] += float(quantidade)
+            carrinho[produto_id_nao_autent]['precoQuantidade'] += float(preco_atualizado)
         else:
             carrinho[produto_id_nao_autent] = { 
-                    'quantidade': quantidade,
-                    'precoQuantidade' : preco_atualizado
+                    'quantidade': float(quantidade),
+                    'precoQuantidade' : float(preco_atualizado)
             }
         
         request.session['carrinho'] = carrinho
@@ -1200,7 +1216,7 @@ def removerAssociaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProduca
             if resposta.text:
                 conteudo = resposta.json()
                 detial = conteudo.get('detail', 'Erro desconhecido ao apagar a associação')
-                print(conteudo)
+                # print(conteudo)
         else:
             print("Erro ao apagar associação")
     return redirect('loja-unidadeProducao', userName=request.user.username, id=idUnidadeProducao)
@@ -1216,7 +1232,7 @@ def criarAssociacaoProdutoUP(request):
         # try:
         if form.is_valid():
             imagem = form.cleaned_data['imagem_produto']
-            print("\n\n",type(imagem),"\n\n")
+            # print("\n\n",type(imagem),"\n\n")
             produto = form.cleaned_data['produto']
             unidade_producao = form.cleaned_data['unidade_producao']
             descricao = form.cleaned_data['descricao']
@@ -1288,7 +1304,7 @@ def adicionarProdutosCarrinhoDpsDeLogar(request):
         informacao = carrinhoSessao[idProduto]
         quantidade = informacao['quantidade']
         
-        print("CHEGUEI AQUI")
+        # print("CHEGUEI AQUI")
         url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/produtoUP/{idProduto}/'
         sessao = requests.Session()
         sessao.cookies.update(request.COOKIES)
@@ -1332,13 +1348,119 @@ def adicionarProdutosCarrinhoDpsDeLogar(request):
     request.session['carrinho'] = {}
     
     
-@login_required(login_url='loja-login')
+@consumidor_required
 def detalhesEnvio(request):
     produtosCarrinho = quantosProdutosNoCarrinho(request)
-    context = {"produtosCarrinho":produtosCarrinho}
-    if request.user.is_authenticated and request.user.is_consumidor:
-        formulario = DetalhesEnvioForm(utilizador=request.user)
-        context['formulario'] = formulario
-        return render(request, 'loja/detalhesEnvio.html', context)
-    else:
-        return redirect('loja-home')
+    context = {"produtosCarrinho":produtosCarrinho} # "produtosCarrinho":produtosCarrinho
+    formulario = DetalhesEnvioForm(utilizador=request.user)
+    url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/detalhes_envio/'
+
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+
+    resposta = sessao.get(url, headers=headers)
+
+    if resposta.content:
+        conteudo = resposta.json()
+        primeiro = next(iter(conteudo))
+        formulario.initial = {
+            'nome': primeiro['nome'],
+            'pais': primeiro['pais'],
+            'cidade': primeiro['cidade'],
+            'morada': primeiro['morada'],
+            'telemovel': primeiro['telemovel'],
+            'email': primeiro['email'],
+            'instrucoes_entrega': primeiro['instrucoes_entrega'],
+            'usar_informacoes_utilizador': primeiro['usar_informacoes_utilizador'],
+            'guardar_esta_morada': primeiro['guardar_esta_morada']
+        }
+
+    if request.method=="POST":
+        formulario = DetalhesEnvioForm(request.POST, utilizador=request.user)
+        
+        dicionario_mutavel = formulario.data.copy()
+        
+        dicionario_mutavel['consumidor'] = request.user.consumidor
+        dicionario_mutavel['cidade'] = formulario.data['cidade'].upper()
+        print(dicionario_mutavel)
+        formulario.data = dicionario_mutavel
+        if formulario.is_valid():
+            
+            if True: ##esconder campos que vai buscar
+                nome = formulario.cleaned_data["nome"]
+                pais_temp = formulario.cleaned_data['pais']
+                if type(pais_temp) == type('ola'):
+                    pais = pais_temp
+                else:
+                    pais = pais_temp.name
+                cidade = formulario.cleaned_data['cidade']
+                morada = formulario.cleaned_data['morada']
+                
+                ### campo telemovel
+                telemovel = formulario.cleaned_data['telemovel']
+                ####converter telemovel para formato internacional
+                international_phone_number = phonenumbers.format_number(telemovel, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+                ### converte para str
+                telemovel_international_str = str(international_phone_number)
+                #### atribui str ao dicionario, pq JSON  n suporta PhoneNumber
+                
+                
+                
+                telemovel = telemovel_international_str
+                email = formulario.cleaned_data['email']
+                instrucoes_entrega = formulario.cleaned_data['instrucoes_entrega']
+                usar_informacoes_utilizador = formulario.cleaned_data['usar_informacoes_utilizador']
+                guardar_esta_morada = formulario.cleaned_data['guardar_esta_morada']
+
+            if resposta.status_code == 200: ##houve resposta
+                
+
+                detalhes_entrega={
+                    "nome":nome,
+                    "pais":pais,
+                    "cidade":cidade,
+                    "telemovel":telemovel,
+                    "morada":morada,
+                    "email" : email,
+                    "instrucoes_entrega": instrucoes_entrega,
+                    "guardar_esta_morada":guardar_esta_morada,
+                    "usar_informacoes_utilizador": usar_informacoes_utilizador
+                }
+                
+                ### pedido
+                url += f"{primeiro['id']}/"
+                resposta = sessao.put(url, headers=headers, data=detalhes_entrega)
+                
+                
+                
+                if resposta.status_code == 200: #correu tudo bem?
+                    return redirect('loja-perfil', userName=request.user.username)
+                else: #deu erro
+                    formulario.add_error('nome',f'Erro: {resposta}')
+                    
+            else: #ainda não existe detalhes de envio
+                detalhes_entrega={
+                    "nome":nome,
+                    "pais":pais,
+                    "cidade":cidade.upper(),
+                    "telemovel":telemovel,
+                    "morada":morada,
+                    "email" : email,
+                    "instrucoes_entrega": instrucoes_entrega,
+                    "usar_informacoes_utilizador": usar_informacoes_utilizador,
+                    "guardar_esta_morada":guardar_esta_morada
+                }
+                resposta = sessao.post(url, headers=headers, data=detalhes_entrega)
+                if resposta.status_code == 201:
+                    return redirect('loja-perfil', userName=request.user.username)
+                else:
+                    print(resposta.json())
+                    formulario.add_error('nome', f'Erro:{resposta}')
+        else:
+            context = {'formulario': formulario}
+            return render(request, 'loja/detalhesEnvio.html', context)   
+    context['formulario'] = formulario
+    return render(request, 'loja/detalhesEnvio.html', context)
+
