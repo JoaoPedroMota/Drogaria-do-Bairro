@@ -688,7 +688,7 @@ class Encomenda(models.Model):
 class ProdutosEncomenda(models.Model):
     encomenda = models.ForeignKey(Encomenda, on_delete=models.CASCADE, null=False, related_name="produtos")
     produtos = models.ForeignKey(ProdutoUnidadeProducao, on_delete=models.CASCADE, null=False, related_name='Encomendado')
-    unidadeProducao = models.ForeignKey(UnidadeProducao, on_delete=models.CASCADE, null=False, related_name='Encomendas')
+    unidadeProducao = models.ForeignKey(UnidadeProducao, on_delete=models.CASCADE, null=True, related_name='Encomendas')
     quantidade = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank = False, default= 1)
     preco = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     precoKilo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)

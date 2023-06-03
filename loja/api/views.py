@@ -1130,8 +1130,8 @@ class EncomendaList(APIView):
         utilizador = self.get_utilizador(username)
         consumidor = self.get_consumidor(utilizador)
         encomenda_objetos = self.get_object(consumidor)
-        if encomenda_objetos.exists():
-            serializar = DetalhesEnvioSerializerResponse(encomenda_objetos, many=True)
+        if encomenda_objetos is not None:
+            serializar = EncomendaSerializer(encomenda_objetos, many=True)
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(serializar.data,status=status.HTTP_200_OK)
@@ -1206,20 +1206,23 @@ class EncomendaDetail(APIView):
         utilizador = self.get_utilizador(username)
         consumidor = self.get_consumidor(utilizador)
         encomenda_objetos = self.get_object(consumidor,idEncomenda)
-        if encomenda_objetos.exists():
-            serializar = DetalhesEnvioSerializerResponse(encomenda_objetos, many=False)
+        print(type(encomenda_objetos))
+        if encomenda_objetos is not None:
+            serializar = EncomendaSerializer(encomenda_objetos, many=False)
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(serializar.data,status=status.HTTP_200_OK)
 
     def put(self, request, username, idEncomenda, format=None):
+        data2=request.data.copy()
+        
         utilizador = self.get_utilizador(username)
         consumidor = self.get_consumidor(utilizador)
         encomenda_objetos = self.get_object(consumidor,idEncomenda)
 
-        if encomenda_objetos.exists():
-
-            deserializer=EncomendaSerializer(encomenda_objetos, data=request.data)
+        if encomenda_objetos is not None:
+            data2["consumidor"]=consumidor.id
+            deserializer=EncomendaSerializer(encomenda_objetos, data=data2)
             if deserializer.is_valid():
                 deserializer.save()
                 return Response(deserializer.data, status=status.HTTP_200_OK)
@@ -1231,7 +1234,7 @@ class EncomendaDetail(APIView):
         consumidor = self.get_consumidor(utilizador)
         encomenda_objetos = self.get_object(consumidor,idEncomenda)
 
-        if encomenda_objetos.exists:
+        if encomenda_objetos.exists():
             encomenda_objetos.delete()
             return Response(f"Encomenda do consumidor '{consumidor}' apagada com sucesso!",status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -1274,7 +1277,7 @@ class ProdutosEncomendaList(APIView):
           
     def get(self, request, username,idEncomenda, format=None):
 
-        produtos_encomenda_objetos = self.produtos_get_object(idEncomenda)
+        produtos_encomenda_objetos = self.get_object(idEncomenda)
         if produtos_encomenda_objetos.exists():
             serializar = ProdutosEncomendaSerializer(produtos_encomenda_objetos, many=True)
         else:
@@ -1296,12 +1299,12 @@ class ProdutosEncomendaList(APIView):
         idProdutoUP=data2["produtos"]
 
         produto=self.getProdutoUP(idProdutoUP)
-        if produto.exists():
+        if produto is not None:
             unidadeProducao=produto.unidade_producao
             precoKilo=produto.preco_a_granel if produto.preco_a_granel is not None else produto.preco_por_unidade
             quantidade=data2["quantidade"]
             preco=precoKilo*quantidade
-            data2["unidadeProducao"]=unidadeProducao
+            data2["unidadeProducao"]=unidadeProducao.id
             data2["precoKilo"]=precoKilo
             data2["preco"]=preco
 
