@@ -23,6 +23,7 @@ urlpatterns = [
     path('<str:username>/consumidor/carrinho/<int:idProdutoCart>/', views.ProdutosCarrinhoDetail.as_view()),
     path('<str:username>/consumidor/carrinho/produtoUP/<int:idProdutoUnidadeProducao>/', views.ProdutosCarrinhoDetailProdutoUP.as_view()),
     path('<str:username>/consumidor/detalhes_envio/', views.DetalhesEnvioList.as_view()),
+    path('<str:username>/consumidor/detalhes_envio/<int:id>/', views.DetalhesEnvioDetails.as_view()),    
 
     path('<str:username>/consumidor/encomenda/', views.EncomendaList.as_view()),
     path('<str:username>/consumidor/encomenda/<int:idEncomenda>/', views.EncomendaDetail.as_view()),
@@ -30,6 +31,10 @@ urlpatterns = [
     path('<str:username>/consumidor/encomenda/<int:idEncomenda>/produtos/<int:idProdutoEncomenda>/', views.ProdutosEncomendaDetail.as_view()),
     
 
+
+
+
+    
 
     
     # fornecedores

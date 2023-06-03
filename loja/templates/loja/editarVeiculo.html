@@ -20,13 +20,16 @@
             {% csrf_token %}
             {% for field in form %}
             {{ field.errors }}
+            <br>
+            <p><label for="{{ field.name }}">{{ field.label }}</label></p>
+            <br>
             <input type="{{ field.field.widget.input_type }}"
                    placeholder="{{ field.label }}"
                    name="{{ field.name }}"
                    id="{{ field.id_for_label }}"
                    {% if field.value %}value="{{ field.value }}"{% endif %}>
         {% endfor %}
-            <input type="submit" id="login" value="EDITAR VEÍCULO">
+            <input type="submit" id="login" value="Guardar">
     </div>
       
     <a href="{% url 'loja-unidadeProducao' userName=request.user.username id=unidadeProducao.id %}" class="layout__boxTitle">

@@ -51,17 +51,24 @@
                   {% csrf_token %}
                   {% for field in formulario %}
                   <div class="form-group">
+                    <p><label for="{{ field.name }}">{{ field.label }}</label></p>
                     {% if field.field.widget.input_type != 'file' %}
                     <div class="input-wrapper">
                       {% if field.name == 'produto' or field.name == 'unidade_producao' or field.name == 'unidade_medida' or field.name == 'unidade_Medida_Por_Unidade' %}
                       <select name="{{ field.name }}">
-                          <option value="" {% if not field.value %}selected{% endif %}>{{ field.name }}</option>
+                          <option value="" {% if not field.value %}selected{% endif %}>{{ field.label }}</option>
                           {% for choice in field.field.choices %}
                               <option value="{{ choice.0 }}" {% if field.value == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
                           {% endfor %}
                       </select>
                       {% else %}
-                          <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.name }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
+                      {% if field.field.widget.input_type == 'number' %}
+                          <!-- <input type="number" name="{{ field.name }}" placeholder="{{ field.field.label }}" {% if field.value %}value="{{ field.value }}"{% endif %}> -->
+                          <input type="number" step="any" min="0.1", name="{{field.name}}" placeholder="{{ field.field.label }}" >
+                      {% else %}
+                      <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.field.label }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
+
+                      {% endif %}
                       {% endif %}
                       
                       {% if field.help_text %}
@@ -84,7 +91,15 @@
                   
                   <input type="submit" id="login" value="GUARDAR E ASSOCIAR">
                 </form>
-                
+                <a href="{% url 'loja-perfil' userName=request.user.username  %}" class="layout__boxTitle">
+                  <div  class="container">
+                      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+                      <title>arrow-left</title>
+                      <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
+                      </svg>
+                      <h6>Voltar</h6>
+                  </div>
+              </a>
                   
 
                  

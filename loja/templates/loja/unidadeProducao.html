@@ -73,7 +73,7 @@
                                             <td>{{ veiculo.tipo_veiculo }}</td>
                                             <td>{{ veiculo.estado_veiculo }}</td>
                                             <td>
-                                                <form action="{% url 'loja-editarVeiculo' userName=request.user.username id=unidadeProducao idVeiculo=veiculo.id %}" method="post">
+                                                <form action="{% url 'loja-editarVeiculo' userName=request.user.username id=unidadeProducao idVeiculo=veiculo.id %}" method="get">
                                                     {% csrf_token %}
                                                     <button type="submit" class="btn btn-info btn-sm">Editar</button>
                                                 </form>

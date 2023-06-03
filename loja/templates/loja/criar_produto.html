@@ -16,6 +16,7 @@
               <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 {% for field in form %}
+
                 <div class="form-group">
                   {% if field.errors %}
                   <ul class="field-error-list">
@@ -24,6 +25,7 @@
                     {% endfor %}
                   </ul>
                   {% endif %}
+                  <p><label for="{{ field.name }}">{{ field.label }}</label></p>
                   {% if field.name == 'categoria' %}
                   <select name="{{ field.name }}">
                     <option value="" {% if not field.value %}selected{% endif %}>Categoria</option>
@@ -38,7 +40,15 @@
                 {% endfor %}
                 <input type="submit" id="login" value="SALVAR">
               </form>
-
+              <a href="{% url 'loja-perfil' userName=request.user.username  %}" class="layout__boxTitle">
+                <div  class="container">
+                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+                    <title>arrow-left</title>
+                    <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
+                    </svg>
+                    <h6>Voltar</h6>
+                </div>
+            </a>
 
 
     
