@@ -694,6 +694,10 @@ class DetalhesEnvio(models.Model):
     usar_informacoes_utilizador = models.BooleanField(help_text='Usar informações guardadas ao criar conta?')
     guardar_esta_morada = models.BooleanField(default=False, help_text='Deseja guardar esta morada para futuras encomendas?')
     consumidor = models.ForeignKey(Consumidor,  null=True, blank=False, on_delete=models.CASCADE, related_name='detalhes_envio')
+    
+    def __str__(self):
+        return f"Detalhes de envio Consumidor: {self.consumidor}"
+    
     class Meta:
         verbose_name = "Detalhes de Envio"
         verbose_name_plural = "Detalhes de Envios"
