@@ -1,7 +1,9 @@
 from django.contrib import admin
 
 #from .models import Utilizador, Consumidor, Fornecedor, Veiculo, UnidadeProducao
-from .models import Utilizador, Consumidor, Fornecedor, Veiculo, UnidadeProducao, Produto, Categoria, Opcao,ProdutoOpcao, DetalhesEnvio,CategoriaAtributo, Atributo, ProdutoUnidadeProducao, Carrinho, ProdutosCarrinho, Encomenda, ProdutosEncomenda
+
+from .models import *
+
 from .imagem import Imagem
 
 

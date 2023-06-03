@@ -1,6 +1,6 @@
 ### APP loja #####
 ### models.py ###
-from loja.models import Utilizador, Consumidor, Fornecedor, UnidadeProducao, Veiculo, Categoria, Produto, Carrinho, ProdutoUnidadeProducao, ProdutosCarrinho, DetalhesEnvio
+from loja.models import *
 from .utilidades_api import categorias_nao_pai
 #### DJANGO ######
 from django.http import Http404
@@ -21,7 +21,7 @@ from rest_framework.response import Response
 from decimal import Decimal
 #### DENTRO DA APP #####
 ### serializers.py ###
-from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer, ProdutoSerializerRequest, TemProdutoNoCarrinhoSerializer, DetalhesEnvioSerializerRequest, DetalhesEnvioSerializerResponse
+from .serializers import *
 ### permissions.py ###
 from .permissions import IsOwnerOrReadOnly,IsOwner ,IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly, IsConsumidorAndOwner, IsConsumidorAndOwner2
 ####
@@ -257,7 +257,7 @@ class ConsumidoresDetail(APIView):
     """
     Devolve  uma instância de Consumidor
     """
-    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    #permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     def get_object(self, identifier):
         try:
             utilizador_temp = Utilizador.objects.get(username=identifier)
@@ -1001,11 +1001,8 @@ class DetalhesEnvioDetails(APIView):
             return Response({'detail':f'Detalhes de envio do utilizador {username} com o id {id} não encontrados'}, status=status.HTTP_404_NOT_FOUND)
         
         data2 = request.data.copy() #copia o request.data para este poder ser alterado
-        
-        
-        
 
-        
+##########################NOVO####################
         morada_detalhesEnvio = detalhesEnvio.morada # recebe a morada já guardada
 
         if 'guardar_esta_morada' not in data2.keys(): # se guardar_esta_morada não estiver no pedido
@@ -1088,6 +1085,315 @@ class DetalhesEnvioDetails(APIView):
             return Response(respostaSerializar.data, status=status.HTTP_200_OK)
         print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EncomendaList(APIView):
+    permission_classes = [IsConsumidorAndOwner2]
+    #permission_classes = [IsAuthenticated]
+    def get_DetalhesEnvio(self, instance, pk):
+        try:
+            return DetalhesEnvio.objects.filter(consumidor=instance,id=pk)
+        except DetalhesEnvio.DoesNotExist:
+            raise Http404
+
+    def get_object(self, instance):
+        try:
+            return Encomenda.objects.filter(consumidor=instance)
+        except Encomenda.DoesNotExist:
+            raise Http404
+        
+
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_consumidor(self, utilizador):
+        try:
+            return Consumidor.objects.get(utilizador=utilizador)
+        except Consumidor.DoesNotExist:
+            raise Http404
+
+    def getCarrinho(self,consumidor):
+        try:
+            return Carrinho.objects.get(consumidor=consumidor)
+        except Carrinho.DoesNotExist:
+            raise Http404
+
+    def getProdutosCarrinho(self,carrinho):
+        try:
+            return ProdutosCarrinho.objects.filter(carrinho=carrinho)
+        except ProdutosCarrinho.DoesNotExist:
+            raise Http404
+          
+    def get(self, request, username, format=None):
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        encomenda_objetos = self.get_object(consumidor)
+        if encomenda_objetos is not None:
+            serializar = EncomendaSerializer(encomenda_objetos, many=True)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data,status=status.HTTP_200_OK)
+
+
+    def post(self, request, username, format=None):
+        utilizador = self.get_utilizador(username)
+        data2 = request.data.copy()
+
+            
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+
+        carrinho=self.getCarrinho(consumidor)
+        produtosCarrinho=self.getProdutosCarrinho(carrinho)
+
+        total=0
+        for produto in produtosCarrinho:
+            total+=produto.preco
+
+        data2["consumidor"]=consumidor.id
+        data2["valor_total"]=total
+
+        deserializer = EncomendaSerializer(data=data2)
+
+        if deserializer.is_valid():
+           
+            deserializer.save()
+            return Response(deserializer.data, status=status.HTTP_201_CREATED)
+        print(deserializer.errors)
+        return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class EncomendaDetail(APIView):
+    permission_classes = [IsConsumidorAndOwner2]
+    def get_DetalhesEnvio(self, instance):
+        try:
+            return DetalhesEnvio.objects.filter(consumidor=instance)
+        except DetalhesEnvio.DoesNotExist:
+            raise Http404
+
+    def get_object(self, consumidor, instance):
+        try:
+            return Encomenda.objects.get(id=instance, consumidor=consumidor)
+        except Encomenda.DoesNotExist:
+            raise Http404
+        
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_consumidor(self, utilizador):
+        try:
+            return Consumidor.objects.get(utilizador=utilizador)
+        except Consumidor.DoesNotExist:
+            raise Http404
+
+    def getCarrinho(self,consumidor):
+        try:
+            return Carrinho.objects.get(consumidor=consumidor)
+        except Carrinho.DoesNotExist:
+            raise Http404
+
+    def getProdutosCarrinho(self,carrinho):
+        try:
+            return ProdutosCarrinho.objects.get(carrinho=carrinho)
+        except ProdutosCarrinho.DoesNotExist:
+            raise Http404
+          
+    def get(self, request, username, idEncomenda, format=None):
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        encomenda_objetos = self.get_object(consumidor,idEncomenda)
+        print(type(encomenda_objetos))
+        if encomenda_objetos is not None:
+            serializar = EncomendaSerializer(encomenda_objetos, many=False)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data,status=status.HTTP_200_OK)
+
+    def put(self, request, username, idEncomenda, format=None):
+        data2=request.data.copy()
+        
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        encomenda_objetos = self.get_object(consumidor,idEncomenda)
+
+        if encomenda_objetos is not None:
+            data2["consumidor"]=consumidor.id
+            deserializer=EncomendaSerializer(encomenda_objetos, data=data2)
+            if deserializer.is_valid():
+                deserializer.save()
+                return Response(deserializer.data, status=status.HTTP_200_OK)
+            return Response(deserializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, username,idEncomenda, format=None):
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        encomenda_objetos = self.get_object(consumidor,idEncomenda)
+
+        if encomenda_objetos.exists():
+            encomenda_objetos.delete()
+            return Response(f"Encomenda do consumidor '{consumidor}' apagada com sucesso!",status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+class ProdutosEncomendaList(APIView):
+    #permission_classes = [IsConsumidorAndOwner2]
+
+    def get_object(self, instance):
+        try:
+            return ProdutosEncomenda.objects.filter(encomenda=instance)
+        except ProdutosEncomenda.DoesNotExist:
+            raise Http404
+        
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_consumidor(self, utilizador):
+        try:
+            return Consumidor.objects.get(utilizador=utilizador)
+        except Consumidor.DoesNotExist:
+            raise Http404
+
+    def getCarrinho(self,consumidor):
+        try:
+            return Carrinho.objects.get(consumidor=consumidor)
+        except Carrinho.DoesNotExist:
+            raise Http404
+
+    def getProdutosCarrinho(self,carrinho):
+        try:
+            return ProdutosCarrinho.objects.get(carrinho=carrinho)
+        except ProdutosCarrinho.DoesNotExist:
+            raise Http404
+          
+    def get(self, request, username,idEncomenda, format=None):
+
+        produtos_encomenda_objetos = self.get_object(idEncomenda)
+        if produtos_encomenda_objetos.exists():
+            serializar = ProdutosEncomendaSerializer(produtos_encomenda_objetos, many=True)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data,status=status.HTTP_200_OK)
+
+
+    def getProdutoUP(self, idProduto):
+        try:
+            return ProdutoUnidadeProducao.objects.get(id=idProduto)
+        except ProdutoUnidadeProducao.DoesNotExist:
+            raise Http404
+
+    def post(self, request, username, idEncomenda, format=None):
+
+        data2 = request.data.copy()
+
+        data2["encomenda"]=idEncomenda
+        idProdutoUP=data2["produtos"]
+
+        produto=self.getProdutoUP(idProdutoUP)
+        if produto is not None:
+            unidadeProducao=produto.unidade_producao
+            precoKilo=produto.preco_a_granel if produto.preco_a_granel is not None else produto.preco_por_unidade
+            quantidade=data2["quantidade"]
+            preco=precoKilo*quantidade
+            data2["unidadeProducao"]=unidadeProducao.id
+            data2["precoKilo"]=precoKilo
+            data2["preco"]=preco
+
+            deserializer = ProdutosEncomendaSerializer(data=data2)
+
+            if deserializer.is_valid():
+                deserializer.save()
+                return Response(deserializer.data, status=status.HTTP_201_CREATED)
+            print(deserializer.errors)
+            return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"details":"Produto não encontrado"},status=status.HTTP_404_NOT_FOUND)
+    
+
+class ProdutosEncomendaDetail(APIView):
+    #permission_classes = [IsConsumidorAndOwner2]
+
+    def get_object(self, instance):
+        try:
+            return ProdutosEncomenda.objects.get(id=instance)
+        except ProdutosEncomenda.DoesNotExist:
+            raise Http404
+        
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_consumidor(self, utilizador):
+        try:
+            return Consumidor.objects.get(utilizador=utilizador)
+        except Consumidor.DoesNotExist:
+            raise Http404
+
+    def getCarrinho(self,consumidor):
+        try:
+            return Carrinho.objects.get(consumidor=consumidor)
+        except Carrinho.DoesNotExist:
+            raise Http404
+
+    def getProdutosCarrinho(self,carrinho):
+        try:
+            return ProdutosCarrinho.objects.get(carrinho=carrinho)
+        except ProdutosCarrinho.DoesNotExist:
+            raise Http404
+          
+    def get(self, request, username,idEncomenda,idProdutoEncomenda, format=None):
+
+        produtos_encomenda_objetos = self.produtos_get_object(idProdutoEncomenda)
+        if produtos_encomenda_objetos.exists():
+            serializar = ProdutosEncomendaSerializer(produtos_encomenda_objetos, many=False)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data,status=status.HTTP_200_OK)
+
+    def getProdutoUP(self, idProduto):
+        try:
+            return ProdutoUnidadeProducao.objects.get(id=idProduto)
+        except ProdutoUnidadeProducao.DoesNotExist:
+            raise Http404
+        
+    def put(self, request, username, idEncomenda,idProdutoEncomenda, format=None):
+
+        produts_encomenda_objetos = self.get_object(idProdutoEncomenda)
+
+        if produts_encomenda_objetos.exists():
+
+            deserializer=EncomendaSerializer(produts_encomenda_objetos, data=request.data)
+            if deserializer.is_valid():
+                deserializer.save()
+                return Response(deserializer.data, status=status.HTTP_200_OK)
+            return Response(deserializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, username,idEncomenda,idProdutoEncomenda, format=None):
+
+        produts_encomenda_objetos = self.get_object(idProdutoEncomenda)
+
+        if produts_encomenda_objetos.exists():
+            idProdutoUP=produts_encomenda_objetos.id
+            produtoUP=self.getProdutoUP(idProdutoUP)
+            produts_encomenda_objetos.delete()
+            return Response(f"{produtoUP}' encomendado, cancelado com sucesso!",status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+        
+
+        
+
+
     
     
     def delete(self, request, username, id):

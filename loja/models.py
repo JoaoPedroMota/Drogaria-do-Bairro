@@ -660,21 +660,53 @@ class ProdutosCarrinho(models.Model):
 
 
 class Encomenda(models.Model):
+
     consumidor = models.ForeignKey(Consumidor, on_delete=models.CASCADE, null=False, related_name="encomendas")
+    detalhes_envio = models.ForeignKey('DetalhesEnvio', on_delete=models.CASCADE, null=True, related_name='encomendas')
+    valor_total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    updated = models.DateTimeField(auto_now=True, null=True, blank=False)
+    created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
+
+    STATUS_CHOICES = [
+        ('Em processamento', 'Em processamento'),
+        ('Enviado', 'Enviado'),
+        ('Entregue', 'Entregue'),
+        ('Cancelado', 'Cancelado'),
+    ]
+    estado = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Em processamento')
     class Meta:
         verbose_name = "Encomenda"
         verbose_name_plural = "Encomendas"
         ordering=['id']
 
+    def __str__(self):
+        return f'Encomenda de {self.consumidor} - nº {self.id} '
+
+
+
 
 class ProdutosEncomenda(models.Model):
     encomenda = models.ForeignKey(Encomenda, on_delete=models.CASCADE, null=False, related_name="produtos")
     produtos = models.ForeignKey(ProdutoUnidadeProducao, on_delete=models.CASCADE, null=False, related_name='Encomendado')
+    unidadeProducao = models.ForeignKey(UnidadeProducao, on_delete=models.CASCADE, null=True, related_name='Encomendas')
+    quantidade = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank = False, default= 1)
+    preco = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    precoKilo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    STATUS_CHOICES = [
+        ('Em processamento', 'Em processamento'),
+        ('Enviado', 'Enviado'),
+        ('Entregue', 'Entregue'),
+        ('Cancelado', 'Cancelado'),
+    ]
+    estado = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Em processamento')
+    updated = models.DateTimeField(auto_now=True, null=True, blank=False)
+    created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
+
     class Meta:
         verbose_name = "Produtos Encomendados"
         verbose_name_plural = "Produtos Encomendados"
         ordering = ['id']
-        
+
         
         
         
@@ -693,6 +725,7 @@ class DetalhesEnvio(models.Model):
     instrucoes_entrega = models.TextField(null=True, blank=True, max_length=500)
     usar_informacoes_utilizador = models.BooleanField(help_text='Usar informações guardadas ao criar conta?')
     guardar_esta_morada = models.BooleanField(default=False, help_text='Deseja guardar esta morada para futuras encomendas?')
+
     consumidor = models.ForeignKey(Consumidor,  null=True, blank=False, on_delete=models.CASCADE, related_name='detalhes_envio')
     
     def __str__(self):
@@ -702,3 +735,4 @@ class DetalhesEnvio(models.Model):
         verbose_name = "Detalhes de Envio"
         verbose_name_plural = "Detalhes de Envios"
         ordering = ['id']
+
