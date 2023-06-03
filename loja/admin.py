@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 #from .models import Utilizador, Consumidor, Fornecedor, Veiculo, UnidadeProducao
-from .models import Utilizador, Consumidor, Fornecedor, Veiculo, UnidadeProducao, Produto, Categoria, Opcao,ProdutoOpcao, CategoriaAtributo, Atributo, ProdutoUnidadeProducao, Carrinho, ProdutosCarrinho, Encomenda, ProdutosEncomenda
+from .models import Utilizador, Consumidor, Fornecedor, Veiculo, UnidadeProducao, Produto,DetalhesEnvio, Categoria, Opcao,ProdutoOpcao, CategoriaAtributo, Atributo, ProdutoUnidadeProducao, Carrinho, ProdutosCarrinho, Encomenda, ProdutosEncomenda
 from .imagem import Imagem
 
 
@@ -40,3 +40,4 @@ admin.site.register(ProdutosEncomenda, MyModel)
 
 admin.site.register(Opcao, MyModel)
 admin.site.register(ProdutoOpcao, MyModel)
+admin.site.register(DetalhesEnvio, MyModel)

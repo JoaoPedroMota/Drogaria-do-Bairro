@@ -2,7 +2,7 @@ import logging
 from rest_framework.serializers import ModelSerializer, Field, SerializerMethodField, ValidationError
 from rest_framework.fields import ImageField
 #### MODELOS ####
-from loja.models import Utilizador, Consumidor, UnidadeProducao, Fornecedor, Veiculo, Produto, Categoria, Carrinho, ProdutosCarrinho, ProdutoUnidadeProducao, DetalhesEnvio
+from loja.models import *
 from .utilidades_api import categorias_nao_pai
 #######
 from django_countries.fields import CountryField
@@ -500,5 +500,13 @@ class DetalhesEnvioSerializerResponse(ModelSerializer):
         model = DetalhesEnvio
         fields = ["nome_morada", 'nome', 'pais', 'cidade', 'telemovel', 'email', 'morada', 'instrucoes_entrega']#,"consumidor"]
          
+class EncomendaSerializer(ModelSerializer):
+    class Meta:
+        model = Encomenda
+        fields = ["id","consumidor", "detalhes_envio","valor_total","updated","created","estado"]
 
+class ProdutosEncomendaSerializer(ModelSerializer):
+    class Meta:
+        model = ProdutosEncomenda
+        fields = ["id","encomenda", "produtos","unidadeProducao","quantidade","preco","precoKilo","estado","updated","created"]
 

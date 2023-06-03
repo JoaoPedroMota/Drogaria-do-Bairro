@@ -20,6 +20,14 @@ from loja.api.serializers import *
 from .utils import fornecedor_required
 
 
+import requests
+from django.contrib import messages
+from django.shortcuts import redirect
+from decimal import Decimal
+from .models import Encomenda, ProdutosEncomenda, ProdutoUnidadeProducao
+
+
+
 import json
 from authlib.integrations.django_client import OAuth
 from django.conf import settings
@@ -101,9 +109,9 @@ def about(request):
     return render(request, 'loja/about.html', context)
 
 
-def checkout(request):
-    context = {}
-    return render(request, 'loja/checkout.html', context)
+# def checkout(request):
+#     context = {}
+#     return render(request, 'loja/checkout.html', context)
 def news(request):
     context = {}
     produtosCarrinho = quantosProdutosNoCarrinho(request)
@@ -111,6 +119,128 @@ def news(request):
     return render(request, 'loja/news.html', context)
 
 
+
+def listaProdutosSemStock(request):
+
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+
+    resposta = sessao.get(url)
+
+    if resposta.content:
+        content=resposta.json()
+
+        listaProdutosSemStock = []
+
+        #percorre a lista de produtos
+        for item in content:
+
+            produto = item['produto']
+            stock = produto['stock'] 
+            quantidadeNoCarrinho=item["quantidade"]
+
+            if quantidadeNoCarrinho>stock:
+                listaProdutosSemStock.append((content.index(item),stock))
+        return listaProdutosSemStock
+
+def create_order(request):
+
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+
+    resposta = sessao.post(url, headers)
+
+    if resposta.content:
+        content=resposta.json()
+
+        listaProdutosSemStock = []
+
+
+    
+
+
+    # Crie uma nova instância de Encomenda com o consumidor fornecido e o estado padrão como "Em processamento"
+    consumidor = request.user.consumidor
+    encomenda = Encomenda.objects.create(
+        consumidor=consumidor,
+        estado='Em processamento',
+    )
+
+
+    valor_total = 0
+    #percorre a lista de produtos
+    for item in content:
+        produto = item['produto']
+
+    # Percorra a lista de produtos no carrinho de compras
+    for item in cart_items.get('produtos_carrinho', []):
+        # Crie uma nova instância de ProdutosEncomenda para cada produto no carrinho de compras
+        ProdutosEncomenda.objects.create(
+            encomenda=encomenda,
+            produtos=item.get('produto'),
+            quantidade=item.get('quantidade'),
+            preco=item.get('preco'),
+            precoKilo=item.get('precoKilo'),
+        )
+
+
+
+    # Crie uma nova instância de DetalhesEnvio com as informações de envio fornecidas e associe-a à instância de Encomenda criada anteriormente
+    # detalhes_envio_info = request.data.get('detalhes_envio')
+    # detalhes_envio = DetalhesEnvio.objects.create(
+    #     consumidor=consumidor,
+    #     **detalhes_envio_info
+    # )
+    # encomenda.detalhes_envio = detalhes_envio
+    # encomenda.save()
+
+    # Calcule o valor total da encomenda somando o preço total de cada ProdutosEncomenda e atribua-o à instância de Encomenda
+    valor_total = sum(item.get('preco', 0) for item in cart_items.get('produtos_carrinho', []))
+    encomenda.valor_total = valor_total
+    encomenda.save()
+
+    # Exclua o carrinho de compras do usuário
+    response = requests.delete(url)
+
+    # Verifique se a resposta foi bem-sucedida
+    if response.status_code != 204:
+        return Response({'message': 'Erro ao excluir carrinho de compras'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Retorne uma mensagem de sucesso com um código de status 201 Created
+    return Response({'message': 'Order created successfully!'}, status=status.HTTP_201_CREATED)
+
+
+
+@login_required(login_url='loja-login')
+def checkout(request):
+    if request.method == 'POST':
+
+        lista=listaProdutosSemStock(request) 
+        #Caso haja produtos sem stock     
+        if len(lista)!=0:
+            for produto in lista:
+                messages.error(request, 'Erro: O Item '+str(int(float(produto[0])+1))+' não tem stock suficiente para a quantidade pedida, o stock atual é '+produto[1])
+
+            return redirect('loja-carrinho')
+        #Caso todos os produtos tenham stock 
+        else:
+            #Criar encomenda e atualizar stocks
+            create_order(request)
+
+
+
+            #FALTA LIMPAR CARRINHO
+            #FALTA GUARDAR TAMBEM VERIFICAR DETALHES DE ENCOMENDA
+
+            #return render(request, 'checkout.html', {'carrinho': cart})
+            return redirect('loja-carrinho')
+        
 
 
 def confirm_password_view(request):
