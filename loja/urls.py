@@ -6,7 +6,7 @@ urlpatterns = [
     path('api/', include('loja.api.urls')),
     path('', views.loja, name='loja-home'),
     path('about/', views.about, name='about'),
-    path('checkout/', views.checkout, name='loja-checkout'),
+    #path('checkout/', views.checkout, name='loja-checkout'),
     path('login/', views.loginUtilizador, name='loja-login'),
     path('logout/', views.logout, name='loja-logout'),
     path('callback', views.callback, name='loja-callback'),
@@ -23,14 +23,17 @@ urlpatterns = [
     path('perfil/<str:userName>/unidadeProducao/<str:id>/editarVeiculo/<str:idVeiculo>', views.editarVeiculo, name='loja-editarVeiculo'),
     path('perfil/<str:userName>/unidadeProducao/<str:id>/editarUnidadeProducao/', views.editarUnidadeProducao, name='loja-editarUnidadeProducao'),
     path('<str:userName>/unidadeProducao/<int:id>/remover', removerUnidadeProducao, name='loja-removerUnidadeProducao'),
-    path('criar_produto/<str:userName>/', views.criar_produto, name='loja-criarProduto'),
-    path('shop/', views.ver_produtos, name='loja-ver_produtos'),
+    path('criar-produto/<str:userName>/', views.criar_produto, name='loja-criarProduto'),
+    path('shop/', views.ver_produtos, name='loja-ver-produtos'),
     path('shop/<int:produto_id>/', views.sP, name='loja-single-product'),
     path('carrinho/', views.carrinho, name='loja-carrinho'),
-    path('adicionar_ao_carrinho/<int:produto_id>/', views.adicionar_ao_carrinho, name='loja-adicionar-ao-carrinho'),
-    path('remover_do_carrinho/<int:produto_id>/', views.remover_do_carrinho, name='loja-remover-do-carrinho'),
-    path('remover_produto_unidadeProducao/<int:idUnidadeProducao>/<int:idProdutoUnidadeProducao>/', views.removerAssociaoProdutoUP, name='loja-removerAssociaoProdutoUP'),
-    path('associar_produto_unidade_producao/', views.criarAssociacaoProdutoUP, name="loja-associarProdutoUP")
+    path('adicionar-ao-carrinho/<int:produto_id>/', views.adicionar_ao_carrinho, name='loja-adicionar-ao-carrinho'),
+    path('remover-do-carrinho/<int:produto_id>/', views.remover_do_carrinho, name='loja-remover-do-carrinho'),
+    path('remover-produto-unidadeProducao/<int:idUnidadeProducao>/<int:idProdutoUnidadeProducao>/', views.removerAssociaoProdutoUP, name='loja-removerAssociaoProdutoUP'),
+    path('associar-produto-unidade-producao/', views.criarAssociacaoProdutoUP, name="loja-associarProdutoUP"),
+    path('detalhes-envio/', views.detalhesEnvio, name='loja-detalhesEnvio'),
+    path('create_order/', views.create_order, name='create_order'),
+    path('checkout/', views.checkout, name='loja-checkout'),
 ]
 
 

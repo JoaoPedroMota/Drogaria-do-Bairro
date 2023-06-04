@@ -1,0 +1,106 @@
+{% extends 'main.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    .input-wrapper {
+    position: relative;
+  }
+
+  .hint-formulario {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgb(8, 120, 211);
+  color: #fff;
+  font-weight: bold;
+  font-size: 14px;
+}
+  .ola{
+    color: white;
+  }
+
+</style>
+<div class="breadcrumb-section breadcrumb-bg">
+  <div class="container">
+      <div class="row">
+          <div class="col-lg-8 offset-lg-2 text-center">
+              <div class="breadcrumb-text">
+                <div class="row">
+                  <h1>Detalhes de Envio</h1>
+                 
+              </div>
+              <br>
+              <br>
+                <form method="post">
+                  {% csrf_token %}
+                  {% for field in formulario %}
+                  <div class="form-group">
+                    <br>
+                    {% if field.name == 'usar_informacoes_utilizador' %}
+                    <p><label for="{{ field.name }}">USAR AS MINHAS INFORMAÇÕES DE PERFIL</label></p>
+                    {% elif field.name == 'guardar_esta_morada' %}
+                      <p><label for="{{ field.name }}">Guardar também a morada no meu perfil</label></p>
+                    {% else %}
+                    <p><label for="{{ field.name }}">{{ field.label }}</label></p>
+                    {% endif %}
+                    {% if field.field.widget.input_type == 'select' %}
+                      <div class="input-wrapper">
+                        <select name="{{ field.name }}" {% if field.required %}required{% endif %}>
+                          {% for code, label in field.field.choices %}
+                            <option value="{{ code }}" {% if label == field.value or code == field.value %}selected{% endif %}>{{ label }}</option>
+                          {% endfor %}
+                        </select>
+                        
+                      </div>
+                    {% elif field.name == 'usar_informacoes_utilizador' %}
+                      <input type="checkbox" name="{{field.name}}" placeholder="field.name" value="True" {% if field.value %} checked {% endif %} >
+                    {% elif field.name == 'guardar_esta_morada' %}
+                    <input type="checkbox" name="{{field.name}}" placeholder="{{field.name}}" value="True" {% if field.value %} checked {% endif %} >
+                    {% else %}
+
+                    <div class="input-wrapper">
+                        
+                        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.field.label }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
+                        {% if field.help_text %}
+                            <abbr title="{{ field.help_text }}" class="hint-formulario">?</abbr>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% if field.errors %}
+                    <ul class="field-error-list">
+                      {% for error in field.errors %}
+                      <li>{{ error }}</li>
+                      {% endfor %}
+                    </ul>
+                    {% endif %}
+                  </div>
+                  {% endfor %}
+                  
+                  <input type="submit" id="login" value="GUARDAR DETALHES DE ENVIO">
+                </form>
+                <a href="{% url 'loja-perfil' userName=request.user.username  %}" class="layout__boxTitle">
+                  <div  class="container">
+                      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+                      <title>arrow-left</title>
+                      <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
+                      </svg>
+                      <h6>Voltar</h6>
+                  </div>
+              </a>
+                  
+
+                 
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+
+{% endblock %}

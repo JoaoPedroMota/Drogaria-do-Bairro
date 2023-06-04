@@ -97,8 +97,14 @@
                 </div>
                 {% if request.user.is_fornecedor %}
                 <div id="Fornecedor">
-                    <a href="{% url 'loja-criarProduto' userName=request.user.username%}" class="btn btn-primary" id="lo">Criar Produto</a>
-                    <a href="{% url 'loja-associarProdutoUP' %}" class="btn btn-primary" id="lo"> Associar Produto a Unidade de Produção</a>
+                    <form action="{% url 'loja-criarProduto' userName=request.user.username %}" method="" >
+                        {% csrf_token %}
+                            <input type="submit" id="login" value="Criar Produto">
+                        </form>
+                        <form action="{% url 'loja-associarProdutoUP' %}" method="" >
+                            {% csrf_token %}
+                                <input type="submit" id="login" value="Associar Produto a Unidade de Produção">
+                        </form>
                     <br>
                     <br>
                     <table id="infoGeralFornecedor">
@@ -131,7 +137,7 @@
                                     <td>
                                         <form action="{% url 'loja-editarUnidadeProducao' userName=request.user.username id=up.id %}" method="get">
                                             {% csrf_token %}
-                                            <button type="submit" class="btn btn-info btn-sm" id="lo">Editar</button>
+                                            <button type="submit" class="btn btn-info btn-sm" id="">Editar</button>
                                         </form>
                                     </td>
                                     <td><a href="{% url 'loja-unidadeProducao' userName=request.user.username id=up.id %}">Gerir Veiculos/Gerir Produtos</a></td>
@@ -154,7 +160,13 @@
         
                 {% elif request.user.is_consumidor %}
                 <div id="Consumidor">
-                    <!-- ESPAÇO PARA COISAS DE UM CONSUMIDOR -->
+                    {% if request.user == utilizadorView %}
+                    <form action="{% url 'loja-detalhesEnvio'%}" method="" >
+                        {% csrf_token %}
+                        <br>
+                            <input type="submit" id="login" value="Os meus detalhes de envio">
+                        </form>
+                    {% endif %}
                 </div>
         
                 {% endif %}

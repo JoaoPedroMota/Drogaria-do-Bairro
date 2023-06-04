@@ -2,7 +2,7 @@ import logging
 from rest_framework.serializers import ModelSerializer, Field, SerializerMethodField, ValidationError
 from rest_framework.fields import ImageField
 #### MODELOS ####
-from loja.models import Utilizador, Consumidor, UnidadeProducao, Fornecedor, Veiculo, Produto, Categoria, Carrinho, ProdutosCarrinho, ProdutoUnidadeProducao
+from loja.models import *
 from .utilidades_api import categorias_nao_pai
 #######
 from django_countries.fields import CountryField
@@ -167,8 +167,8 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
 
     class Meta:
         model = Utilizador
-        # fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador']
-        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
+        # fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais','estado' ,'cidade', 'nome', 'telemovel', 'tipo_utilizador']
+        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais','cidade','morada' ,'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
         extra_kwargs = {'password': {'required': True}}
     
 
@@ -335,9 +335,7 @@ class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
         """
         A mesma coisa que o clean() no modelo ProdutoUnidadeProducao, mas para o serializador
         """
-        
-        
-        
+
         unidade_medida = data.get('unidade_medida')
         preco_a_granel = data.get('preco_a_granel')
         unidade_Medida_Por_Unidade = data.get('unidade_Medida_Por_Unidade')
@@ -478,7 +476,8 @@ class UnidadeProducaoSingleProdutoSerializer(ModelSerializer):
 
 
 class SingleProdutoPaginaSerializer(ModelSerializer):
-    """Devolve um só produto da tabela ProdutoUnidadeProducao
+    """
+    Devolve um só produto da tabela ProdutoUnidadeProducao
     """
     unidade_producao = UnidadeProducaoSingleProdutoSerializer(read_only=True)
     produto = ProdutoSerializer()
@@ -488,4 +487,54 @@ class SingleProdutoPaginaSerializer(ModelSerializer):
         read_only_fields = ['id']
 
 
+class DetalhesEnvioSerializerRequest(ModelSerializer):
+    pais = campoPaisSerializador()
+    class Meta:
+        model = DetalhesEnvio
+        fields = ["id",'nome', 'pais', 'cidade', 'telemovel', 'email', 'morada', 'instrucoes_entrega', 'usar_informacoes_utilizador', 'guardar_esta_morada',"consumidor"]
+        read_only_fields = ['id']
+    def validate(self, attrs):
+        utilizar_informacoes = attrs.get('usar_informacoes_utilizador')
+        consumidor = attrs.get('consumidor')
+
+        if utilizar_informacoes and consumidor:
+            utilizador = consumidor.utilizador
+
+            if attrs.get('nome') != utilizador.nome:
+                raise serializers.ValidationError({'nome': 'O nome não corresponde às informações do utilizador.'})
+
+            if attrs.get('pais') != utilizador.pais:
+                raise serializers.ValidationError({'pais': 'O país não corresponde às informações do utilizador.'})
+
+            if attrs.get('cidade') != utilizador.cidade:
+                raise serializers.ValidationError({'cidade': 'A cidade não corresponde às informações do utilizador.'})
+
+            if attrs.get('telemovel') != utilizador.telemovel:
+                raise serializers.ValidationError({'telemovel': 'O número de telemóvel não corresponde às informações do utilizador.'})
+
+            if attrs.get('email') != utilizador.email:
+                raise serializers.ValidationError({'email': 'O e-mail não corresponde às informações do utilizador.'})
+
+            if utilizador.morada is not None:
+                moradita = utilizador.morada.replace(' ', '')
+                if utilizador.morada != ''  and moradita !='' and attrs.get('morada') != utilizador.morada:
+                    raise serializers.ValidationError({'morada': 'A morada não corresponde às informações do utilizador.'})
+
+        return attrs
+        
+class DetalhesEnvioSerializerResponse(ModelSerializer):
+    pais = campoPaisSerializador()
+    class Meta:
+        model = DetalhesEnvio
+        fields = ["id",'nome', 'pais', 'cidade', 'telemovel', 'email', 'morada', 'instrucoes_entrega', 'usar_informacoes_utilizador', 'guardar_esta_morada']
+         
+class EncomendaSerializer(ModelSerializer):
+    class Meta:
+        model = Encomenda
+        fields = ["id","consumidor", "detalhes_envio","valor_total","updated","created","estado"]
+
+class ProdutosEncomendaSerializer(ModelSerializer):
+    class Meta:
+        model = ProdutosEncomenda
+        fields = ["id","encomenda", "produtos","unidadeProducao","quantidade","preco","precoKilo","estado","updated","created"]
 

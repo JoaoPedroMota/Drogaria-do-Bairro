@@ -61,7 +61,6 @@
                                 <div id="divTabelaVeiculos">
                                     <table id="customers">
                                         <tr>
-                                            <th>Id Interno</th>
                                             <th>Nome</th>
                                             <th>Tipo Veículo</th>
                                             <th>Estado</th>
@@ -70,12 +69,11 @@
                                         </tr>
                                         {% for veiculo in veiculos %}
                                         <tr>
-                                            <td>{{ veiculo.id }}</td>
                                             <td>{{ veiculo.nome }}</td>
                                             <td>{{ veiculo.tipo_veiculo }}</td>
                                             <td>{{ veiculo.estado_veiculo }}</td>
                                             <td>
-                                                <form action="{% url 'loja-editarVeiculo' userName=request.user.username id=unidadeProducao idVeiculo=veiculo.id %}" method="post">
+                                                <form action="{% url 'loja-editarVeiculo' userName=request.user.username id=unidadeProducao idVeiculo=veiculo.id %}" method="get">
                                                     {% csrf_token %}
                                                     <button type="submit" class="btn btn-info btn-sm">Editar</button>
                                                 </form>

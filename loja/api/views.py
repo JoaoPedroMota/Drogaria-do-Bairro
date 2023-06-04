@@ -1,6 +1,6 @@
 ### APP loja #####
 ### models.py ###
-from loja.models import Utilizador, Consumidor, Fornecedor, UnidadeProducao, Veiculo, Categoria, Produto, Carrinho, ProdutoUnidadeProducao, ProdutosCarrinho
+from loja.models import *
 from .utilidades_api import categorias_nao_pai
 #### DJANGO ######
 from django.http import Http404
@@ -21,11 +21,12 @@ from rest_framework.response import Response
 from decimal import Decimal
 #### DENTRO DA APP #####
 ### serializers.py ###
-from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer, ProdutoSerializerRequest, TemProdutoNoCarrinhoSerializer
+from .serializers import *
 ### permissions.py ###
-from .permissions import IsOwnerOrReadOnly, IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly, IsConsumidorAndOwner
+from .permissions import IsOwnerOrReadOnly,IsOwner ,IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly, IsConsumidorAndOwner, IsConsumidorAndOwner2
 ####
 from decimal import Decimal
+import phonenumbers
 
 
 
@@ -100,8 +101,7 @@ class UtilizadoresDetail(APIView):
     """
     Devolve, atualiza ou apaga uma instância de Utilizador
     """
-    #parser_classes = (MultiPartParser, FormParser)
-    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly, IsAuthenticated]
     def get_object(self, identifier):
         try:
             return Utilizador.objects.get(username=identifier)
@@ -257,7 +257,7 @@ class ConsumidoresDetail(APIView):
     """
     Devolve  uma instância de Consumidor
     """
-    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    #permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     def get_object(self, identifier):
         try:
             utilizador_temp = Utilizador.objects.get(username=identifier)
@@ -420,7 +420,7 @@ class ProdutoDetailID(APIView):
         return Response(serializar.data, status=status.HTTP_200_OK)
 
 class ProdutoUnidadeProducaoList(APIView):
-    #permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]
     def get_produtos_up(self, username, identifierUP):
         try:
             user = Utilizador.objects.get(username=username)
@@ -867,4 +867,565 @@ class ProdutosCarrinhoDetailProdutoUP(APIView):
         else:
             return Response({"detail": "Produto não encontrado no carrinho"},status=status.HTTP_404_NOT_FOUND)
     
+
+
+class DetalhesEnvioList(APIView):
+    permission_classes = [IsConsumidorAndOwner2]
+    def get_object(self, instance):
+        try:
+            return DetalhesEnvio.objects.filter(consumidor=instance)
+        except DetalhesEnvio.DoesNotExist:
+            raise Http404
+
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_consumidor(self, utilizador):
+        try:
+            return Consumidor.objects.get(utilizador=utilizador)
+        except Consumidor.DoesNotExist:
+            raise Http404
+    def get(self, request, username, format=None):
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        detalhes_envio_objetos = self.get_object(consumidor)
+        if detalhes_envio_objetos.exists():
+            serializar = DetalhesEnvioSerializerResponse(detalhes_envio_objetos, many=True)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data,status=status.HTTP_200_OK)
+    def post(self, request, username, format=None):
+        utilizador = self.get_utilizador(username)
+        data2 = request.data.copy()
+        consumidor = self.get_consumidor(utilizador)
+        data2['consumidor'] = consumidor.id
+        
+        if 'guardar_esta_morada' not in data2.keys():
+            data2['guardar_esta_morada'] = False
+        
+        
+        if 'usar_informacoes_utilizador' not in data2.keys():
+            data2['usar_informacoes_utilizador'] = False
+        
+        nome_bool = True if data2.get('nome') is not None else False
+        pais_bool = True if data2.get('pais') is not None else False
+        cidade_bool = True if data2.get('cidade') is not None else False
+        morada_bool = True if data2.get('morada') is not None else False
+        telemovel_bool = True if data2.get('telemovel') is not None else False
+        email_bool = True if data2.get('email') is not None else False
+        if nome_bool and pais_bool and cidade_bool and morada_bool and telemovel_bool and email_bool: #enviou todos os campos obrigatórios
+            if (data2['usar_informacoes_utilizador'] == 'True' or data2['usar_informacoes_utilizador']==True) and (utilizador.nome != data2.get('nome') or utilizador.pais != data2.get('pais') or utilizador.cidade != data2.get('cidade') or utilizador.telemovel != data2.get('telemovel') or utilizador.email != data2.get('email') or (data2.get('morada') != utilizador.morada and utilizador.morada is not None)):
+                #escolheu usar informações do utilizador mas existe algum que não está igual
+                erroString = "Escolheu usar as informações do utilizador, mas está campos diferentes aos que tem guardados. Os campos diferentes: "
+                erroString+= "nome " if utilizador.nome != data2.get('nome') else ''
+                erroString+= "pais " if utilizador.pais != data2.get('pais') else ''
+                erroString+= "cidade " if utilizador.cidade != data2.get('cidade') else ''
+                erroString+= "morada " if (data2.get('morada') != utilizador.morada and utilizador.morada is not None) else ''
+                erroString+= "telemovel " if utilizador.telemovel != data2.get('telemovel') else ''
+                erroString+= "email" if utilizador.email != data2.get('email') else ''
+                erroString+= ". Altere estes campos para o valor que tem guardado."
+                return Response({'details': erroString}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+        
+        if (data2['usar_informacoes_utilizador'] == 'True' or data2['usar_informacoes_utilizador'] == True): #escolheu usar informacoes do utilizador
+            if (utilizador.nome == data2.get('nome') or utilizador.pais.name == data2.get('pais') or utilizador.cidade == data2.get('cidade')or utilizador.telemovel == data2.get('telemovel')or utilizador.email == data2.get('email') or (data2.get('morada') == utilizador.morada and utilizador.morada is not None)):
+                pass #a informacao está toda igual?
+            elif nome_bool==False and pais_bool == False and cidade_bool == False and morada_bool == False and telemovel_bool == False and email_bool == False:
+                ###escolheu usar informação do utilizador e não enviou nenhum campo obrigatório
+                data2['nome'] = utilizador.nome
+                data2['pais'] = utilizador.pais
+                data2['cidade'] = utilizador.cidade
+                
+                if utilizador.morada is not None:
+                    data2['morada'] = utilizador.morada 
+                elif utilizador.morada is None:
+                    return Response({'morada':"Escolheu usar informações do utilizador. Mas ainda não tem a sua morada guardada. Envie a sua morada, e se pretender guardar, defina 'guardar_esta_morada' igual a true!"}, status=status.HTTP_400_BAD_REQUEST)           
+                
+                
+                if True: #esconder esta lógica para facilitar leitura do código
+                    ### campo telemovel
+                    telemovel = utilizador.telemovel
+                    ####converter telemovel para formato internacional
+                    international_phone_number = phonenumbers.format_number(telemovel, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+                    ### converte para str
+                    telemovel_international_str = str(international_phone_number)
+                    #### atribui str ao dicionario, pq JSON  n suporta PhoneNumber
+                data2['telemovel'] = telemovel_international_str
+                data2['email'] = utilizador.email
+        
+        if (data2['usar_informacoes_utilizador'] == 'True' or data2['usar_informacoes_utilizador'] == True) and morada_bool:
+            data2['nome'] = utilizador.nome
+            data2['pais'] = utilizador.pais
+            data2['cidade'] = utilizador.cidade
+            if True: #esconder esta lógica para facilitar leitura do código
+                ### campo telemovel
+                telemovel = utilizador.telemovel
+                ####converter telemovel para formato internacional
+                international_phone_number = phonenumbers.format_number(telemovel, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+                ### converte para str
+                telemovel_international_str = str(international_phone_number)
+                #### atribui str ao dicionario, pq JSON  n suporta PhoneNumber
+            data2['telemovel'] = telemovel_international_str
+            data2['email'] = utilizador.email
+            morada = data2['morada']
+            vazio = morada.replace(" ","")
+            if vazio == '':
+                return Response({'morada':"Morada inválida. Selecione uma morada que não seja uma string vazia"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        guardar_esta_morada = data2.get('guardar_esta_morada')
+        
+        deserializer = DetalhesEnvioSerializerRequest(data=data2)
+        if deserializer.is_valid():
+            if guardar_esta_morada==True:
+                utilizador.morada = data2['morada']  
+                utilizador.save()          
+            deserializer.save()
+            respostaSerializar = DetalhesEnvioSerializerResponse(deserializer.instance)
+            return Response(respostaSerializar.data, status=status.HTTP_201_CREATED)
+        return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class DetalhesEnvioDetails(APIView):
+    permission_classes = [IsConsumidorAndOwner2]
+    def get_object(self, instance, id):
+        try:
+            return DetalhesEnvio.objects.get(consumidor=instance, id=id)
+        except DetalhesEnvio.DoesNotExist:
+            raise Http404
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_consumidor(self, utilizador):
+        try:
+            return Consumidor.objects.get(utilizador=utilizador)
+        except Consumidor.DoesNotExist:
+            raise Http404
+    def get(self, request, username, id):
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        detalhesEnvio = self.get_object(consumidor, int(id))
+        if detalhesEnvio is not None:
+            serializar = DetalhesEnvioSerializerResponse(detalhesEnvio, many=False)
+            return Response(serializar.data, status=status.HTTP_200_OK)
+        elif detalhesEnvio is None:
+            return Response(status.HTTP_404_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, username, id):
+        utilizador = self.get_utilizador(username) #vai buscar o utlizador
+        consumidor = self.get_consumidor(utilizador) # vai buscar consumidor
+        detalhesEnvio = self.get_object(consumidor, int(id)) # vai buscar detalhes de envio
+        if detalhesEnvio is None:
+            return Response({'detail':f'Detalhes de envio do utilizador {username} com o id {id} não encontrados'}, status=status.HTTP_404_NOT_FOUND)
+        
+        data2 = request.data.copy() #copia o request.data para este poder ser alterado
+
+##########################NOVO####################
+        morada_detalhesEnvio = detalhesEnvio.morada # recebe a morada já guardada
+
+        if 'guardar_esta_morada' not in data2.keys(): # se guardar_esta_morada não estiver no pedido
+            data2['guardar_esta_morada'] = False #não é para guardar
+        
+        
+        if 'usar_informacoes_utilizador' not in data2.keys(): # se usar_informacoes_utilizador não estiver no pedido
+            data2['usar_informacoes_utilizador'] = False #não é para usar as informacoes do utilizador
+        
+        ##para verificações mais à frente
+        nome_bool = True if data2.get('nome') is not None else False # foi enviado nome no pedido?
+        pais_bool = True if data2.get('pais') is not None else False # foi enviado pais no pedido?
+        cidade_bool = True if data2.get('cidade') is not None else False # foi enviado cidade no pedido?
+        morada_bool = True if data2.get('morada') is not None else False # foi enviado morada no pedido?
+        telemovel_bool = True if data2.get('telemovel') is not None else False # foi enviado telemovel no pedido?
+        email_bool = True if data2.get('email') is not None else False # foi enviado email no pedido?
+        # usar_informacoes utilizador é igual a true, e se algum dos outros campos tiver sido enviado
+        if data2['usar_informacoes_utilizador'] == True and (
+                                                            nome_bool == True or  
+                                                            pais_bool == True or 
+                                                            cidade_bool == True or 
+                                                            (morada_bool == True or utilizador.morada is not None ) #foi enviada morada ou o utilizador tem alguma morada guardada?
+                                                            or telemovel_bool == True or email_bool == True):
+            if utilizador.nome == data2.get('nome') and utilizador.pais.name == data2.get('pais') and utilizador.cidade == data2.get('cidade') and utilizador.telemovel == data2.get('telemovel') and utilizador.email == data2.get('email') and (data2.get('morada') == utilizador.morada or utilizador.morada is None):
+            #(lembrar que é para usar infos do utillizador) 
+            # o nome enviado é igual ao nome do utilizador?
+            # o nome do pais enviado é igual ao guardado no utilizador?
+            # a cidade enviada é igual é igual à guardada no utilizador?
+            # o telemóvel enviado é igual ao guardada no utilizador?
+            # o email enviado é igual ao guardada no utilizador?
+            # a morada enviada é igual à guardada no utilizador ou o utilizador não tem morada guardada?
+                pass
+            
+            else:
+                erroString = "Escolheu usar as informações do utilizador. \
+                            Mas está a definir valores diferentes aos guardados na criação  da conta. \
+                            Campos diferentes aos guardados na conta: "
+                erroString+= "nome, " if utilizador.nome != data2.get('nome') else ''
+                erroString+= "pais, " if utilizador.pais.name != data2.get('pais') else ''
+                erroString+= "cidade, " if utilizador.cidade != data2.get('cidade') else ''
+                erroString+= "morada, " if utilizador.morada != data2.get('morada') else ''
+                erroString+= "telemovel, " if utilizador.telemovel != data2.get('telemovel')else ''
+                erroString+= "email" if utilizador.email != data2.get('email') else ''
+                erroString+= ". Remova estes campos ou coloque os valores guardados aquando a criação da conta."
+                return Response({'details': erroString}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # definiu usar informacoes do utilizador e não enviou nenhum campo respetivo do utilizador. definir valores guardados no utilizador
+        if data2['usar_informacoes_utilizador'] == True and nome_bool==False and pais_bool==False and cidade_bool==False and morada_bool ==False and telemovel_bool== False  and email_bool == False:
+            data2['nome'] = utilizador.nome
+            data2['pais'] = utilizador.pais
+            data2['cidade'] = utilizador.cidade
+            if utilizador.morada is not None:
+                data2['morada'] = utilizador.morada
+            elif utilizador.morada is None and data2.get('morada') is None:
+                if morada_detalhesEnvio == '' or morada_detalhesEnvio is None:
+                    return Response({'morada':"Escolheu usar informações do utilizador. Mas ainda não tem a sua morada guardada. Envie a sua morada, e se pretender guardar, defina 'guardar_esta_morada' !"}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    data2['morada'] = morada_detalhesEnvio
+            if True: #esconder esta lógica para facilitar leitura do código
+                ### campo telemovel
+                telemovel = utilizador.telemovel
+                ####converter telemovel para formato internacional
+                international_phone_number = phonenumbers.format_number(telemovel, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+                ### converte para str
+                telemovel_international_str = str(international_phone_number)
+                #### atribui str ao dicionario, pq JSON  n suporta PhoneNumber
+            data2['telemovel'] = telemovel_international_str
+            data2['email'] = utilizador.email
+        
+        
+        guardar_esta_morada = True if data2.get('guardar_esta_morada')=='True' else False
+        data2['consumidor'] = consumidor.id #atribui o id do user logado ao campo consumidor 
+        serializer = DetalhesEnvioSerializerRequest(detalhesEnvio, data=data2)
+        if serializer.is_valid():
+            if guardar_esta_morada:
+                utilizador.morada = data2['morada']  
+                utilizador.save()          
+            serializer.save()
+            respostaSerializar = DetalhesEnvioSerializerResponse(serializer.instance)
+            return Response(respostaSerializar.data, status=status.HTTP_200_OK)
+        print(serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EncomendaList(APIView):
+    permission_classes = [IsConsumidorAndOwner2]
+    #permission_classes = [IsAuthenticated]
+    def get_DetalhesEnvio(self, instance, pk):
+        try:
+            return DetalhesEnvio.objects.filter(consumidor=instance,id=pk)
+        except DetalhesEnvio.DoesNotExist:
+            raise Http404
+
+    def get_object(self, instance):
+        try:
+            return Encomenda.objects.filter(consumidor=instance)
+        except Encomenda.DoesNotExist:
+            raise Http404
+        
+
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_consumidor(self, utilizador):
+        try:
+            return Consumidor.objects.get(utilizador=utilizador)
+        except Consumidor.DoesNotExist:
+            raise Http404
+
+    def getCarrinho(self,consumidor):
+        try:
+            return Carrinho.objects.get(consumidor=consumidor)
+        except Carrinho.DoesNotExist:
+            raise Http404
+
+    def getProdutosCarrinho(self,carrinho):
+        try:
+            return ProdutosCarrinho.objects.filter(carrinho=carrinho)
+        except ProdutosCarrinho.DoesNotExist:
+            raise Http404
+          
+    def get(self, request, username, format=None):
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        encomenda_objetos = self.get_object(consumidor)
+        if encomenda_objetos is not None:
+            serializar = EncomendaSerializer(encomenda_objetos, many=True)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data,status=status.HTTP_200_OK)
+
+
+    def post(self, request, username, format=None):
+        utilizador = self.get_utilizador(username)
+        data2 = request.data.copy()
+
+            
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+
+        carrinho=self.getCarrinho(consumidor)
+        produtosCarrinho=self.getProdutosCarrinho(carrinho)
+
+        total=0
+        for produto in produtosCarrinho:
+            total+=produto.preco
+
+        data2["consumidor"]=consumidor.id
+        data2["valor_total"]=total
+
+        deserializer = EncomendaSerializer(data=data2)
+
+        if deserializer.is_valid():
+           
+            deserializer.save()
+            return Response(deserializer.data, status=status.HTTP_201_CREATED)
+        print(deserializer.errors)
+        return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class EncomendaDetail(APIView):
+    permission_classes = [IsConsumidorAndOwner2]
+    def get_DetalhesEnvio(self, instance):
+        try:
+            return DetalhesEnvio.objects.filter(consumidor=instance)
+        except DetalhesEnvio.DoesNotExist:
+            raise Http404
+
+    def get_object(self, consumidor, instance):
+        try:
+            return Encomenda.objects.get(id=instance, consumidor=consumidor)
+        except Encomenda.DoesNotExist:
+            raise Http404
+        
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_consumidor(self, utilizador):
+        try:
+            return Consumidor.objects.get(utilizador=utilizador)
+        except Consumidor.DoesNotExist:
+            raise Http404
+
+    def getCarrinho(self,consumidor):
+        try:
+            return Carrinho.objects.get(consumidor=consumidor)
+        except Carrinho.DoesNotExist:
+            raise Http404
+
+    def getProdutosCarrinho(self,carrinho):
+        try:
+            return ProdutosCarrinho.objects.get(carrinho=carrinho)
+        except ProdutosCarrinho.DoesNotExist:
+            raise Http404
+          
+    def get(self, request, username, idEncomenda, format=None):
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        encomenda_objetos = self.get_object(consumidor,idEncomenda)
+        print(type(encomenda_objetos))
+        if encomenda_objetos is not None:
+            serializar = EncomendaSerializer(encomenda_objetos, many=False)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data,status=status.HTTP_200_OK)
+
+    def put(self, request, username, idEncomenda, format=None):
+        data2=request.data.copy()
+        
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        encomenda_objetos = self.get_object(consumidor,idEncomenda)
+
+        if encomenda_objetos is not None:
+            data2["consumidor"]=consumidor.id
+            deserializer=EncomendaSerializer(encomenda_objetos, data=data2)
+            if deserializer.is_valid():
+                deserializer.save()
+                return Response(deserializer.data, status=status.HTTP_200_OK)
+            return Response(deserializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, username,idEncomenda, format=None):
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        encomenda_objetos = self.get_object(consumidor,idEncomenda)
+
+        if encomenda_objetos.exists():
+            encomenda_objetos.delete()
+            return Response(f"Encomenda do consumidor '{consumidor}' apagada com sucesso!",status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+class ProdutosEncomendaList(APIView):
+    #permission_classes = [IsConsumidorAndOwner2]
+
+    def get_object(self, instance):
+        try:
+            return ProdutosEncomenda.objects.filter(encomenda=instance)
+        except ProdutosEncomenda.DoesNotExist:
+            raise Http404
+        
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_consumidor(self, utilizador):
+        try:
+            return Consumidor.objects.get(utilizador=utilizador)
+        except Consumidor.DoesNotExist:
+            raise Http404
+
+    def getCarrinho(self,consumidor):
+        try:
+            return Carrinho.objects.get(consumidor=consumidor)
+        except Carrinho.DoesNotExist:
+            raise Http404
+
+    def getProdutosCarrinho(self,carrinho):
+        try:
+            return ProdutosCarrinho.objects.get(carrinho=carrinho)
+        except ProdutosCarrinho.DoesNotExist:
+            raise Http404
+          
+    def get(self, request, username,idEncomenda, format=None):
+
+        produtos_encomenda_objetos = self.get_object(idEncomenda)
+        if produtos_encomenda_objetos.exists():
+            serializar = ProdutosEncomendaSerializer(produtos_encomenda_objetos, many=True)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data,status=status.HTTP_200_OK)
+
+
+    def getProdutoUP(self, idProduto):
+        try:
+            return ProdutoUnidadeProducao.objects.get(id=idProduto)
+        except ProdutoUnidadeProducao.DoesNotExist:
+            raise Http404
+
+    def post(self, request, username, idEncomenda, format=None):
+
+        data2 = request.data.copy()
+
+        data2["encomenda"]=idEncomenda
+        idProdutoUP=data2["produtos"]
+
+        produto=self.getProdutoUP(idProdutoUP)
+        if produto is not None:
+            unidadeProducao=produto.unidade_producao
+            precoKilo=produto.preco_a_granel if produto.preco_a_granel is not None else produto.preco_por_unidade
+            quantidade=data2["quantidade"]
+            preco=precoKilo*quantidade
+            data2["unidadeProducao"]=unidadeProducao.id
+            data2["precoKilo"]=precoKilo
+            data2["preco"]=preco
+
+            deserializer = ProdutosEncomendaSerializer(data=data2)
+
+            if deserializer.is_valid():
+                deserializer.save()
+                return Response(deserializer.data, status=status.HTTP_201_CREATED)
+            print(deserializer.errors)
+            return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"details":"Produto não encontrado"},status=status.HTTP_404_NOT_FOUND)
+    
+
+class ProdutosEncomendaDetail(APIView):
+    #permission_classes = [IsConsumidorAndOwner2]
+
+    def get_object(self, instance):
+        try:
+            return ProdutosEncomenda.objects.get(id=instance)
+        except ProdutosEncomenda.DoesNotExist:
+            raise Http404
+        
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_consumidor(self, utilizador):
+        try:
+            return Consumidor.objects.get(utilizador=utilizador)
+        except Consumidor.DoesNotExist:
+            raise Http404
+
+    def getCarrinho(self,consumidor):
+        try:
+            return Carrinho.objects.get(consumidor=consumidor)
+        except Carrinho.DoesNotExist:
+            raise Http404
+
+    def getProdutosCarrinho(self,carrinho):
+        try:
+            return ProdutosCarrinho.objects.get(carrinho=carrinho)
+        except ProdutosCarrinho.DoesNotExist:
+            raise Http404
+          
+    def get(self, request, username,idEncomenda,idProdutoEncomenda, format=None):
+
+        produtos_encomenda_objetos = self.produtos_get_object(idProdutoEncomenda)
+        if produtos_encomenda_objetos.exists():
+            serializar = ProdutosEncomendaSerializer(produtos_encomenda_objetos, many=False)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data,status=status.HTTP_200_OK)
+
+    def getProdutoUP(self, idProduto):
+        try:
+            return ProdutoUnidadeProducao.objects.get(id=idProduto)
+        except ProdutoUnidadeProducao.DoesNotExist:
+            raise Http404
+        
+    def put(self, request, username, idEncomenda,idProdutoEncomenda, format=None):
+
+        produts_encomenda_objetos = self.get_object(idProdutoEncomenda)
+
+        if produts_encomenda_objetos.exists():
+
+            deserializer=EncomendaSerializer(produts_encomenda_objetos, data=request.data)
+            if deserializer.is_valid():
+                deserializer.save()
+                return Response(deserializer.data, status=status.HTTP_200_OK)
+            return Response(deserializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, username,idEncomenda,idProdutoEncomenda, format=None):
+
+        produts_encomenda_objetos = self.get_object(idProdutoEncomenda)
+
+        if produts_encomenda_objetos.exists():
+            idProdutoUP=produts_encomenda_objetos.id
+            produtoUP=self.getProdutoUP(idProdutoUP)
+            produts_encomenda_objetos.delete()
+            return Response(f"{produtoUP}' encomendado, cancelado com sucesso!",status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+        
+
+        
+
+
+    
+    
+    def delete(self, request, username, id):
+        utilizador = self.get_utilizador(username)
+        consumidor = self.get_consumidor(utilizador)
+        detalhesEnvio = self.get_object(consumidor, int(id))
+        if detalhesEnvio is None:
+            return Response({'detail':f'Detalhes de envio do utilizador {username} com o id {id} não encontrados'}, status=status.HTTP_404_NOT_FOUND)
+        detalhesEnvio.delete()
+        return Response({"details":"No content! Apagado com sucesso!"},status=status.HTTP_204_NO_CONTENT)
+
 

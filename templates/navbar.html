@@ -58,7 +58,7 @@
               <li><a href="/about">Sobre Nós</a></li>
               <li><a href="/contacts">Contactos</a></li>
               {% if not request.user.is_authenticated or request.user.is_consumidor%}
-              <li><a href="/shop/">Produtos</a></li>
+              <li><a href="{% url 'loja-ver-produtos' %}">Produtos</a></li>
               {% endif %}
               {% if request.user.is_authenticated %}
              
@@ -79,7 +79,7 @@
               {% if not request.user.is_authenticated or request.user.is_consumidor%}
               <li>
                 <div class="header-icons">
-                  <a class="shopping-cart" href="/carrinho"><i class="fas fa-shopping-cart"></i><span id="bolinha-vermelha">{{produtosCarrinho}}</span></a>
+                  <a class="shopping-cart" href="{% url 'loja-carrinho' %}"><i class="fas fa-shopping-cart"></i><span id="bolinha-vermelha">{{produtosCarrinho}}</span></a>
                   <a class="mobile-hide search-bar-icon" href="#"><i class="fas fa-search"></i></a>
                 </div>
               </li>
