@@ -12,10 +12,11 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv, find_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+TEMPLATE_DIR = os.path.join(BASE_DIR, "loja", "templates")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -66,10 +67,7 @@ MIDDLEWARE = [
     
     
     "corsheaders.middleware.CorsMiddleware",
-    
-    
-    
-    
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -83,7 +81,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'templates'
+            BASE_DIR / 'templates',
+            TEMPLATE_DIR
             ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -161,7 +160,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = '/static/'
-MEDIA_URL = '/images/' #imagens e fotos perfil
+MEDIA_URL = '/website/assets/img/' #imagens e fotos perfil
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
@@ -170,7 +169,7 @@ STATICFILES_DIRS = [
 
 
 
-MEDIA_ROOT = BASE_DIR / 'static/images' #imagens e fotos perfil
+MEDIA_ROOT = BASE_DIR / 'static/website/assets/img/' #imagens e fotos perfil
 
 
 
@@ -188,81 +187,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = True # cuidado!!!! verificar quando estiver no sercvidor. ESTA LINHA DEFINE QUEM PODE FAZER PEDIDOS À API
 
-REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': (
-        'rest_framework_json_api.exceptions.exception_handler',
-        'rest_framework_json.exceptions.exception_handler',
-        "Projeto.loja.api.utilidades_api.custom_exception_handler"
-                          ),
-    'DEFAULT_PARSER_CLASSES': (
-        'rest_framework_json_api.parsers.JSONParser',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-    ],
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-    ],
-    'DEFAULT_METADATA_CLASS': 'rest_framework_json_api.metadata.JSONAPIMetadata',
-    'DEFAULT_FILTER_BACKENDS': (
-        'rest_framework_json_api.filters.QueryParameterValidationFilter',
-        'rest_framework_json_api.filters.OrderingFilter',
-        'rest_framework_json_api.django_filters.DjangoFilterBackend',
-        'rest_framework.filters.SearchFilter',
-    ),
-    'SEARCH_PARAM': 'filter[search]',
-    'TEST_REQUEST_RENDERER_CLASSES': (
-        'rest_framework_json_api.renderers.JSONRenderer',
-    ),
-    'TEST_REQUEST_DEFAULT_FORMAT': 'vnd.api+json'
-}
-
-# Password validation
-# https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-LANGUAGE_CODE = 'pt-pt'
-
-TIME_ZONE = 'UTC'
-
-USE_I18N = True
-
-USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = '/static/'
-MEDIA_URL = '/images/' #imagens e fotos perfil
-
-STATICFILES_DIRS = [
-    BASE_DIR / 'static'
-]
-
-
-
-
-MEDIA_ROOT = BASE_DIR / 'static/images' #imagens e fotos perfil
 
 
 
@@ -271,14 +203,6 @@ MEDIA_ROOT = BASE_DIR / 'static/images' #imagens e fotos perfil
 
 
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-
-CORS_ALLOW_ALL_ORIGINS = True # cuidado!!!! verificar quando estiver no sercvidor. ESTA LINHA DEFINE QUEM PODE FAZER PEDIDOS À API
 
 
 
@@ -319,3 +243,11 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.AllowAny",
     ),
 }
+
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+
+AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN")
+AUTH0_CLIENT_ID = os.environ.get("AUTH0_CLIENT_ID")
+AUTH0_CLIENT_SECRET = os.environ.get("AUTH0_CLIENT_SECRET")

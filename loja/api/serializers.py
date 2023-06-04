@@ -12,6 +12,11 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password as django_validate_password
 from rest_framework.serializers import CharField
 from rest_framework import serializers
+from django.core.files.base import ContentFile
+import base64
+
+
+
 class TipoUtilizadorField(Field):
     def to_representation(self, value):
         return dict(Utilizador.TIPO_UTILIZADOR).get(value)
@@ -91,7 +96,7 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
     tipo_utilizador = TipoUtilizadorField()
     password = CharField(write_only=True, required=False)
     nome = CharField(read_only=True)
-    imagem_perfil = ImageField(required=False)
+    imagem_perfil = serializers.ImageField(required=False)
     def create(self, validated_data):
         if 'password' not in validated_data:
             raise ValidationError("password is required")
@@ -107,6 +112,10 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
             raise ValidationError("cidade is required")
         if "telemovel" not in validated_data:
             raise ValidationError("telemovel is required")
+        
+        
+    
+            validated_data['imagem_perfil'] = ContentFile(imagem_descodificada, '')
         validated_data['nome'] = f"{validated_data['first_name']} {validated_data['last_name']}"
         validated_data['cidade'] = validated_data['cidade'].upper()
         validated_data['password'] = make_password(validated_data['password'])
@@ -116,6 +125,10 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
             raise ValidationError(" 'tipo_utilizador' : 'Não se pode alterar o campo tipo_utilizador' ")
         if 'password' in validated_data:
             raise ValidationError(" Ainda não é possível editar o campo de palavra passe ")
+
+        
+        
+        
         instance.username = validated_data.get('username', instance.username).lower()
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
@@ -127,6 +140,20 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
 
         instance.save()
         return instance
+    def validate_imagem_perfil(self, value):
+        max_size = 2 * 1024 * 1024  # Tamanho máximo em bytes (2MB)
+        allowed_extensions = ['jpg', 'png', 'svg', 'gif']
+
+        # Verificar a extensão do arquivo
+        ext = value.name.split('.')[-1].lower()
+        if ext not in allowed_extensions:
+            raise serializers.ValidationError(f'Tipo de ficheiro inválido. Extensões válidas: {allowed_extensions}')
+
+        # Verificar o tamanho do arquivo
+        if value.size > max_size:
+            raise serializers.ValidationError('Ficheiro grande de mais. Tamanho máximo 2MB')
+
+        return value
     
     
     def validate_password(self, value):
@@ -140,8 +167,8 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
 
     class Meta:
         model = Utilizador
-        #fields = ['username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador']
-        fields = ['username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
+        # fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador']
+        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais', 'cidade', 'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
         extra_kwargs = {'password': {'required': True}}
     
 
@@ -214,7 +241,7 @@ class CategoriaSerializer(ModelSerializer):
 class CategoriaProduto(ModelSerializer):
     class Meta:
         model = Categoria
-        fields= ['nome']
+        fields= ['nome','id']
 
 
 
@@ -268,22 +295,58 @@ class CarrinhoSerializer(ModelSerializer):
 logger = logging.getLogger(__name__)
 
 class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
+    imagem_produto = serializers.ImageField(required=True)
     class Meta:
         model = ProdutoUnidadeProducao
-        fields = ["id", "produto", "unidade_producao", "stock", "descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca"]
+        fields = ["id", "produto", "unidade_producao", "stock", "descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca", "imagem_produto"]
         read_only_fields = ['id']
 
+    def verificar_existencia_associacao(self, produto, unidade_producao):
+        existe_associacao = False
+
+        if produto and unidade_producao:
+            # Faça a verificação aqui e atribua o resultado à variável existe_associacao
+            instance = self.instance
+            queryset = ProdutoUnidadeProducao.objects.filter(produto=produto, unidade_producao=unidade_producao)
+            if instance:
+                queryset = queryset.exclude(pk=instance.pk)
+            existe_associacao = queryset.exists()
+
+        return existe_associacao
+    def validate_imagem_produto(self, value):
+        max_size = 2 * 1024 * 1024  # Tamanho máximo em bytes (2MB)
+        allowed_extensions = ['jpg', 'png', 'svg', 'gif']
+
+        # Verificar a extensão do arquivo
+        ext = value.name.split('.')[-1].lower()
+        if ext not in allowed_extensions:
+            raise serializers.ValidationError(f'Tipo de ficheiro inválido. Extensões válidas: {allowed_extensions}')
+
+        # Verificar o tamanho do arquivo
+        if value.size > max_size:
+            raise serializers.ValidationError('Ficheiro grande de mais. Tamanho máximo 2MB')
+
+        return value
+    
+    
+    
     def validate(self, data):
         
         """
         A mesma coisa que o clean() no modelo ProdutoUnidadeProducao, mas para o serializador
         """
+        
+        
+        
         unidade_medida = data.get('unidade_medida')
         preco_a_granel = data.get('preco_a_granel')
         unidade_Medida_Por_Unidade = data.get('unidade_Medida_Por_Unidade')
         quantidade_por_unidade = data.get('quantidade_por_unidade')
         preco_por_unidade = data.get('preco_por_unidade')
-
+        produto = data.get('produto')
+        unidade_producao = data.get('unidade_producao')
+        
+        
         if unidade_medida == 'un':
             if preco_a_granel is not None:
                 raise serializers.ValidationError('O preço a granel não é permitido para produtos vendidos à unidade. Remova o campo preco_a_granel.')
@@ -317,7 +380,8 @@ class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
             elif unidade_medida in ['kg', 'g', 'l', 'ml']:
                 if preco_a_granel is None:
                    raise serializers.ValidationError('O preço a granel é obrigatório para produtos vendidos por peso ou volume. Preencha o campo: Preço a granel.') 
-
+        if self.verificar_existencia_associacao(produto, unidade_producao):
+            raise serializers.ValidationError("Já existe este produto ({produto}) nesta unidade de produção ({unidade_producao}). Não pode ter o mesmo produto na mesma unidade de produção. Altere um dos campos.")
         return data
 
     
@@ -335,9 +399,24 @@ class ProdutosCarrinhoResponseSerializer(ModelSerializer):
         model= ProdutosCarrinho
         fields= ["carrinho", "produto", "quantidade","precoKilo","preco","id"]
         read_only = ["preco","precoKilo",'id', 'carrinho']
+
+
+class TemProdutoNoCarrinhoSerializer(ModelSerializer):
+    """"
+    Usado para responder a pedidos à API
+    """
+    produto = ProdutoUnidadeProducaoSerializer()
+    class Meta:
+        model= ProdutosCarrinho
+        fields= ["carrinho", "produto", "quantidade","precoKilo","preco","id"]
+        read_only = ["preco","precoKilo",'id', 'carrinho']
+
+
+
+
         
 class ProdutosCarrinhoRequestSerializer(ModelSerializer):
-    """Usado para fazer a API saber intrepertar pedidos
+    """Usado para fazer pedidos À API e esta saber interpreta-los
 
     Args:
         ModelSerializer (_type_): _description_
@@ -363,7 +442,11 @@ class ProdutosCarrinhoRequestSerializer(ModelSerializer):
             if parte_fracao != 0:
                 raise serializers.ValidationError(f'Produtos vendidos à unidade não podem ter quantidade não inteiras. Escolha um número sem parte fracionária')
         return data
-
+    # def __init__(self, *args, **kwargs):
+    #     super(ProdutosCarrinhoRequestSerializer, self).__init__(*args, **kwargs)
+    #     instance = getattr(self, 'instance', None)
+    #     if instance and instance.pk:
+    #         self.fields['produto'].disabled = True
 
 
 
@@ -378,7 +461,7 @@ class FornecedorNomeUtilizadorSerializer(ModelSerializer):
     utilizador = CharField(source="utilizador.nome", read_only=True)
     class Meta:
         model = Fornecedor
-        fields = ['utilizador']
+        fields = ['utilizador','id']
 
 
 
@@ -387,6 +470,7 @@ class UnidadeProducaoSingleProdutoSerializer(ModelSerializer):
     Serializador de auxilio a Single Product Serializer. Devolve o id, o fornecedor, isto é o nome do fornecedor da UP, a morada, cidade e pais da UP
     """
     fornecedor = FornecedorNomeUtilizadorSerializer(read_only=True)
+    pais = campoPaisSerializador()
     class Meta:
         model = UnidadeProducao
         fields = ['id','fornecedor', 'nome', 'morada', 'cidade', 'pais']
@@ -400,7 +484,7 @@ class SingleProdutoPaginaSerializer(ModelSerializer):
     produto = ProdutoSerializer()
     class Meta:
         model = ProdutoUnidadeProducao
-        fields = ["id","produto", "unidade_producao", "stock","descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca"]
+        fields = ["id","produto", "unidade_producao", "stock","descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca","imagem_produto"]
         read_only_fields = ['id']
 
 

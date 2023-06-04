@@ -2,15 +2,14 @@ from decimal import Decimal
 from datetime import date
 import requests
 import json
-
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.middleware.csrf import get_token
-
 from .models import *
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import PasswordConfirmForm, ProdutoUnidadeProducaoForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario
+from .forms import PasswordConfirmForm, ProdutoUnidadeProducaoForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario, CompletarPerfil
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
@@ -21,7 +20,28 @@ from loja.api.serializers import *
 from .utils import fornecedor_required
 
 
- 
+import json
+from authlib.integrations.django_client import OAuth
+from django.conf import settings
+from django.shortcuts import redirect, render, redirect
+from django.urls import reverse
+from urllib.parse import quote_plus, urlencode
+
+from loja.api.serializers import UtilizadorSerializer
+
+oauth = OAuth()
+
+oauth.register(
+    "auth0",
+    client_id=settings.AUTH0_CLIENT_ID,
+    client_secret=settings.AUTH0_CLIENT_SECRET,
+    client_kwargs={
+        "scope": "openid profile email",
+    },
+    server_metadata_url = f"http://{settings.AUTH0_DOMAIN}/.well-known/openid-configuration",
+)
+
+
 #     if request.user != utilizador:
 #         return HttpResponse('Você não deveria estar aqui!')
 #     if request.method == 'POST':
@@ -31,28 +51,62 @@ from .utils import fornecedor_required
 #     context={'objeto':utilizador, 'pagina':'apagar-conta'}
 #     return render(request,'loja/delete.html', context)
 
+def quantosProdutosNoCarrinho(request):
+    if request.user.is_authenticated and request.user.is_consumidor:
+        print("entrei!")
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
+        url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
+        resposta = sessao.get(url)
+        conteudo = resposta.json() if resposta.json() else 0
+        return len(conteudo) if len(conteudo) != 0 else 0
+    elif request.user.is_authenticated and request.user.is_fornecedor:
+        return 0
+    else:
+        
+        carrinho = request.session.get('carrinho') 
+        if carrinho is not None:
+            return len(carrinho)
+        else:
+            return 0
+
+
+
+
 # Create your views here.
 def loja(request):
     context = {}
+    if request.user.is_authenticated and request.user.is_consumidor:
+        if request.session.get('carrinho') is not None and request.session.get('carrinho') !={}:
+            adicionarProdutosCarrinhoDpsDeLogar(request)
+    elif request.user.is_authenticated and request.user.is_fornecedor:
+        if request.session.get('carrinho') is not None and request.session.get('carrinho') !={}:
+            request.session['carrinho'] = {}
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context={"produtosCarrinho":produtosCarrinho}
     return render(request, 'loja/loja.html', context)
+def contacts(request):
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context = {"produtosCarrinho":produtosCarrinho}
+    return render(request, 'loja/contacts.html', context)
 def about(request):
     context = {}
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context = {"produtosCarrinho":produtosCarrinho}
     return render(request, 'loja/about.html', context)
-# def carrinho(request):
 
-#     if request.user.is_authenticated:
-#             if request.user.is_consumidor:
-#                 consumidor = request.user.username
-#                 carrinho, created = Carrinho.objects.get_or_create(consumidor=consumidor, complete=False)
-#                 items = carrinho.adicionar_ao_carrinho.all()
-#     else:
-#         items = []
-#     context = {'items':ProdutosCarrinho}
-#     return render(request, 'loja/carrinho.html', context)
 
 def checkout(request):
     context = {}
     return render(request, 'loja/checkout.html', context)
+def news(request):
+    context = {}
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context = {"produtosCarrinho":produtosCarrinho}
+    return render(request, 'loja/news.html', context)
+
+
+
 
 def confirm_password_view(request):
     if request.method == 'POST':
@@ -75,54 +129,86 @@ def confirm_password_view(request):
     return render(request, 'password_confirm.html', context)
 
 def loginUtilizador(request):
-    pagina='login'
-    if request.user.is_authenticated:
-        return redirect('loja-home')
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        try:
-            utilizador = Utilizador.objects.get(email=email)
-        except:
-            messages.error(request,"Este email não corresponde a nenhum utilizador registado")
-        utilizador = authenticate(request, email=email, password=password)
-        if utilizador is not None:
-            
-            login(request, utilizador)
-            return redirect('loja-home')
-        else:
-            messages.error(request,"Utilizador ou password errados")  
-    context = {'pagina':pagina}
-    return render(request, 'loja/login_register.html', context)
+    return oauth.auth0.authorize_redirect(
+        request, request.build_absolute_uri(reverse("loja-callback"))
+    )
 
-def registerUtilizador(request):
-    pagina = 'registo'
-    form = UtilizadorFormulario()
+
+def callback(request):
+    token = oauth.auth0.authorize_access_token(request)
+    request.session["user"] = token
+
+    username = token['userinfo']['nickname']
+    email = token['userinfo']['email']
+
+    user, created = Utilizador.objects.get_or_create(username=username, email=email)
+
+    login(request, user)
+
+    if created:
+        return redirect('loja-completarPerfil')
+    else:
+        return redirect(request.build_absolute_uri(reverse("loja-home")))
+
+    # username = token['userinfo']['nickname']
+
+    # # url = f'http://127.0.0.1:8000/api/utilizadores/{username}'
+    # url = f'http://127.0.0.1:8000/api/utilizadores/ninfante'
     
-    if request.method == 'POST':
-        formulario = UtilizadorFormulario(request.POST, request.FILES)
-        if formulario.is_valid():
-            utilizador = formulario.save(commit=False)
-            utilizador.username = utilizador.username.lower()
-            utilizador.cidade = utilizador.cidade.upper()
-            utilizador.nome = utilizador.first_name+' '+ utilizador.last_name
-            utilizador.save()
-            login(request,utilizador)
-            if utilizador.tipo_utilizador == "C":
-                consumidor = Consumidor.objects.create(utilizador=utilizador)
-                carrinho = Carrinho.objects.create(consumidor=consumidor)
-                return redirect('loja-home')
-            else:
-                Fornecedor.objects.create(utilizador=utilizador)
-                return redirect('loja-home')
+    # response = requests.get(url)
+
+    # if response.status_code == 200:
+    #     print('AAAA\n\n')
+    #     print(response.json())
+    #     utilizador = UtilizadorSerializer(data=response.json())
+    #     login(request, utilizador)
+    #     return redirect(request.build_absolute_uri(reverse("loja-home")))
+    # else:
+    #     print('BBBB\n\n')
+
+
+def logout(request):
+    request.session.clear()
+
+    return redirect(
+        f"https://{settings.AUTH0_DOMAIN}/v2/logout?"
+        + urlencode(
+            {
+                "returnTo": request.build_absolute_uri(reverse("loja-home")),
+                "client_id": settings.AUTH0_CLIENT_ID,
+            },
+            quote_via=quote_plus,
+        ),
+    )
+
+# def registerUtilizador(request):
+#     pagina = 'registo'
+#     form = UtilizadorFormulario()
+    
+#     if request.method == 'POST':
+#         formulario = UtilizadorFormulario(request.POST, request.FILES)
+#         if formulario.is_valid():
+#             utilizador = formulario.save(commit=False)
+#             utilizador.username = utilizador.username.lower()
+#             utilizador.cidade = utilizador.cidade.upper()
+#             utilizador.nome = utilizador.first_name+' '+ utilizador.last_name
+#             utilizador.save()
+#             login(request,utilizador)
+#             if utilizador.tipo_utilizador == "C":
+#                 consumidor = Consumidor.objects.create(utilizador=utilizador)
+#                 carrinho = Carrinho.objects.create(consumidor=consumidor)
+#                 return redirect('loja-home')
+#             else:
+#                 Fornecedor.objects.create(utilizador=utilizador)
+#                 return redirect('loja-home')
 
             
-        else:
-            messages.error(request,'Ocorreu um erro durante o processo de registo.')
-            form = formulario  # reatribui o formulário com erros
+#         else:
+#             messages.error(request,'Ocorreu um erro durante o processo de registo.')
+#             form = formulario  # reatribui o formulário com erros
 
-    context = {'pagina': pagina, 'form': form}
-    return render(request,'loja/login_register.html', context)
+#     context = {'pagina': pagina, 'form': form}
+#     return render(request,'loja/login_register.html', context)
 
 def formFornecedor(request):
     form = FornecedorFormulario()
@@ -138,12 +224,6 @@ def formFornecedor(request):
             messages.error(request,'Ocorreu um erro durante o processo de registo')
     context = {'form':form}
     return render(request,'loja/register_fornecedor.html' ,context)
-
-def logutUtilizador(request):
-    logout(request)
-    return redirect('loja-home')
-
-
 
 @login_required(login_url='loja-login')
 def editarPerfil(request):
@@ -170,9 +250,40 @@ def editarPerfil(request):
             messages.success(request, 'Perfil atualizado com sucesso.')
             link = reverse('loja-perfil', args=[request.user.username])
             return redirect(link)
-    context = {'form':form, 'pagina':pagina}
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context = {'form':form, 'pagina':pagina, "produtosCarrinho":produtosCarrinho}
     return render(request, 'loja/editarUtilizador.html', context)
 
+@login_required(login_url='loja-login')
+def completarPerfil(request):
+    utilizador = request.user
+    form = CompletarPerfil(instance=utilizador)
+    if request.method == 'POST':
+        form = CompletarPerfil(request.POST, request.FILES,instance = utilizador)
+        if form.is_valid():
+            utilizador = form.save(commit=False)
+            utilizador.username = request.POST.get('username').lower()
+            utilizador.first_name = request.POST.get('first_name')
+            utilizador.last_name = request.POST.get('last_name')
+            utilizador.nome = utilizador.first_name + ' ' + utilizador.last_name
+            utilizador.pais = request.POST.get('pais')
+            utilizador.cidade = request.POST.get('cidade').lower()
+            utilizador.telemovel = request.POST.get('telemovel')
+            if request.POST.get('imagem_perfil'):
+                utilizador.imagem_perfil = request.POST.get('imagem_perfil')
+            utilizador.tipo_utilizador = request.POST.get('tipo_utilizador')
+            utilizador.save()
+            if utilizador.tipo_utilizador == "C":
+                consumidor = Consumidor.objects.create(utilizador=utilizador)
+                carrinho = Carrinho.objects.create(consumidor=consumidor)
+            else:
+                Fornecedor.objects.create(utilizador=utilizador)
+
+
+            return redirect('loja-home')
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context = {'form':form, "produtosCarrinho":produtosCarrinho}
+    return render(request, 'loja/completarPerfil.html', context)
 
 @login_required(login_url='loja-login')
 def apagarConta(request, pk):
@@ -199,7 +310,8 @@ def apagarConta(request, pk):
 def perfil(request, userName):
     utilizadorPerfil = Utilizador.objects.get(username=userName)
     pagina = 'perfil'
-    context={'pagina':pagina, 'utilizadorView': utilizadorPerfil}
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context={'pagina':pagina, 'utilizadorView': utilizadorPerfil, "produtosCarrinho":produtosCarrinho}
     if utilizadorPerfil.is_fornecedor:
         fornecedor = utilizadorPerfil.fornecedor
         unidadesProducao = fornecedor.unidades_producao.all()
@@ -239,55 +351,6 @@ def criarUP(request, userName):
 
 
 
-# def unidadeProducao(request, userName, id):
-#     context = {}
-#     utilizador = Utilizador.objects.get(username=userName)
-#     fornecedor = utilizador.fornecedor
-#     #fornecedor.unidades_producao.all()
-#     unidadeProducao = fornecedor.unidades_producao.get(pk=id)
-#     veiculos = unidadeProducao.veiculo_set.all()
-#     print("\n\n\n\n",repr(veiculos))
-#     num_veiculos = veiculos.count()
-    
-    
-#     context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':unidadeProducao}
-#     return render(request, 'loja/unidadeProducao.html', context)
-
-#######################ZONA DE TESTE######################################################
-
-# def ver_produtos(request):
-#     q = request.GET.get('q') if request.GET.get('q') != None else ''
-#     url = 'http://127.0.0.1:8000/api/produtos/'
-#     response = requests.get(url)
-
-#     if response.status_code == 200:
-#         data = response.json()
-#     else:
-#         return None
-
-#     url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
-#     response2 = requests.get(url2)
-#     if response2.status_code == 200:
-#         data2 = response2.json()
-#     else:
-#         return None
-
-#     FilteredProducts = []
-#     for product in data:
-#         if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
-#             FilteredProducts.append(product)
-
-#     actualFilteredProducts = []
-#     for product in FilteredProducts:
-#         for shopProduct in data2:
-#             if product['id'] == shopProduct['produto']:
-#                 if shopProduct['preco_a_granel']==None:
-#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade"})
-#                 else:
-#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel"})
-
-#     context={'produtos_precos':actualFilteredProducts}
-#     return render(request, 'loja/shop.html', context)
 
 
 @fornecedor_required
@@ -665,8 +728,8 @@ def criar_produto(request, userName):
             sessao = requests.Session()
             sessao.cookies.update(request.COOKIES)
             urlCriarProduto = f"http://127.0.0.1:8000/api/produtos/"
-            
-            headers = {"Authorization": f"Token {request.user.auth_token}"}
+            csrf_token = get_token(request)
+            headers = {'X-CSRFToken':csrf_token}
             
             
             resposta = sessao.post(urlCriarProduto, data=produto_data, headers=headers)
@@ -694,71 +757,154 @@ def lista_produtos_eletronicos(request):
 
 
 def sP(request,produto_id):
-    produto=[]
-    p=int(produto_id)
-    url = f'http://127.0.0.1:8000/api/produtos_loja/{p}/'
+    
+    filtered_products=[]
+    idProdutoInt=int(produto_id)
+    url = f'http://127.0.0.1:8000/api/produtos_loja/'
     response = requests.get(url)
     if response.status_code == 200:
-        data = response.json()
+        produtosNaLoja = response.json()
     else:
         return None
-    
-    if data['quantidade_por_unidade']==None:
-        context={'produto_info':data['produto']['nome'],'categoria':data['produto']['categoria']['nome'],'granel':data['preco_a_granel'],'fornecedor':data['unidade_producao']['fornecedor']['utilizador'],'up':data['unidade_producao']['nome'],
-                 'morada':data['unidade_producao']['morada'],
-                 'cidade':data['unidade_producao']['cidade'],'pais':data['unidade_producao']['pais'],'descricao':data['descricao'],'unidadeM':'Kilograma','stock':data['stock']
-                 ,'data_producao':data['data_producao'],'marca':data['marca'],'unidade':data['preco_por_unidade']}
-    if data['preco_a_granel']==None:
-        context={'produto_info':data['produto']['nome'],'categoria':data['produto']['categoria']['nome'],'granel':data['preco_a_granel'],'fornecedor':data['unidade_producao']['fornecedor']['utilizador'],'up':data['unidade_producao']['nome'],
-                 'morada':data['unidade_producao']['morada'],
-                 'cidade':data['unidade_producao']['cidade'],'pais':data['unidade_producao']['pais'],'descricao':data['descricao'],'unidadeM':'Unidade','stock':data['stock'],'data_producao':data['data_producao']
-                 ,'marca':data['marca'],'unidade':data['preco_por_unidade']}
+    listaID=[]
 
-    return render(request, 'loja/single-product.html', context)
+    for product in produtosNaLoja:
+        if product['produto'] == idProdutoInt:
+            listaID.append(product['id'])
+    
+    for i in listaID:
+        url = f'http://127.0.0.1:8000/api/produtos_loja/{i}/'
+        response = requests.get(url)
+        if response.status_code == 200:
+            infoSingleProduct = response.json()
+            for product in produtosNaLoja:
+                if product['id'] == i:
+                    filtered_products.append({
+                        'id':infoSingleProduct['id'],
+                        'nome': infoSingleProduct['produto']['nome'],
+                        'stock': product['stock'],
+                        'descricao': product['descricao'],
+                        'categoria': infoSingleProduct['produto']['categoria']['nome'],
+                        'up': infoSingleProduct['unidade_producao']['nome'],
+                        'fornecedor': infoSingleProduct['unidade_producao']['fornecedor']['utilizador'],
+                        'morada': infoSingleProduct['unidade_producao']['morada'],
+                        'pais': infoSingleProduct['unidade_producao']['pais'],
+                        'cidade': infoSingleProduct['unidade_producao']['cidade'],
+                        'dataP': infoSingleProduct['data_producao'],
+                        'marca': infoSingleProduct['marca'],
+                        'precoU':infoSingleProduct['preco_por_unidade'],
+                        'precoG':infoSingleProduct['preco_a_granel'],
+                        'unidade_medida': infoSingleProduct['unidade_medida'],
+                        'quantidade_por_unidade': infoSingleProduct['quantidade_por_unidade'] if infoSingleProduct['quantidade_por_unidade'] is not None else '',
+                        'unidade_Medida_Por_Unidade': infoSingleProduct['unidade_Medida_Por_Unidade'],
+                        'imagem_produto': infoSingleProduct['imagem_produto'],
+                    })
+
+        else:
+            return None
+
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context={'filtered_products':filtered_products, "produtosCarrinho":produtosCarrinho}
+    return render(request, 'loja/single-product.html',context)
+    # url = f'http://127.0.0.1:8000/api/produtos_loja/{p}/'
+    # response = requests.get(url)
+    # if response.status_code == 200:
+    #     data = response.json()
+    # else:
+    #     return None
+    
+    # if data['quantidade_por_unidade']==None:
+    #     context={'produto_info':data['produto']['nome'],'categoria':data['produto']['categoria']['nome'],'granel':data['preco_a_granel'],'fornecedor':data['unidade_producao']['fornecedor']['utilizador'],'up':data['unidade_producao']['nome'],
+    #              'morada':data['unidade_producao']['morada'],
+    #              'cidade':data['unidade_producao']['cidade'],'pais':data['unidade_producao']['pais'],'descricao':data['descricao'],'unidadeM':'Kilograma','stock':data['stock']
+    #              ,'data_producao':data['data_producao'],'marca':data['marca'],'unidade':data['preco_por_unidade']}
+    # if data['preco_a_granel']==None:
+    #     context={'produto_info':data['produto']['nome'],'categoria':data['produto']['categoria']['nome'],'granel':data['preco_a_granel'],'fornecedor':data['unidade_producao']['fornecedor']['utilizador'],'up':data['unidade_producao']['nome'],
+    #              'morada':data['unidade_producao']['morada'],
+    #              'cidade':data['unidade_producao']['cidade'],'pais':data['unidade_producao']['pais'],'descricao':data['descricao'],'unidadeM':'Unidade','stock':data['stock'],'data_producao':data['data_producao']
+    #              ,'marca':data['marca'],'unidade':data['preco_por_unidade']}
+
+    # return render(request, 'loja/single-product.html', context)
+    
+#  if shopProduct['preco_a_granel']==None:
+#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade",'id':shopProduct['id']})
+#                 else:
+#                     actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel",'id':shopProduct['id']})
 
 
 def ver_produtos(request):
-    q = request.GET.get('q') if request.GET.get('q') != None else ''
-    url = 'http://127.0.0.1:8000/api/produtos/'
-    info = {'q':q}
-    response = requests.get(url, data=info)
+    if not request.user.is_authenticated or (request.user.is_authenticated and request.user.is_consumidor):
+        q = request.GET.get('q', '')  # Usando o operador de coalescência nula para definir um valor padrão vazio para 'q'
+        url = 'http://127.0.0.1:8000/api/produtos/'
+        info = {'q': q}
+        response = requests.get(url, data=info)
+        if response.status_code == 200:
+            data = response.json()
+        else:
+            data=[]
+       
+        url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
+        info = {'q': q}
+        response2 = requests.get(url2, data=info)
+        if response2.status_code == 200:
+            data2 = response2.json()
+        else:
+            data2=[]
+        
+        FilteredProducts = []
+        for product in data:
+            if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
+                FilteredProducts.append(product)
+        
+        actualFilteredProducts = []
+       
+        for product in FilteredProducts:
+            prices = []
+            prices1 = []
 
-    if response.status_code == 200:
-        data = response.json()
-    else:
-        return None
-    url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
-    info = {'q':q}
-    response2 = requests.get(url2, data=info)
-    if response2.status_code == 200:
-        data2 = response2.json()
-    else:
-        return None
+            for shopProduct in data2:
+                if product['id'] == shopProduct['produto']:
+                    if shopProduct['preco_a_granel'] is not None:
+                        prices.append(shopProduct['preco_a_granel'])
+                    else:
+                        prices1.append(shopProduct['preco_por_unidade'])
 
-    FilteredProducts = []
-    for product in data:
-        if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
-            FilteredProducts.append(product)
-    actualFilteredProducts = []
-    for product in FilteredProducts:
-        for shopProduct in data2:
-            if product['id'] == shopProduct['produto']:
-                if shopProduct['preco_a_granel']==None:
-                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_por_unidade'],'tipo':"unidade",'id':shopProduct['id'],'categoria':product['categoria']['nome']})
-                else:
-                    actualFilteredProducts.append({'produto':product['nome'], 'preco':shopProduct['preco_a_granel'],'tipo':"granel",'id':shopProduct['id'],'categoria':product['categoria']['nome']})
+            min_price = min(prices) if prices and None not in prices else -1
+            min_price1 = min(prices1) if prices1 and None not in prices1 else -1
+            if prices or prices1:
+                product_info = {
+                    'id': product['id'],
+                    'produto': product['nome'],
+                    'min_precoG': min_price,
+                    'min_precoU': min_price1,
+                    'categoria': product['categoria']['nome'],
+                    'idCategoria': product['categoria']['id'],
+                    'imagem_produto': None
+                }
+                lowest_price_product = None
+                if min_price != -1:
+                    lowest_price_product = next(
+                        (shopProduct for shopProduct in data2 if shopProduct['preco_a_granel'] == min_price), None)
+                elif min_price1 != -1:
+                    lowest_price_product = next(
+                        (shopProduct for shopProduct in data2 if shopProduct['preco_por_unidade'] == min_price1), None)
+                if lowest_price_product is not None:
+                    product_info['imagem_produto'] = lowest_price_product['imagem_produto']
 
-    url3 = 'http://127.0.0.1:8000/api/categorias/'
-    response3 = requests.get(url3)
-    if response.status_code == 200:
-        data3 = response3.json()
-    else:
-        return None
+                actualFilteredProducts.append(product_info)
 
-    print(data3)
+        url3 = 'http://127.0.0.1:8000/api/categorias/'
+        response3 = requests.get(url3)
+        if response.status_code == 200:
+            data3 = response3.json()
+        else:
+            return None
 
-    context={'produtos_precos':actualFilteredProducts,'termo_pesquisa':q,'categoriaProduto':data3}
-    return render(request, 'loja/shop.html', context)
+        print(data3)
+
+        produtosCarrinho = quantosProdutosNoCarrinho(request)
+        context = {'produtos_precos': actualFilteredProducts, 'termo_pesquisa': q, "produtosCarrinho":produtosCarrinho, 'categoriaProduto':data3}
+        return render(request, 'loja/shop.html', context)
 
 
 # def ver_produtos_categorias(request):
@@ -784,99 +930,247 @@ def ver_produtos(request):
 
 
 
-
-######################CARRINHO############################
+##################################################
 
 def carrinho(request):
-    def criar_instancia_produto_carrinho(json):
-        """Tentar criar uma instância do produto carrinho
-
-        Args:
-            json (dict): json convertido num dicionário.
-        """
-        idCarrinho = json["carrinho"]["id"]
-        idProdutoUP = json['produto']['id']
-        quantidade = Decimal(json["quantidade"])
-        preco = Decimal(json["preco"])
-        precoKilo = Decimal(json["precoKilo"])
-        
-        urlCarrinho = f"http://127.0.0.1:8000/api/consumidores/carrinho/{idCarrinho}"
-        urlProdutoUP = f"http://127.0.0.1:8000/api/produtos_loja/{idProdutoUP}/"
-        
-        respostaCarrinho = requests.get(urlCarrinho)
-        conteudoCarrinho = respostaCarrinho.json()
-
-        respostaProdutoUP = requests.get(urlProdutoUP)
-        conteudoProdutoUP = respostaProdutoUP.json()
-    
-    
-    sessao = requests.Session()
-    sessao.cookies.update(request.COOKIES)
-    url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
-    resposta = sessao.get(url)
-    conteudo = resposta.json()
-    print(conteudo)
-    carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
-    produtos_carrinho = carrinho.produtos_carrinho.all()
-
-
-    total_price = sum(produto_carrinho.preco if produto_carrinho.preco is not None else 0 for produto_carrinho in produtos_carrinho)
-
-    
-
-
-
-    context = {
-        'carrinho': carrinho,
-        'produtos_carrinho': produtos_carrinho,
-        'total': total_price
-    }
+    # if request.session.get('carrinho') is not None and request.session.get('carrinho') != {}:
+    #     print(request.session['carrinho'])
+    context = {}
+    if request.user.is_authenticated:
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
+        url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
+        resposta = sessao.get(url)
+        if resposta.content:
+            conteudo = resposta.json()
+            total= Decimal(0)
+            produtos = []
+            for produto in conteudo:
+                produtoUP = produto['produto']
+                idParaReceberNome = produtoUP['produto']
+                urlNomeProduto = f'http://127.0.0.1:8000/api/produtosID/{idParaReceberNome}/'
+                resposta = sessao.get(urlNomeProduto)
+                nome = resposta.json()
+                nomeProduto = nome['nome']
+                quantidade = produto['quantidade']
+                precoKilo = produto['precoKilo']
+                preco = produto['preco']
+                idProdutoNoCarrinho = produto['id']
+                total+=Decimal(preco)
+                produtos.append({
+                    'produto' : produtoUP,
+                    'nomeProduto': nomeProduto,
+                    'quantidade':quantidade,
+                    'precoKilo':precoKilo,
+                    'preco':preco,
+                    'idNoCarrinho':idProdutoNoCarrinho
+                })
+            # carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+            # produtos_carrinho = carrinho.produtos_carrinho.all()
+            #total_price = sum(produto_carrinho.preco if produto_carrinho.preco is not None else 0 for produto_carrinho in produtos_carrinho)
+            produtosCarrinho = quantosProdutosNoCarrinho(request)
+            context = {
+                'produtos': produtos,
+                'total': total,
+                "produtosCarrinho": produtosCarrinho
+            }
+    elif not request.user.is_authenticated:
+        carrinho = request.session.get('carrinho')
+        print(carrinho)
+        total= Decimal(0)
+        produtos = []
+        chaves = carrinho.keys()
+        for chave in chaves:
+            urlProdutoUP = f'http://127.0.0.1:8000/api/produtos_loja/{chave}/'
+            resposta = requests.get(urlProdutoUP)
+            
+            
+            
+            produtoUP = resposta.json()
+            nomeProduto = produtoUP['produto']['nome']
+            quantidade = carrinho[chave]['quantidade']
+            precoKilo = produtoUP['preco_a_granel'] if produtoUP['unidade_medida'] != 'un' else produtoUP['preco_por_unidade']
+            preco = carrinho[chave]['precoQuantidade']
+            total+=Decimal(preco)
+            produtos.append({
+                'produto' : produtoUP,
+                'nomeProduto': nomeProduto,
+                'quantidade':quantidade,
+                'precoKilo':precoKilo,
+                'preco':preco,
+                'idNoCarrinho':chave
+            })
+        # carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+        # produtos_carrinho = carrinho.produtos_carrinho.all()
+        #total_price = sum(produto_carrinho.preco if produto_carrinho.preco is not None else 0 for produto_carrinho in produtos_carrinho)
+        produtosCarrinho = quantosProdutosNoCarrinho(request)
+        context = {
+            "produtosCarrinho": produtosCarrinho,
+            'produtos': produtos,
+            'total': total
+        }
     return render(request, 'loja/carrinho.html', context)
 
 def adicionar_ao_carrinho(request, produto_id):
+    """
+    Adiciona um produto a um carrinho
+
+    Args:
+        request (_type_): request do browser
+        produto_id (_type_): id de um ProdutoUnidadeProdução. NÃO É A FK da coluna produto na tabela ProdutoUnidadeProducao, 
+                            é a coluna id. (produto = ProdutoUnidadeProducao.objects.get(id=produto_id)) 
+
+    Returns:
+        _type_: _description_
+    """
     data = request.GET.get('preco')
     split_values = data.split('?')
-    valor = float(split_values[0])
-    quantidade = int(split_values[1].split('=')[1])
+    valor = Decimal(split_values[0])
+    quantidade = Decimal(split_values[1].split('=')[1])
     preco_atualizado = Decimal(str(valor * quantidade))
-
+    carrinho = request.session.get('carrinho', {})
     if request.user.is_authenticated and request.user.is_consumidor:
-        produto = ProdutoUnidadeProducao.objects.get(id=produto_id)
-        carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
-        produto_carrinho, created = ProdutosCarrinho.objects.get_or_create(carrinho=carrinho, produto=produto)
+        data = request.GET.get('preco')
+        split_values = data.split('?')
+        valor = Decimal(split_values[0])
+        quantidade = Decimal(split_values[1].split('=')[1])
+        preco_atualizado = Decimal(str(valor * quantidade))
 
-        if created:
+        url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/produtoUP/{produto_id}/'
+    
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
+
+        csrf_token = get_token(request)
+        headers = {'X-CSRFToken':csrf_token}
+
+        resposta = sessao.get(url, headers=headers)
+        if resposta.status_code == 200:
+            content = resposta.json()
+            idProdutoNoCarrinho = content.get('id')
+            # idCarrinho = content.get('carrinho')
+            produtoUnidadeProducao = content.get('produto')
+            idProdutoUnidadeProducao = produtoUnidadeProducao.get('id')
+            quantidade_updated = Decimal(content.get('quantidade')) + quantidade
+            print("Quantidade antiga:", content.get('quantidade'))
+            print("Quantidade update:", quantidade_updated)
             
-            produto_carrinho.quantidade = quantidade
-            produto_carrinho.preco = preco_atualizado
-            produto_carrinho.precoKilo = valor
-            produto_carrinho.save()
-            messages.success(request, 'O produto foi adicionado ao carrinho com sucesso.')
+            atualizar_carrinho_dict_info = {
+                'produto': idProdutoUnidadeProducao,
+                'quantidade' : quantidade_updated
+            }
+            # # print(atualizar_carrinho_dict_info)
+            
+            urlAtualizar = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/{idProdutoNoCarrinho}/'
+            respostaUpdate = sessao.put(urlAtualizar, headers=headers, data = atualizar_carrinho_dict_info)
+            
+            print("VALORES ATUALIZADOS:", respostaUpdate.json())
         else:
-            # O produto já está no carrinho, então atualize a quantidade e o preço
-            produto_carrinho.quantidade += quantidade
-            produto_carrinho.preco += preco_atualizado
-            produto_carrinho.save()
-            messages.success(request, 'O produto foi atualizado com sucesso.')
+            sessao = requests.Session()
+            sessao.cookies.update(request.COOKIES)
 
-       
+            csrf_token = get_token(request)
+            headers = {'X-CSRFToken':csrf_token}
+            
+            
+            
+                        
+            atualizar_carrinho_dict_info = {
+                'produto': produto_id,
+                'quantidade' : quantidade
+            }
+            
+            
+            urlAtualizar = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/'
+            respostaUpdate = sessao.post(urlAtualizar, headers=headers, data = atualizar_carrinho_dict_info)
+        
+        # produto = ProdutoUnidadeProducao.objects.get(id=produto_id)
+        # carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+        # produto_carrinho, created = ProdutosCarrinho.objects.get_or_create(carrinho=carrinho, produto=produto)
+
+        # if created:
+            
+        #     produto_carrinho.quantidade = quantidade
+        #     produto_carrinho.preco = preco_atualizado
+        #     produto_carrinho.precoKilo = valor
+        #     produto_carrinho.save()
+        #     messages.success(request, 'O produto foi adicionado ao carrinho com sucesso.')
+        # else:
+        #     # O produto já está no carrinho, então atualize a quantidade e o preço
+        #     produto_carrinho.quantidade += quantidade
+        #     produto_carrinho.preco += preco_atualizado
+        #     produto_carrinho.save()
+        #     messages.success(request, 'O produto foi atualizado com sucesso.')
+    elif request.user.is_authenticated and request.user.is_fornecedor:
+        return redirect('loja-home')
+    else:
+        data = request.GET.get('preco')
+        split_values = data.split('?')
+        valor = float(split_values[0])
+        quantidade = float(split_values[1].split('=')[1])
+        preco_atualizado = valor * quantidade
+        produto_id_nao_autent = str(produto_id)
+
+        if produto_id_nao_autent in carrinho.keys():
+            carrinho[produto_id_nao_autent]['quantidade'] += quantidade
+            carrinho[produto_id_nao_autent]['precoQuantidade'] += preco_atualizado
+        else:
+            carrinho[produto_id_nao_autent] = { 
+                    'quantidade': quantidade,
+                    'precoQuantidade' : preco_atualizado
+            }
+        
+        request.session['carrinho'] = carrinho
     return redirect('loja-ver_produtos')
-
+    
 
 from django.shortcuts import get_object_or_404, redirect
 from .models import Carrinho, ProdutosCarrinho
 
 def remover_do_carrinho(request, produto_id):
-    carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
-    produto_carrinho = get_object_or_404(ProdutosCarrinho, carrinho=carrinho, id=produto_id)
+    if request.user.is_authenticated:
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
 
-    # Reduz a quantidade do produto no carrinho
-    # if produto_carrinho.quantidade > 1:
-    #     produto_carrinho.quantidade -= 1
-    #     produto_carrinho.save()
-    # else:
-    produto_carrinho.delete()
-    messages.success(request, 'O produto foi removido do carrinho com sucesso.')
+        csrf_token = get_token(request)
+        headers = {'X-CSRFToken':csrf_token}
+
+
+
+        
+        urlDelete = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/{produto_id}/'
+        respostaDelete = sessao.delete(urlDelete, headers=headers)
+        
+
+        
+        
+        # carrinho = Carrinho.objects.get(consumidor=request.user.consumidor)
+        # produto_carrinho = get_object_or_404(ProdutosCarrinho, carrinho=carrinho, id=produto_id)
+
+        # # Reduz a quantidade do produto no carrinho
+        # # if produto_carrinho.quantidade > 1:
+        # #     produto_carrinho.quantidade -= 1
+        # #     produto_carrinho.save()
+        # # else:
+        # produto_carrinho.delete()
+        if respostaDelete.status_code == 204:
+            messages.success(request, 'O produto foi removido do carrinho com sucesso.')
+        elif respostaDelete.status_code == 404:
+            mensagem_erro = respostaDelete.json().get('detail', 'Produto não encontrado no carrinho')
+            messages.error(request, mensagem_erro)
+        else:
+            messages.error(request, "Algo correu mal ao remover o produto do carrinho")
+    else:
+        carrinho = request.session.get('carrinho')
+        idProdutoStr = str(produto_id)
+        if idProdutoStr in carrinho.keys():
+            carrinho.pop(idProdutoStr)
+            messages.success(request, 'O produto foi removido do carrinho com sucesso.')
+            request.session['carrinho'] = carrinho
+        else:
+            mensagem_erro = respostaDelete.json().get('detail', 'Produto não encontrado no carrinho')
+            messages.error(request, mensagem_erro)
+            
     return redirect('loja-carrinho')
 
     
@@ -908,8 +1202,11 @@ def removerAssociaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProduca
 def criarAssociacaoProdutoUP(request):
     formulario = ProdutoUnidadeProducaoForm(user=request.user)
     if request.method == 'POST':
-        form = ProdutoUnidadeProducaoForm(request.POST, user=request.user)
+        form = ProdutoUnidadeProducaoForm(request.POST, request.FILES,user=request.user)
+        # try:
         if form.is_valid():
+            imagem = form.cleaned_data['imagem_produto']
+            print("\n\n",type(imagem),"\n\n")
             produto = form.cleaned_data['produto']
             unidade_producao = form.cleaned_data['unidade_producao']
             descricao = form.cleaned_data['descricao']
@@ -935,6 +1232,9 @@ def criarAssociacaoProdutoUP(request):
                 "data_producao": data_producao.isoformat() if isinstance(data_producao, date) else None,
                 "marca":marca
             }
+            
+            
+            
             url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{unidade_producao.id}/produtos/'
 
             
@@ -946,17 +1246,77 @@ def criarAssociacaoProdutoUP(request):
             csrf_token = get_token(request)
             headers = {'X-CSRFToken':csrf_token}
         
-            resposta = sessao.post(url, headers=headers,data=produto_up_data)
+            resposta = sessao.post(url, headers=headers,data=produto_up_data, files={"imagem_produto":imagem})
             if resposta.status_code == 201:
-                messages.success(request, 'Produto criado com sucesso.')
+                #messages.success(request, 'Produto criado com sucesso.')
                 return redirect('loja-perfil', userName=request.user.username)
             else:
-                pass
+                if resposta.status_code == 400:
+                    error_code = resposta.json().get('error_code')
+                    if error_code == 'INTEGRITY_ERROR':
+                        form.add_error('produto', f'Já existe este produto ({produto}) nesta unidade de produção ({unidade_producao}).')
+                    else:
+                        form.add_error('produto', f'Outro erro 400 BAD REQUEST: {resposta.json().get("detail")}')
+
         else:
             # Se o formulário não é válido, armazena os erros em cada campo do formulário
-            for field in form:
-                field.error_messages = [error for error in form.errors.get(field.name, [])]
+            #print("Erro de validação do formulário")
             context = {'formulario': form}
             return render(request, 'loja/criarAssociacaoProdutoUP.html', context)
     context = {'formulario': formulario}
     return render(request, 'loja/criarAssociacaoProdutoUP.html', context)
+
+
+
+def adicionarProdutosCarrinhoDpsDeLogar(request):
+    carrinhoSessao = request.session['carrinho']
+    chavesProdutos = carrinhoSessao.keys()
+    for idProduto in chavesProdutos:
+        #{'1': {'quantidade': 2.0, 'precoQuantidade': 6.0}, 
+        # '3': {'quantidade': 1.0, 'precoQuantidade': 4.98},
+        # '7': {'quantidade': 1.0, 'precoQuantidade': 4.65}}
+        informacao = carrinhoSessao[idProduto]
+        quantidade = informacao['quantidade']
+        
+        print("CHEGUEI AQUI")
+        url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/produtoUP/{idProduto}/'
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
+
+        csrf_token = get_token(request)
+        headers = {'X-CSRFToken':csrf_token}
+        resposta = sessao.get(url, headers=headers)
+        if resposta.status_code == 200:
+            content = resposta.json()
+            idProdutoNoCarrinho = content.get('id')
+            produtoUnidadeProducao = content.get('produto')
+            idProdutoUnidadeProducao = produtoUnidadeProducao.get('id')
+            quantidade_updated = Decimal(content.get('quantidade')) + Decimal(quantidade)
+            
+            atualizar_carrinho_dict_info = {
+                'produto': idProdutoUnidadeProducao,
+                'quantidade' : quantidade_updated
+            }
+            # # print(atualizar_carrinho_dict_info)
+            
+            url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/{idProdutoNoCarrinho}/'
+            respostaUpdate = sessao.put(url, headers=headers, data = atualizar_carrinho_dict_info)
+        else:
+            sessao = requests.Session()
+            sessao.cookies.update(request.COOKIES)
+
+            csrf_token = get_token(request)
+            headers = {'X-CSRFToken':csrf_token}
+            
+            
+            
+                        
+            atualizar_carrinho_dict_info = {
+                'produto': idProduto,
+                'quantidade' : quantidade
+            }
+            
+            
+            url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/'
+            respostaUpdate = sessao.post(url, headers=headers, data = atualizar_carrinho_dict_info)
+    request.session['carrinho'] = {}

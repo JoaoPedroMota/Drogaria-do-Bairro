@@ -2,6 +2,9 @@
 {% load static %}
 {% block content%}
 
+<head>
+    <title>Your Page Title</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <!-- breadcrumb-section -->
 <div class="breadcrumb-section breadcrumb-bg">
@@ -69,8 +72,30 @@
     color: #856404;
     font-size: 30px;
   }
-</style>
+  .preçoRange{
+    font-size: 20px;
+    font-weight: normal;
+  }
+  .preçoRange1{
+    font-size: 20px;
+    font-weight: bold;
+  }
+   .preçoRange2{
+   
+    font-weight: bold ;
+  }
+  
+  .seta {
+  cursor: pointer;
+  display: inline-block;
+  transition: transform 0.3s ease-in-out;
+}
 
+.seta.rotated {
+  transform: rotate(90deg);
+}
+</style>
+</head>
 
 {% if termo_pesquisa %}
 <div class="pesquisa">
@@ -90,61 +115,65 @@
 {% endif %}
 
 {% for categoria in categoriaProduto %}
-    <div>
+    {% if categoria.categoria_pai is null %}
+    <div class="categoria">
+        <span class="seta">></span>
         <a href="{% url 'loja-ver_produtos' %}?q={{categoria.nome}}" >{{categoria.nome}}</a>
-        
+        <ul class ="subcategorias">
+            {% for subcategoria in categoriaProduto %}
+                {% if subcategoria.categoria_pai.id == categoria.id %}
+                    <li><a href="{% url 'loja-ver_produtos' %}?q={{subcategoria.nome}}" >{{subcategoria.nome}}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
     </div>
+    {% endif %}
 {% endfor %}
 
+<script>
+    $(document).ready(function() {
+        $(".subcategorias").hide();
+
+        $(".categoria").click(function() {
+            $(this).find(".subcategorias").slideToggle();
+            $(this).find(".seta").toggleClass("rotated");
+        });
+    });
+</script>
 
 <div class="product-section mt-150 mb-150">
     <div class="row product-lists">
         {% for produto in produtos_precos %}
+       
         <div class="col-lg-4 col-md-6 text-center {{ produto.categoria }}">
             <div class="single-product-item filtro-item">
-                <a href="{% url 'loja-single-product' produto_id=produto.id%}">
-                    {% if produto.produto == "Morango" %}
-                    <img src="{% static 'website/assets/img/products/morango.jpg' %}" alt="Morango">
-                    {% elif produto.produto == "Alface" %}
-                    <img src="{% static 'website/assets/img/products/alface.jpg' %}" alt="Alface">
-                    {% elif produto.produto == "Tomate Chucha" %}
-                    <img src="{% static 'website/assets/img/products/tomate.jpg' %}" alt="Tomate Chucha">
-                    {% elif produto.produto == "Gelado Chocolate" %}
-                    <img src="{% static 'website/assets/img/products/gelado_choco.png' %}" alt="Gelado Chocolate">
-                    {% elif produto.produto == "Gelado Laranja" %}
-                    <img src="{% static 'website/assets/img/products/gelado_laranja.jpg' %}" alt="Gelado Chocolate">
-                    {% elif produto.produto == "Gelado de Sardinha" %}
-                    <img src="{% static 'website/assets/img/products/gelado_sardinha.jpg' %}" alt="Gelado Sardinha">
-                    {% elif produto.produto == "Gelado Banana" %}
-                    <img src="{% static 'website/assets/img/products/gelado_banana.jpg' %}" alt="Gelado Banana">
-                    {% else %}
-                    <img src="{% static 'website/assets/img/products/default.jpg' %}" alt="Default">
-                    {% endif %}
-                </a>
+                <a href="{% url 'loja-single-product' produto_id=produto.id %}">
+                    <img src="{% static produto.imagem_produto %}" alt="Morango" width="220" height="220">
                 <h3>{{ produto.produto }}</h3>
-        <h4>Categoria: {{ produto.categoria }}</h4>
-        {% if produto.tipo == "granel" %}
-        <p class="container">
-            <span>Preço por Kg: {{produto.preco}}</span>
-            <input type="number" class="styled-input" step="0.5" min="0" max="50" placeholder="1 Kg" name="quantidade" value="1" oninput="atualizarPreco(this, {{ produto.preco }})">
-            <span class="preco" name="preco">{{ produto.preco }}€</span>
-        </p>
-        <br>
-        <a href="{% url 'loja-adicionar-ao-carrinho' produto_id=produto.id %}?preco={{ produto.preco }}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1" data-price="{{ produto.preco }}">
-            <i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
-        {% else %}
-        <p class="container">
-            <span>Preço por unidade: {{produto.preco}}€</span>
-            <input type="number" class="styled-input" step="0.5" min="0" max="50" placeholder="1 Kg" name="quantidade" value="1" oninput="atualizarPreco(this, {{ produto.preco }})">
-            <span class="preco" name="preco">{{ produto.preco }}€</span>
-        </p>
-        <br>
-        <a href="{% url 'loja-adicionar-ao-carrinho' produto_id=produto.id %}?preco={{ produto.preco }}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1" data-price="{{ produto.preco }}">
-            <i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
-        {% endif %}
-    </div>
-</div>
-{% endfor %}
+                </a>
+                <h4>Categoria: {{ produto.categoria }}</h4>
+                <br>
+                
+                <p class="container">
+                    <span class="preçoRange1">Desde</span>
+                   
+                </p>
+                {% if produto.min_precoG == -1 %}
+                <span class="preçoRange" name="preco"> Por Unidade: <span class="preçoRange2">{{ produto.min_precoU }}€ </span> </span>
+            
+                {% elif produto.min_precoU == -1 %}
+                <span class="preçoRange" name="preco"> Por Kilograma: <span class="preçoRange2">{{ produto.min_precoG }}€ </span> </span>
+             
+                {% else %}
+                
+                <span class="preçoRange" name="preco"> Por Unidade: <span class="preçoRange2">{{ produto.min_precoU }}€ ||</span> </span>
+                
+                <span class="preçoRange" name="preco">  Por Kilograma: <span class="preçoRange2">{{ produto.min_precoG }}€ </span> </span>
+                
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
     </div>
 </div>
    

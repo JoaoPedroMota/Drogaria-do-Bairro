@@ -18,6 +18,34 @@
     table{
         border: 1px solid;
     }
+    #lo {
+    font-size: .9em;
+    color: #fff;
+    background: #F28123;
+    outline: none;
+    border: 1px solid #F28123;
+    cursor: pointer;
+    padding: 0.9em;
+    -webkit-appearance: none;
+    width: 100%;
+    margin: 2em 0;
+    letter-spacing: 4px;
+  }
+   #lo:hover{
+    -webkit-transition: .5s all;
+    -moz-transition: .5s all;
+    -o-transition: .5s all;
+    -ms-transition: .5s all;
+    transition: .5s all;
+    background: #c2a86f;
+  }
+  
+    
+  
+
+
+
+
     #customers {
   font-family: Arial, Helvetica, sans-serif;
   border-collapse: collapse;
@@ -51,11 +79,11 @@
                     <p>O seu perfil</p>
                     <br>
                     <div id="imagemPerfil">
-                        <img class="imagens" id='imagem-perfil-perfil' src="{{utilizadorView.imagem_perfil.url}}"
+                        <img class="imagens" id='imagem-perfil-perfil' src="{{request.user.imagem_perfil.url}}"
                             style="width:150px;height: 150px;border-radius: 100%;" />
                     </div>
                     <h1>Bem Vindo</h1>
-
+                    
                     <h2>{{utilizadorView.nome}}</h2>
                     <br>
                     {% if request.user == utilizadorView %}
@@ -69,12 +97,15 @@
                 </div>
                 {% if request.user.is_fornecedor %}
                 <div id="Fornecedor">
-                    <a href="{% url 'loja-criarProduto' userName=request.user.username%}" class="btn btn-primary">Criar Produto</a>
-                    <a href="{% url 'loja-associarProdutoUP' %}" class="btn btn-primary"> Associar Produto a Unidade de Produção</a>
+                    <a href="{% url 'loja-criarProduto' userName=request.user.username%}" class="btn btn-primary" id="lo">Criar Produto</a>
+                    <a href="{% url 'loja-associarProdutoUP' %}" class="btn btn-primary" id="lo"> Associar Produto a Unidade de Produção</a>
+                    <br>
+                    <br>
                     <table id="infoGeralFornecedor">
                         {% if numero_up > 0 %}
                         <div id="numeroUPfornecedor">
                             <h3>Unidades de produção: {{numero_up}}.</h3>
+                            <br>
                         </div>
                         <div id="divTabelaPerfilFornecedor">
                             <table id="customers">
@@ -98,9 +129,9 @@
                                     <td>{{ up.morada }}</td>
                                     <td>{{ up.get_tipo_unidade_display }}</td>
                                     <td>
-                                        <form action="{% url 'loja-editarUnidadeProducao' userName=request.user.username id=up.id %}" method="post">
+                                        <form action="{% url 'loja-editarUnidadeProducao' userName=request.user.username id=up.id %}" method="get">
                                             {% csrf_token %}
-                                            <button type="submit" class="btn btn-info btn-sm">Editar</button>
+                                            <button type="submit" class="btn btn-info btn-sm" id="lo">Editar</button>
                                         </form>
                                     </td>
                                     <td><a href="{% url 'loja-unidadeProducao' userName=request.user.username id=up.id %}">Gerir Veiculos/Gerir Produtos</a></td>

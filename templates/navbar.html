@@ -23,6 +23,19 @@
 .main-menu ul ul a {
   padding: 10px;
 }
+
+#bolinha-vermelha {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-color: rgb(242, 129, 35);
+  color: white;
+  border-radius: 100%;
+  margin-right: 2px;
+  position: absolute;
+  top: -2px;
+  text-align: center;
+}
 </style>
 
 <div class="top-header-area" id="sticker">
@@ -41,40 +54,35 @@
           <!-- menu start -->
           <nav class="main-menu">
             <ul>
-              <li class="current-list-item"><a href="/">Casa</a>
-                
-              </li>
+              <li class="current-list-item"><a href="/">Casa</a></li>
               <li><a href="/about">Sobre Nós</a></li>
-              </li>
-              {% if not  request.user.is_fornecedor %}
-              <li><a href="/shop">Produtos</a></li>
-              {% endif %}
-              
-              {% if not request.user.is_authenticated %}
-              <li class="nav-item active">
-                <a href="{% url 'loja-login' %}">Entrar </a>
-              </li>
+              <li><a href="/contacts">Contactos</a></li>
+              {% if not request.user.is_authenticated or request.user.is_consumidor%}
+              <li><a href="/shop/">Produtos</a></li>
               {% endif %}
               {% if request.user.is_authenticated %}
              
               <li><a href="#">@{{request.user.username}}</a>
                 <ul>
-                  <li><a class="dropdown-item" href="{% url 'loja-perfil' request.user.username  %}">Perfil</a></li>
-                  <li><a class="dropdown-item" href="{% url 'loja-logout' %}">Logout</a></li>
+                  <li><a class="dropdown-item" id="cenasUtilizadorDropdown" href="{% url 'loja-perfil' request.user.username %}">Perfil</a></li>
+                  <li><a class="dropdown-item" id="cenasUtilizadorDropdown" href="{% url 'loja-logout' %}">Logout</a></li>
                 </ul>
               </li>
               
               <li><img class="imagens" id='imagem-perfil' src="{{request.user.imagem_perfil.url}}"
                 style="width:50px;height: 40px;border-radius: 100%;" /></li>
+              {% else %}
+              <li class="nav-item active">
+                <a href="{% url 'loja-login' %}">Entrar </a>
+              </li>
               {% endif %}
-              
+              {% if not request.user.is_authenticated or request.user.is_consumidor%}
               <li>
                 <div class="header-icons">
-                  <a class="shopping-cart" href="/carrinho"><i class="fas fa-shopping-cart"></i></a>
+                  <a class="shopping-cart" href="/carrinho"><i class="fas fa-shopping-cart"></i><span id="bolinha-vermelha">{{produtosCarrinho}}</span></a>
                   <a class="mobile-hide search-bar-icon" href="#"><i class="fas fa-search"></i></a>
                 </div>
               </li>
-              
             </ul>
           </nav>
           <a class="mobile-show search-bar-icon" href="#"><i class="fas fa-search"></i></a>
@@ -85,6 +93,8 @@
     </div>
   </div>
 </div>
+
+
 <!-- end header -->
 
 <!-- search area -->
@@ -106,4 +116,12 @@
 </div>
 
 </nav>
-
+{% else %}
+</ul>
+</nav>
+</div>
+</div>
+</div>
+</div>
+</div>
+{% endif %}

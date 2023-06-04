@@ -1,5 +1,5 @@
 import phonenumbers
-from django.db import models
+from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser
 from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.auth.validators import ASCIIUsernameValidator
@@ -12,7 +12,7 @@ from functools import partial
 from django.utils import timezone
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator
-from django_countries.widgets import CountrySelectWidget
+
 
 
 
@@ -95,15 +95,15 @@ class Utilizador(AbstractUser):
     ]
     
     # Campos personalizados
-    nome = models.CharField(max_length=200, null=True)
-    email = models.EmailField(unique=True, null=True, blank=False, error_messages={'unique': 'Já existe um utilizador com esse e-mail.'})
-    username = models.CharField(max_length=20, unique=True, null=True, blank=False, validators=[ASCIIUsernameValidator()], help_text='Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ ', error_messages={ 'unique': 'Já existe um utilizador com esse nome de utilizador.',},)
+    nome = models.CharField(max_length=200, null=True, blank=True)
+    email = models.EmailField(unique=True, null=True, blank=False, error_messages={'unique': 'Já existe um utilizador com esse e-mail.'}, max_length=200)
+    username = models.CharField(max_length=200, unique=True, null=True, blank=False, validators=[ASCIIUsernameValidator()], help_text='Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ ', error_messages={ 'unique': 'Já existe um utilizador com esse nome de utilizador.',},)
     pais = CountryField(null=True, blank=False, default='PT')
-    cidade = models.CharField(max_length=200, null=True, blank=False) 
+    cidade = models.CharField(max_length=200, blank=True, default='') 
     #morada = models.CharField(max_length=200, null=True, blank=False)
-    telemovel = PhoneNumberField(null=True, blank=True, unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
+    telemovel = PhoneNumberField(null=True, blank=False, default='', unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
     tipo_utilizador = models.CharField(max_length=1, choices=TIPO_UTILIZADOR, default='', null=True)
-    imagem_perfil = models.ImageField(null=True, default="avatar.svg", validators=[validar_extensao_imagens, validar_tamanho_imagens])
+    imagem_perfil = models.ImageField(null=True, default="imagens_perfil\\avatar.png", upload_to='imagens_perfil/',validators=[validar_extensao_imagens, validar_tamanho_imagens])
     updated = models.DateTimeField(auto_now=True, null=True, blank=False)
     created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
     
@@ -414,6 +414,15 @@ class Produto(models.Model):
         ordering = ("id","nome")
 
 class ProdutoUnidadeProducao(models.Model):
+    def validar_extensao_imagens(value):
+        ext = value.name.split('.')[-1].lower()
+        allowed_extensions = ['jpg','png','svg','gif']
+        if ext not in allowed_extensions:
+            raise ValidationError((f'Tipo de ficheiro inválido. Extensões válidas: {allowed_extensions}'))
+    def validar_tamanho_imagens(value):
+        max_size = 2 * 1024 * 1024
+        if value.size > max_size:
+            raise ValidationError((f'Ficheiro grande de mais. Tamanho máximo 2MB'))
     UNIDADES_MEDIDA_CHOICES = (
         ('kg', 'Quilograma'),
         ('g', 'Grama'),
@@ -426,6 +435,7 @@ class ProdutoUnidadeProducao(models.Model):
         ('g', 'Grama'),
         ('l', 'Litro'),
         ('ml', 'Mililitro'),
+        ('un', 'Unidade')
     )
     
     ### produto e unidade de produção
@@ -437,13 +447,13 @@ class ProdutoUnidadeProducao(models.Model):
     unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES, null=False, blank=False)
     preco_a_granel = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
     ###cenas à unidade
-    unidade_Medida_Por_Unidade = models.CharField(max_length=2,choices=UNIDADES_MEDIDA_CHOICES_unidade, null=True, blank=True)
-    quantidade_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)])
+    unidade_Medida_Por_Unidade = models.CharField(max_length=2,choices=UNIDADES_MEDIDA_CHOICES_unidade, null=True, blank=True, help_text='Caso o produto seja vendido à unidade, qual é a unidade de medida dessa unidade? Por exemplo, se for uma posta de carne/peixe, que unidade de medida tem essa posta (quanto pesa a posta). Ou se forem produtos que não precisam de dizer quanto tem de peso/volume, como um brinquedo/filme, selecione unidade')
+    quantidade_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)], help_text='Quanto tem o produto que vende à unidade? Quanto pesa a posta de carne/peixe? Ou se forem berlindes, quantos berlindes vende de uma vez?')
     preco_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)])  
     # outras cenas
     data_producao = models.DateField( null=True,blank=True, default=timezone.now)
-    marca = models.CharField(max_length=100, null=True)
-
+    marca = models.CharField(max_length=100, null=True, blank=True)
+    imagem_produto = models.ImageField(null=True, blank=False,upload_to='products/', validators=[validar_extensao_imagens, validar_tamanho_imagens])
     def get_imagem(self):
         from .imagem import Imagem
         return Imagem.objects.get(produto=self)
@@ -454,6 +464,14 @@ class ProdutoUnidadeProducao(models.Model):
         verbose_name_plural = "Produtos por Unidade Producao"
         verbose_name = "Produto por Unidade Producao"
         ordering=['id','produto','unidade_producao']
+        unique_together = ('produto', 'unidade_producao')
+
+    
+    def save(self, *args, **kwargs):
+        try:
+            super().save(*args, **kwargs)
+        except IntegrityError:
+            raise ValidationError(f"Já existe este produto ({self.produto}) nesta unidade de produção ({self.unidade_producao}). Não pode ter o mesmo produto na mesma unidade de produção. Altere um dos campos.")
     
     def clean(self):
         super().clean()
@@ -489,7 +507,7 @@ class ProdutoUnidadeProducao(models.Model):
             elif self.unidade_medida in ['kg', 'g', 'l', 'ml']:
                 if self.preco_a_granel is None:
                    raise ValidationError('O preço a granel é obrigatório para produtos vendidos por peso ou volume. Preencha o campo: Preço a granel.') 
-                
+    
                 
                 
 # class Imagem(models.Model):
@@ -607,6 +625,15 @@ class ProdutosCarrinho(models.Model):
         verbose_name = "Produtos num Carrinho"
         verbose_name_plural = "Produtos num Carrinho"
         ordering = ['id']
+    def save(self, *args, **kwargs):
+        produto = ProdutoUnidadeProducao.objects.get(id=self.produto.id)
+        if produto.unidade_medida in ['g', 'kg', 'ml', 'l']:
+            self.precoKilo = produto.preco_a_granel
+            self.preco = self.quantidade * self.precoKilo
+        elif produto.unidade_medida == 'un':
+            self.precoKilo = produto.preco_por_unidade
+            self.preco = self.quantidade * self.precoKilo
+        super(ProdutosCarrinho, self).save(*args, **kwargs)
 
 
 

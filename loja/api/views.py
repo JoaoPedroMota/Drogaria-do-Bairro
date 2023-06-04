@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.contrib.auth.hashers import check_password
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
+from django.db import IntegrityError
 ##### REST FRAMEWORK #####
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -20,9 +21,9 @@ from rest_framework.response import Response
 from decimal import Decimal
 #### DENTRO DA APP #####
 ### serializers.py ###
-from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer, ProdutoSerializerRequest
+from .serializers import UtilizadorSerializer, ConsumidorSerializer, FornecedorSerializer, ProdutoSerializer,UnidadeProducaoSerializer, VeiculoSerializer, CategoriaSerializer, ProdutoUnidadeProducaoSerializer, SingleProdutoPaginaSerializer, CarrinhoSerializer, ProdutosCarrinhoResponseSerializer, ProdutosCarrinhoRequestSerializer, ProdutoSerializerRequest, TemProdutoNoCarrinhoSerializer
 ### permissions.py ###
-from .permissions import IsOwnerOrReadOnly, IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly, IsConsumidorAndOwner
 ####
 from decimal import Decimal
 
@@ -77,7 +78,6 @@ class UtilizadoresList(APIView):
         serializar = UtilizadorSerializer(utilizadores, many=True)
         return Response(serializar.data)
     def post(self, request, format=None):
-        print("Método:", request.method)
         request.data['username'] = request.data['username'].lower()
         utilizador = UtilizadorSerializer(data=request.data)
         if utilizador.is_valid():
@@ -112,19 +112,19 @@ class UtilizadoresDetail(APIView):
         serializar = UtilizadorSerializer(utilizador, many=False)
         return Response(serializar.data)
     
-    def put(self, request, idUtilizador, format=None):
-        utilizador = self.get_object(idUtilizador)
+    def put(self, request, username, format=None):
+        utilizador = self.get_object(username)
         deserializar = UtilizadorSerializer(utilizador, data = request.data)
         if deserializar.is_valid():
             deserializar.save()
             return Response(deserializar.data)
         return Response(deserializar.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    def delete(self,request, idUtilizador, format=None):
+    def delete(self,request, username, format=None):
         # if 'password' not in request.data:
         #     return Response("Password Required", status=status.HTTP_400_BAD_REQUEST)
         # password = request.data['password']
-        utilizador = self.get_object(idUtilizador)
+        utilizador = self.get_object(username)
         # if not check_password(password, utilizador.password):
         #     return Response("Password is incorrect", status=status.HTTP_401_UNAUTHORIZED)
         utilizador.delete()
@@ -166,7 +166,6 @@ class UnidadeProducaoList(APIView):
         deserializer = UnidadeProducaoSerializer(data=request.data)
         if deserializer.is_valid():
             up_guardada = deserializer.save(fornecedor=fornecedor)
-            print("\nJá guardei!!!\n")
             return Response(deserializer.data, status=status.HTTP_201_CREATED)
         return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -355,7 +354,7 @@ class ProdutoList(APIView):
     """
     Devolve todos os produtos da loja
     """
-    permission_classes= [IsFornecedorOrReadOnly,IsAuthenticatedOrReadOnly]
+    permission_classes= [IsFornecedorOrReadOnly]#,IsAuthenticatedOrReadOnly]
     def get(self, request, format=None):
         if 'q' in request.data:
             if request.data['q'] != '':
@@ -383,13 +382,13 @@ class ProdutoList(APIView):
         
     def post(self, request, format=None):
         #request.data['slug'] = request.data['slug']
-        print(request.data)
         produto = ProdutoSerializerRequest(data=request.data)
         if produto.is_valid():
             produto_temp = produto.save()
             resposta_produto_serializer = ProdutoSerializer(produto_temp, many=False)
             return Response(resposta_produto_serializer.data, status=status.HTTP_201_CREATED)
-        print("\n\n\n\n", produto.errors, "\n\n\n\n\n")
+        #print("\n\n\n\n", produto.errors, "\n\n\n\n\n")
+        print(produto.errors)
         return Response({'detail': produto.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -421,7 +420,7 @@ class ProdutoDetailID(APIView):
         return Response(serializar.data, status=status.HTTP_200_OK)
 
 class ProdutoUnidadeProducaoList(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]
+    #permission_classes = [IsAuthenticatedOrReadOnly, IsFornecedorAndOwnerOrReadOnly]
     def get_produtos_up(self, username, identifierUP):
         try:
             user = Utilizador.objects.get(username=username)
@@ -468,13 +467,14 @@ class ProdutoUnidadeProducaoList(APIView):
             unidadeProducao = UnidadeProducao.objects.get(id=idUnidadeProducao)
         except UnidadeProducao.DoesNotExist:
             raise Http404
-        print("PRINT NA API. REQUEST.DATA:",request.data)
+        #print("PRINT NA API. REQUEST.DATA:",request.data)
         if int(request.data.get('unidade_producao')) != int(idUnidadeProducao):
             return Response(f'Não pode adicionar produtos a outra unidade de produção que não a atual. Você está na unidade de produção:{unidadeProducao.nome}. Use o id {unidadeProducao.id}', status=status.HTTP_400_BAD_REQUEST)
         serializar = ProdutoUnidadeProducaoSerializer(data=request.data)
         if serializar.is_valid():
             serializar.save()
             return Response(serializar.data, status=status.HTTP_201_CREATED)
+        print(serializar.errors)
         return Response(serializar.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -504,8 +504,11 @@ class ProdutoUnidadeProducaoDetail(APIView):
         informacao = request.data
         deserializar = ProdutoUnidadeProducaoSerializer(produto, data=informacao)
         if deserializar.is_valid():
-            deserializar.save()
-            return Response(deserializar.data, status=status.HTTP_200_OK)
+            try:
+                deserializar.save()
+                return Response(deserializar.data, status=status.HTTP_200_OK)
+            except IntegrityError:
+                return Response({"detail": "Já existe este produto nesta unidade de produção.", "error_code": "INTEGRITY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(deserializar.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def delete(self, request, username, idUnidadeProducao, idProdutoUnidadeProducao, format=None):
@@ -619,35 +622,58 @@ class SingleProductDetails(APIView):
         return Response(serializador.data, status=status.HTTP_200_OK)
 
 
+class VeiculoDetail(APIView):
+    def get_object(self, identifier):
+        try:
+            return Veiculo.objects.get(pk=identifier)
+        except Veiculo.DoesNotExist:
+            raise Http404
+
+    def get(self, request, idVeiculo, idFornecedor, idUnidadeProducao, format=None):
+        try:
+            veiculo = self.get_object(idVeiculo)
+            respostaDevolver = VeiculoSerializer(veiculo, many=False)
+            return Response(respostaDevolver.data)
+        except:
+            return Response(status=404)
+    
+    def delete(self, request, username, idUnidadeProducao, format=None):
+        user = Utilizador.objects.get(username=username)
+        fornecedor = user.fornecedor
+        if request.user.is_consumidor:
+            return Response("Não pode apagar um veiculo. Não é um fornecedor!")
+        if request.user.fornecedor != fornecedor:
+            return Response("Só pode apagar os seus veiculos e não os dos outros")
+        veiculo = self.get_object(idUnidadeProducao, username)
+        veiculo.delete()
+        return Response(f"veiculo '{veiculo.nome}' apagado com sucesso!",status=status.HTTP_204_NO_CONTENT)
 
 
-
-
-
-
-
-
-
-
-@api_view(['GET'])
-def getVeiculos(request, username, idUnidadeProducao, format=None):
-    utilizador_temp = Utilizador.objects.get(username=username)
-    fornecedor = Fornecedor.objects.get(utilizador=utilizador_temp)
-    unidadeProducao = fornecedor.unidades_producao.get(pk=idUnidadeProducao)
-    veiculos = unidadeProducao.veiculos.all()
-    respostaDevolver = VeiculoSerializer(veiculos, many=True)
-    return Response(respostaDevolver.data)
-
-@api_view(['GET'])
-def getVeiculo(request, idVeiculo, idFornecedor, idUnidadeProducao, format=None):
-    fornecedor = Fornecedor.objects.get(id=idFornecedor)
-    unidadeProducao = fornecedor.unidades_producao.get(pk=idUnidadeProducao)
-    veiculo = unidadeProducao.veiculos.get(id=idVeiculo)
-    respostaDevolver = VeiculoSerializer(veiculo, many=False)
-    return Response(respostaDevolver.data)
-
+class VeiculoList(APIView):
+    def get(self, request, idVeiculo, idFornecedor, idUnidadeProducao, format=None):
+        veiculos = Veiculo.objects.all()
+        if veiculo.count() == 1:
+            serializar = VeiculoSerializer(veiculos, many=False)
+        elif veiculos.count() > 1:
+            serializar = VeiculoSerializer(veiculos, many=True)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data, status=status.HTTP_200_OK)
+    def post(self, request, username, idUnidadeProducao, formato=None):
+        utilizador = Utilizador.objects.get(username=username)
+        fornecedor = Fornecedor.objects.get(utilizador=utilizador)
+        if request.user.is_consumidor:
+            return Response("Não pode criar um veiculo. Não é um fornecedor!")
+        if request.user.fornecedor != fornecedor:
+            return Response("Só pode criar veiculos para si e não para os outros.")
+        deserializer = VeiculoSerializer(data=request.data)
+        if deserializer.is_valid():
+            veiculo_guardado = deserializer.save(idUnidadeProducao=idUnidadeProducao)
+            return Response(deserializer.data, status=status.HTTP_201_CREATED)
+        return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+        
 ########################
-
 
 class CarrinhoList(APIView):
     """Devolve todos os ids dos carrinhos existentes e a que consumidor pertencem,
@@ -678,7 +704,7 @@ class CarrinhoDetail(APIView):
             
 
 class ProdutosCarrinhoList(APIView):
-    permission_classes = [IsConsumidorAndOwnerOrReadOnly, IsAuthenticatedOrReadOnly]
+    permission_classes = [IsConsumidorAndOwner, IsAuthenticatedOrReadOnly]
     def get_object(self, carrinho):
         try:
             return ProdutosCarrinho.objects.filter(carrinho=carrinho)
@@ -707,7 +733,12 @@ class ProdutosCarrinhoList(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(serializar.data,status=status.HTTP_200_OK)
     def post(self, request, username, format=None):
+        if request.user.username != username:
+            return Response({'detail':"Não tem permissão para realizar esta ação, porque não é o utilizador dono deste carrinho!"}, status=status.HTTP_401_UNAUTHORIZED)
         carrinho = self.get_carrinho(username)
+        if 'carrinho' in request.data:
+            if int(request.data['carrinho'])!=int(carrinho.id):
+                return Response({'detail':'O ID do carrinho fornecido não corresponde ao id do carrinho do utilizador logado. Não precisa de enviar o id do carrinho, porque ele é atríbuido de acordo com o utilizador que está logado.'}, status=status.HTTP_400_BAD_REQUEST)
         serializador = ProdutosCarrinhoRequestSerializer(data=request.data)
         if serializador.is_valid():
             itemCarrinho = serializador.validated_data['produto']
@@ -717,13 +748,13 @@ class ProdutosCarrinhoList(APIView):
             elif itemCarrinho.unidade_medida in ['un']:
                 precoKilo = itemCarrinho.preco_por_unidade
                 preco = Decimal(request.data['quantidade'])*precoKilo
-            serializador.save(carrinho=carrinho, preco=preco, precoKilo=precoKilo)
+            serializador.save(carrinho=carrinho, preco=preco, precoKilo=precoKilo) #atribui o carrinho da linha FIXME(carrinho = self.get_carrinho(username)), o preco e o preco por kilo/unidade
             response_serializer = ProdutosCarrinhoResponseSerializer(serializador.instance)
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializador.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class ProdutosCarrinhoDetail(APIView):
-    permission_classes = [IsConsumidorAndOwnerOrReadOnly, IsAuthenticated]
+    permission_classes = [IsConsumidorAndOwner, IsAuthenticated]
     def get_object(self, cart, idProdutoCart):
         try:
             return ProdutosCarrinho.objects.get(carrinho=cart, id=idProdutoCart)
@@ -744,6 +775,18 @@ class ProdutosCarrinhoDetail(APIView):
         except Utilizador.DoesNotExist:
             raise Http404
     def get(self, request, username, idProdutoCart, format=None):
+        """
+        Devolve o produto com um dado id(id da tabela ProdutoCarrinho)
+
+        Args:
+            request (_type_): _description_
+            username (_type_): _description_
+            idProdutoCart (_type_): _description_
+            format (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
         carrinho = self.get_carrinho(username)
         item_carrinho = self.get_object(carrinho, idProdutoCart)
         if item_carrinho is not None:
@@ -754,14 +797,14 @@ class ProdutosCarrinhoDetail(APIView):
     def put(self, request, username, idProdutoCart, format=None):
         carrinho = self.get_carrinho(username)
         item_carrinho = self.get_object(carrinho, idProdutoCart)
-        
         if item_carrinho is None:
             return Response({"detail": "Produto não encontrado no carrinho"},status=status.HTTP_404_NOT_FOUND)
 
         # Atualize o objeto com os novos dados
-        data = request.data
-        serializer = ProdutosCarrinhoRequestSerializer(item_carrinho, data=data)
+        data = request.data.copy()
         
+        data['produto'] = item_carrinho.produto.id
+        serializer = ProdutosCarrinhoRequestSerializer(item_carrinho, data=data)
         if serializer.is_valid():
             produto = item_carrinho.produto
             if produto.unidade_medida in ['kg','g','l','ml']:
@@ -771,9 +814,10 @@ class ProdutosCarrinhoDetail(APIView):
                 precoKilo = produto.preco_por_unidade
                 preco = Decimal(request.data['quantidade']) * precoKilo
             serializer.save(preco=preco, precoKilo=precoKilo)
+            
             response_serializer = ProdutosCarrinhoResponseSerializer(serializer.instance)
             return Response(response_serializer.data, status=status.HTTP_200_OK)
-        else:
+        else:   
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     def delete(self, request, username, idProdutoCart, format=None):
         carrinho = self.get_carrinho(username)
@@ -788,4 +832,39 @@ class ProdutosCarrinhoDetail(APIView):
 
 
 
+class ProdutosCarrinhoDetailProdutoUP(APIView):
+    """_summary_
+
+    Args:
+        APIView (_type_): _description_
+    """
+    permission_classes = [IsConsumidorAndOwnerOrReadOnly]
+    def get_object(self, cart, idProdutoUnidadeProducao):
+        try:
+            return ProdutosCarrinho.objects.get(carrinho=cart, produto=idProdutoUnidadeProducao)
+        except ProdutosCarrinho.DoesNotExist:
+            return None
+
+    def get_carrinho(self, username):
+        try:
+            utilizador_temp = Utilizador.objects.get(username=username)
+            try:
+                consumidor_temp = Consumidor.objects.get(utilizador = utilizador_temp)
+                try:
+                    return Carrinho.objects.get(consumidor=consumidor_temp)
+                except Carrinho.DoesNotExist:
+                    raise Http404
+            except Consumidor.DoesNotExist:
+                raise Http404
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get(self, request, username, idProdutoUnidadeProducao, format=None):
+        carrinho = self.get_carrinho(username)
+        item_carrinho = self.get_object(carrinho, idProdutoUnidadeProducao)
+        if item_carrinho is not None:
+            serializar = TemProdutoNoCarrinhoSerializer(item_carrinho, many=False) #serializer para responder
+            return Response(serializar.data,status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Produto não encontrado no carrinho"},status=status.HTTP_404_NOT_FOUND)
+    
 

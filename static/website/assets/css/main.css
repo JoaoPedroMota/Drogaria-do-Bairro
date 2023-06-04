@@ -436,7 +436,7 @@ a.read-more-btn {
 }
 
 a.read-more-btn:hover {
-  color: #F28123;
+  color: rgb(242, 129, 35);
 }
 
 a.boxed-btn, a.bordered-btn, a.cart-btn {
@@ -460,6 +460,15 @@ a.boxed-btn, a.bordered-btn, a.cart-btn {
   background-color: #F28123;
   margin: 0 auto;
 }
+
+#cenasUtilizadorDropdown{
+  background-color: rgba(242, 129, 35,0.7)
+}
+
+
+
+
+
 
 .section-title p {
   font-size: 15px;

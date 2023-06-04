@@ -8,5 +8,5 @@ class LojaConfig(AppConfig):
     name = 'loja'
     
     
-    def ready(self):
-        import loja.signals
+    # def ready(self):
+    #     import loja.signals

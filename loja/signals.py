@@ -4,7 +4,7 @@ from .models import Utilizador
 from rest_framework.authtoken.models import Token
 import requests
 
-@receiver(post_save, sender=Utilizador, weak=False)
-def report_uploaded(sender, instance, created, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
+# @receiver(post_save, sender=Utilizador, weak=False)
+# def report_uploaded(sender, instance, created, **kwargs):
+#     if created:
+#         Token.objects.create(user=instance)
