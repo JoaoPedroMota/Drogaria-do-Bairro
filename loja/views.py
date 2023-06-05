@@ -65,7 +65,7 @@ def quantosProdutosNoCarrinho(request):
         if request.user.is_superuser:
             return "E"
         if request.user.is_consumidor:
-            print("entrei aqui 1")
+            
             sessao = requests.Session()
             sessao.cookies.update(request.COOKIES)
             url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
@@ -544,17 +544,13 @@ def criarUP(request, userName):
 @fornecedor_required
 def unidadeProducao(request, userName, id):
     context = {}
+    
     def criar_produto_temporario(produtosUPRespostaJSON):
         lista_produtos_up = []
         nome_up = ""
         semaforo = 0
-        #print("\n\n\n\nPRODUTOS RECEBIDOS. VIERAM DA API:",produtosUPRespostaJSON)
         for produto in produtosUPRespostaJSON:
 
-                
-            
-            
-            
             ### TABELA PRODUTO
             idProduto = produto.get('produto')
             urlProduto = f'http://127.0.0.1:8000/api/produtosID/{idProduto}/'
@@ -598,11 +594,13 @@ def unidadeProducao(request, userName, id):
             
             
             ##### TABELA UNIDADE PRODUÇÃO
+            
             idUP = produto['unidade_producao']
             urlUP = f'http://127.0.0.1:8000/api/unidadesProducao/{idUP}'
             respostaUP = requests.get(urlUP)
             upDicionario = respostaUP.json() #informações de um produto
-            
+           
+          
             
             
             ##### TABELA FORNECEDORES
@@ -699,15 +697,19 @@ def unidadeProducao(request, userName, id):
     
     ######produtos
     urlProdutosUP = f'http://127.0.0.1:8000/api/{userName}/fornecedor/unidadesProducao/{id}/produtos/'
-    
     sessao = requests.Session()
     sessao.cookies.update(request.COOKIES)
     respostaProdutosUP = sessao.get(urlProdutosUP)
     produtosUP = respostaProdutosUP.json()
     lista_produtos_up,nome_up = criar_produto_temporario(produtosUP)
+
+    #-------------
     
+    unidade_producao = UnidadeProducao.objects.get(id=id)
     
-    context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id, "produtosUP":lista_produtos_up, 'nome_up':nome_up}
+    encomendas = ProdutosEncomenda.objects.filter(unidadeProducao=unidade_producao)
+  
+    context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id, "produtosUP":lista_produtos_up, 'nome_up':nome_up,'encomenda':encomendas}
     return render(request, 'loja/unidadeProducao.html', context)
 
 #######################ZONA DE TESTE######################################################
@@ -1031,6 +1033,7 @@ def sP(request,produto_id):
 
 
 def ver_produtos(request):
+    
     if not request.user.is_authenticated or (request.user.is_authenticated and request.user.is_consumidor):
         q = request.GET.get('q', '')  # Usando o operador de coalescência nula para definir um valor padrão vazio para 'q'
         url = 'http://127.0.0.1:8000/api/produtos/'
@@ -1077,21 +1080,32 @@ def ver_produtos(request):
                     'min_precoU': min_price1,
                     'categoria': product['categoria']['nome'],
                     'idCategoria': product['categoria']['id'],
+                    
+
                 }
-                lowest_price_product = None
-                if min_price != -1:
+                lowest_price_product = next(
+                    (
+                        shopProduct for shopProduct in data2 
+                        if shopProduct['produto'] == product['id'] and shopProduct['preco_a_granel'] == min_price
+                    ), None
+                )
+                if lowest_price_product is None:
                     lowest_price_product = next(
-                        (shopProduct for shopProduct in data2 if shopProduct['preco_a_granel'] == min_price), None)
-                elif min_price1 != -1:
-                    lowest_price_product = next(
-                        (shopProduct for shopProduct in data2 if shopProduct['preco_por_unidade'] == min_price1), None)
+                        (
+                            shopProduct for shopProduct in data2 
+                            if shopProduct['produto'] == product['id'] and shopProduct['preco_por_unidade'] == min_price1
+                        ), None
+                    )
 
                 if lowest_price_product is not None:
                     product_info['imagem_produto'] = lowest_price_product['imagem_produto']
 
                 actualFilteredProducts.append(product_info)
+             
+        
         produtosCarrinho = quantosProdutosNoCarrinho(request)
         context = {'produtos_precos': actualFilteredProducts, 'termo_pesquisa': q, "produtosCarrinho":produtosCarrinho}
+        
         return render(request, 'loja/shop.html', context)
     else:
         return redirect('loja-home')
@@ -1130,7 +1144,7 @@ def carrinho(request):
                 nome = resposta.json()
                 nomeProduto = nome['nome']
                 quantidade = produto['quantidade']
-                print(f"Quantidade: {quantidade}, nome: {produtoUP['marca']}")
+               
                 precoKilo = produto['precoKilo']
                 preco = produto['preco']
                 idProdutoNoCarrinho = produto['id']
@@ -1198,7 +1212,7 @@ def carrinho(request):
                 "produtosCarrinho": produtosCarrinho,
                 "total": total
             }
-    print(context)  
+    
     return render(request, 'loja/carrinho.html', context)
 
 

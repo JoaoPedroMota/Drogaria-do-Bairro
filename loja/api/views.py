@@ -703,7 +703,6 @@ class ProdutosCarrinhoList(APIView):
         except Utilizador.DoesNotExist:
             raise Http404
     def get(self, request, username, format=None):
-        print("cheguei aqui blablablabla")
         carrinho = self.get_carrinho(username)
 
         itens_carrinho = self.get_object(carrinho)
