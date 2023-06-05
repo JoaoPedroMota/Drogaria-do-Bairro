@@ -1213,7 +1213,6 @@ def adicionar_ao_carrinho(request, produto_id):
         request (_type_): request do browser
         produto_id (_type_): id de um ProdutoUnidadeProdução. NÃO É A FK da coluna produto na tabela ProdutoUnidadeProducao, 
                             é a coluna id. (produto = ProdutoUnidadeProducao.objects.get(id=produto_id)) 
-
     Returns:
         _type_: _description_
     """
@@ -1254,19 +1253,20 @@ def adicionar_ao_carrinho(request, produto_id):
             # idCarrinho = content.get('carrinho')
             produtoUnidadeProducao = content.get('produto')
             idProdutoUnidadeProducao = produtoUnidadeProducao.get('id')
-            quantidade_updated = Decimal(content.get('quantidade')) + quantidade
-            # print("Quantidade antiga:", content.get('quantidade'))
-            # print("Quantidade update:", quantidade_updated)
-            
-            atualizar_carrinho_dict_info = {
-                'produto': idProdutoUnidadeProducao,
-                'quantidade' : quantidade_updated
-            }
-            # # print(atualizar_carrinho_dict_info)
-            
-            urlAtualizar = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/{idProdutoNoCarrinho}/'
-            respostaUpdate = sessao.put(urlAtualizar, headers=headers, data = atualizar_carrinho_dict_info)
-            
+            quantidadeTotal = Decimal(content.get('quantidade')) + quantidade
+            if quantidadeTotal <= 999:
+                quantidade_updated = Decimal(content.get('quantidade')) + quantidade
+                atualizar_carrinho_dict_info = {
+                    'produto': idProdutoUnidadeProducao,
+                    'quantidade' : quantidade_updated
+                }
+                # # print(atualizar_carrinho_dict_info)
+                
+                urlAtualizar = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/{idProdutoNoCarrinho}/'
+                respostaUpdate = sessao.put(urlAtualizar, headers=headers, data = atualizar_carrinho_dict_info)
+            else:
+                mensagem_erro = "Erro: Quantidade máxima antigida. Máximo permitido é 999."
+                messages.error(request, mensagem_erro)
             # print("VALORES ATUALIZADOS:", respostaUpdate.json())
         else: ### ainda não há o produto no carrinho logo é um post
             sessao = requests.Session()
@@ -1322,8 +1322,14 @@ def adicionar_ao_carrinho(request, produto_id):
         produto_id_nao_autent = str(produto_id)
 
         if produto_id_nao_autent in carrinho.keys():
-            carrinho[produto_id_nao_autent]['quantidade'] += float(quantidade)
-            carrinho[produto_id_nao_autent]['precoQuantidade'] += float(preco_atualizado)
+            totalQuantidade = carrinho[produto_id]['quantidade'] + float(quantidade)
+            if totalQuantidade <= 999:
+                carrinho[produto_id_nao_autent]['quantidade'] += float(quantidade)
+                carrinho[produto_id_nao_autent]['precoQuantidade'] += float(preco_atualizado)
+            else:
+                mensagem_erro = "Erro: Quantidade máxima antigida. Máximo permitido é 999."
+                messages.error(request, mensagem_erro)
+                
         else:
             carrinho[produto_id_nao_autent] = { 
                     'quantidade': float(quantidade),
@@ -1707,3 +1713,15 @@ def getProdutosEncomenda(request, username, idEncomenda):
     except json.decoder.JSONDecodeError:
         pass
     return render(request, 'loja/produtos_encomendados.html', context)
+
+def novosDetalhesEnvioOuExistentes(request, username):
+    url = f'http://127.0.0.1:8000/api/{username}/consumidor/detalhes_envio/'
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+    if request.methos == 'POST':
+        pass
+    else:
+        formulario = ''
+    

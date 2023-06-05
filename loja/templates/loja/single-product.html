@@ -130,7 +130,7 @@
                         
                         <p class="container">
                             <br>
-                            <input type="number" class="styled-input" step="0.5" min="0.1" max="50" placeholder="1 kg/g/l/ml" name="quantidade" onblur="atualizarNumeroComVirgula(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoG }})">
+                            <input type="number" class="styled-input" step="0.5" min="0.1" max="999" placeholder="1 kg/g/l/ml" name="quantidade" onblur="atualizarNumeroComVirgula(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoG }})">
                             <span class="preco" name="preco">{{ produto.precoG}}€</span>
                         </p>
                         <br>
@@ -139,7 +139,7 @@
                         {% else %}
                         <p class="container">
                             <br>
-                            <input type="number" class="styled-input" step="1" min="1" max="50" placeholder="1 Unidade" name="quantidade" onblur="atualizarNumero(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoU }})">
+                            <input type="number" class="styled-input" step="1" min="1" max="999.999" placeholder="1 Unidade" name="quantidade" onblur="atualizarNumero(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoU }})">
                             <span class="preco" name="preco">{{ produto.precoU }}€</span>
                         </p>
                         <br>
