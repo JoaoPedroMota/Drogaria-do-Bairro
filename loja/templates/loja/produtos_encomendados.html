@@ -1,0 +1,155 @@
+{% extends 'main.html' %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="{%static 'website/assets/css/responsiveC.css' %}">
+<style>
+    h2{
+        font-size: 25px !important;
+        color:#F28123;
+    }
+    h3{
+        font-size: 25px !important;
+        color:#fff;
+    }
+    p{
+        font-size: 13px !important;
+        color: #fff;
+    }
+    table{
+        border: 1px solid;
+    }
+    #customers {
+  font-family: Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+    }
+
+    #customers td, #customers th {
+    border: 1px solid #ddd;
+    padding: 8px;
+    }
+
+    #customers tr{background-color: #f2f2f2;}
+
+    #customers tr:hover {background-color: #ddd;}
+
+    #customers th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #07212e;
+    color: white;
+    }
+</style>
+	<!-- breadcrumb-section -->
+	<div class="breadcrumb-section breadcrumb-bg">
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-8 offset-lg-2 text-center">
+					<div class="breadcrumb-text">
+						<div id="UnidadeProducao">
+
+                            <div id="infoGeralUnidadeProducao">
+                                <h2>Produtos Encomendados:</h2>
+                                <hr>
+                                {% if numero_produtos > 0 %}
+                                <div id="numeroVeiculos">
+                                    <h3>Número de produtos nesta encomenda: {{ numero_produtos }}.</h3>
+                                    <br>
+                                    <p>Esta encomenda custou ao todo: {{total}}€.</p>
+                                    <br>
+                                    <br>
+                                </div>
+                                <div id="divTabelaVeiculos">
+                                    <table id="customers">
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Imagem</th>
+                                            <th>Nome</th>
+                                            <th>Unidade de Produção</th>
+                                            <th>Fornecedor</th>
+                                            <th>Preço</th>
+                                            <th>Quantidade</th>
+                                            <th>Total</th>
+                                            <th>Estado</th>
+                                            <th>Última Atualização</th>
+
+                                        </tr>
+                                        <tbody>
+                                            {% for produto in produtos_encomendados %}
+                                                {% with i=forloop.counter0|add:1 %}
+                                                <tr>
+                                                    <td>{{i}}</td>
+                                                    <td class="product-image">
+                                                        <img src="{% static produto.imagem_produto %}" alt="produto.nome_produto">
+                                                    </td>
+                                                    <td>{{ produto.nome_produto }}</td>
+                                                    <td>{{produto.nome_up }}</td>
+                                                    <td>{{produto.fornecedor_nome}}</td>
+                                                    <td>{{ produto.precoKilo }}€/{% if produto.preco_a_granel == True %} {{produto.unidade_medida}} {% else %} un {% endif %}</td>
+                                                    <td>{% if produto.preco_a_granel == True %}{{ produto.quantidade|floatformat:2 }} {{produto.unidade_medida}} {% else %} {{ produto.quantidade }} un {% endif %}</td>
+                                                    <td>{{ produto.preco }}€</td>
+                                                    <td>{{ produto.estado}}</td>
+                                                    <td>{{produto.updated}}</td>
+                                                </tr>
+                                                {% endwith %}
+                                            
+                                            {% endfor %}
+                                        </tbody>
+                                                                             
+                                    </table>
+                                </div>
+                                {% endif %}
+                                <br>
+
+                            </div>
+                            <br>
+                            <a href="{% url 'loja-perfil' request.user.username %}" class="layout__boxTitle">
+                                <div  class="container">
+                                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+                                    <title>arrow-left</title>
+                                    <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
+                                    </svg>
+                                    <h6>Voltar</h6>
+                                </div>
+                            </a>
+                        </div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+
+	
+
+	<!-- logo carousel -->
+	<div class="logo-carousel-section">
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="logo-carousel-inner">
+						<div class="single-logo-item">
+							<img src="{%static 'website/assets/img/company-logos/1.png' %}" alt="">
+						</div>
+						<div class="single-logo-item">
+							<img src="{%static 'website/assets/img/company-logos/2.png' %}" alt="">
+						</div>
+						<div class="single-logo-item">
+							<img src="{%static 'website/assets/img/company-logos/3.png' %}" alt="">
+						</div>
+						<div class="single-logo-item">
+							<img src="{%static 'website/assets/img/company-logos/4.png' %}" alt="">
+						</div>
+						<div class="single-logo-item">
+							<img src="{%static 'website/assets/img/company-logos/5.png' %}" alt="">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
+{% endblock content%}

@@ -40,9 +40,9 @@
     background: #c2a86f;
   }
   
-    
-  
-
+  .table-spacing td, .table-spacing th {
+        padding: 12px 8px; /* Ajuste o espaçamento conforme necessário */
+    }
 
 
 
@@ -51,6 +51,8 @@
   border-collapse: collapse;
   width: 100%;
     }
+
+
 
     #customers td, #customers th {
     border: 1px solid #ddd;
@@ -68,8 +70,40 @@
     background-color: #07212e;
     color: white;
     }
+
+
+
+    
+    #cutomcustomers {
+        font-family: Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: auto;
+    }
+
+    #cutomcustomers td, #cutomcustomers th {
+    border: 1px solid #ddd;
+    padding: 8px;
+    }
+
+
+    #cutomcustomers tr{background-color: #f2f2f2;}
+
+#cutomcustomers tr:hover {background-color: #ddd;}
+
+#cutomcustomers th {
+padding-top: 12px;
+padding-bottom: 12px;
+text-align: left;
+background-color: #07212e;
+color: white;
+}
+
+
+
 </style>
     <!-- breadcrumb-section -->
+
+
 <div class="breadcrumb-section breadcrumb-bg">
     <div class="container">
         <div class="row">
@@ -79,7 +113,7 @@
                     <p>O seu perfil</p>
                     <br>
                     <div id="imagemPerfil">
-                        <img class="imagens" id='imagem-perfil-perfil' src="{{request.user.imagem_perfil.url}}"
+                        <img class="imagens" id='imagem-perfil-perfil' src="{{utilizadorView.imagem_perfil.url}}"
                             style="width:150px;height: 150px;border-radius: 100%;" />
                     </div>
                     <h1>Bem Vindo</h1>
@@ -95,7 +129,7 @@
                     {% endif %}
                     <br>
                 </div>
-                {% if request.user.is_fornecedor %}
+                {% if request.user.is_fornecedor and request.user.username == utilizadorView.username %}
                 <div id="Fornecedor">
                     <form action="{% url 'loja-criarProduto' userName=request.user.username %}" method="" >
                         {% csrf_token %}
@@ -146,7 +180,7 @@
                             </table>
                         </div>
                         {% else %}
-                        <p>Ainda não tem unidades de produção associadas. Crie uma com o botão abaixo! </p>
+                            <p>Ainda não tem unidades de produção associadas. Crie uma com o botão abaixo! </p>
                         {% endif %}
                     </table>
                     <br>
@@ -158,18 +192,55 @@
                     </div>
                 </div>
         
-                {% elif request.user.is_consumidor %}
-                <div id="Consumidor">
-                    {% if request.user == utilizadorView %}
-                    <form action="{% url 'loja-detalhesEnvio'%}" method="" >
-                        {% csrf_token %}
-                        <br>
-                            <input type="submit" id="login" value="Os meus detalhes de envio">
-                        </form>
-                    {% endif %}
-                </div>
+                {% elif request.user.is_consumidor and request.user.username == utilizadorView.username %}
+                    <div id="Consumidor">
+                            <form action="{% url 'loja-detalhesEnvio'%}" method="" >
+                                {% csrf_token %}
+                                 <br>
+                                <input type="submit" id="login" value="Os meus detalhes de envio">
+                            </form>
+                            {% if numero_encomendas > 0 %}
+                                <h2>Você já fez {{numero_encomendas}} encomendas no site!</h2>
+                                <br>
+                                <br>
+                                <div id="divTabelaPerfilFornecedor">
+                                    <table id="cutomcustomers"  class="table-spacing">
+                                        <tr>
+                                            <th>Encomenda</th>
+                                            <th>Valor Total</th>
+                                            <th>Estado</th>
+                                            <th>Informações de entrega</th>
+                                            <th>Criada</th>
+                                            <th>Última Atualização</th>
+                                            <th id="semBorda">Detalhes</th>
+                                        </tr>
+                                        <tbody>
+                                            {% for encomenda in encomendas %}
+                                                {% with i=forloop.counter0|add:1 %}
+                                                <tr>
+                                                    <td>{{i}}</td>
+                                                    <td>{{ encomenda.valor_total }}€</td>
+                                                    <td>{{ encomenda.estado }}</td>
+                                                    <td>{{ encomenda.detalhes_envio }}</td>
+                                                    <td>{{ encomenda.created }}</td>
+                                                    <td>{{ encomenda.updated }}</td>
+                                                    <td><a href="{% url 'loja-produtosEncomendados' username=request.user.username idEncomenda=encomenda.idEncomenda %}">Mais</a></td>
+                                                </tr>
+                                                {% endwith %}
+                                            
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+
+
+
+                            {% else %}
+                                <h2>Ainda não tem encomendas realizadas.</p>
+                            {% endif %}
+                        </div>
+                {% endif %}                
+                    
         
-                {% endif %}
     
                 </div>
             </div>

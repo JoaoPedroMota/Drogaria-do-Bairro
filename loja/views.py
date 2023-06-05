@@ -18,6 +18,7 @@ from django.db.models import QuerySet
 from django.contrib.auth.hashers import check_password
 from loja.api.serializers import *
 from .utils import fornecedor_required, consumidor_required
+from datetime import datetime
 
 
 import requests
@@ -60,24 +61,34 @@ oauth.register(
 #     return render(request,'loja/delete.html', context)
 
 def quantosProdutosNoCarrinho(request):
-    if request.user.is_authenticated and request.user.is_consumidor:
-        sessao = requests.Session()
-        sessao.cookies.update(request.COOKIES)
-        url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
-        resposta = sessao.get(url)
-        if resposta.content:
-            conteudo = resposta.json() if resposta.json() else 0
-        else:
+    if request.user.is_authenticated:
+        if request.user.is_superuser:
+            return "E"
+        if request.user.is_consumidor:
+            print("entrei aqui 1")
+            sessao = requests.Session()
+            sessao.cookies.update(request.COOKIES)
+            url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
+            resposta = sessao.get(url)
+            if resposta.status_code == 500:
+                return -1
+            
+            if resposta.content:
+                conteudo = resposta.json() if resposta.json() else 0
+            else:
+                return 0
+            return len(conteudo) if len(conteudo) != 0 else 0
+        elif request.user.is_authenticated and request.user.is_fornecedor:
+            print("entrei aqui 2")
             return 0
-        return len(conteudo) if len(conteudo) != 0 else 0
-    elif request.user.is_authenticated and request.user.is_fornecedor:
-        return 0
     else:
-        
+        print("entrei aqui 3")
         carrinho = request.session.get('carrinho') 
         if carrinho is not None:
+            print("e agora aqui")
             return len(carrinho)
         else:
+            print("não. fui para aqui")
             return 0
 
 
@@ -93,7 +104,10 @@ def loja(request):
         if request.session.get('carrinho') is not None and request.session.get('carrinho') !={}:
             request.session['carrinho'] = {}
     produtosCarrinho = quantosProdutosNoCarrinho(request)
-    context={"produtosCarrinho":produtosCarrinho}
+    if produtosCarrinho == -1:
+        context={"produtosCarrinho":"E"}
+    else:
+        context={"produtosCarrinho":produtosCarrinho}
     return render(request, 'loja/loja.html', context)
 
 
@@ -141,7 +155,7 @@ def listaProdutosSemStock(request):
             stock = produto['stock'] 
             quantidadeNoCarrinho=item["quantidade"]
 
-            if quantidadeNoCarrinho>stock:
+            if float(quantidadeNoCarrinho)>float(stock):
                 listaProdutosSemStock.append((content.index(item),stock))
         return listaProdutosSemStock
 
@@ -446,12 +460,51 @@ def perfil(request, userName):
     pagina = 'perfil'
     produtosCarrinho = quantosProdutosNoCarrinho(request)
     context={'pagina':pagina, 'utilizadorView': utilizadorPerfil, "produtosCarrinho":produtosCarrinho}
-    if utilizadorPerfil.is_fornecedor:
+    if request.user.is_superuser:
+        pass
+    
+    
+    elif utilizadorPerfil.is_fornecedor:
         fornecedor = utilizadorPerfil.fornecedor
         unidadesProducao = fornecedor.unidades_producao.all()
         numero_up = unidadesProducao.count()
         context['unidadesProducao'] = unidadesProducao
         context['numero_up'] = numero_up
+    elif utilizadorPerfil.is_consumidor:
+        consumidor = utilizadorPerfil.consumidor
+        
+        
+        
+        
+        url = f'http://127.0.0.1:8000/api/{utilizadorPerfil.username}/consumidor/encomenda/'
+        
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
+        csrf_token = get_token(request)
+        headers = {'X-CSRFToken':csrf_token}
+        resposta = sessao.get(url, headers=headers)
+        try:
+            listaEncomendas = []
+            todasEncomendas = resposta.json()
+            for encomenda in todasEncomendas:
+                idEncomenda = encomenda['id']
+                valor_total = encomenda['valor_total']
+                detalhes_envio = encomenda['detalhes_envio']
+                
+                updated_temp = encomenda['updated']
+                updated = datetime.strptime(updated_temp, '%Y-%m-%dT%H:%M:%S.%fZ')
+                #
+                created_temp = encomenda['created']
+                created = datetime.strptime(created_temp, '%Y-%m-%dT%H:%M:%S.%fZ')
+                estado = encomenda['estado']
+                encomenda_dicio = {"idEncomenda":idEncomenda, "valor_total":valor_total, "detalhes_envio": detalhes_envio, "updated":updated, "created":created, "estado":estado}
+                listaEncomendas.append(encomenda_dicio)
+            context['encomendas'] = listaEncomendas
+            context['numero_encomendas'] = len(listaEncomendas)
+        except json.decoder.JSONDecodeError:
+            pass
+    else:
+        context['outro'] = 'Outro'
     return render(request,'loja/perfil.html',context)
 
 # @login_required(login_url='loja-login')
@@ -1077,6 +1130,7 @@ def carrinho(request):
                 nome = resposta.json()
                 nomeProduto = nome['nome']
                 quantidade = produto['quantidade']
+                print(f"Quantidade: {quantidade}, nome: {produtoUP['marca']}")
                 precoKilo = produto['precoKilo']
                 preco = produto['preco']
                 idProdutoNoCarrinho = produto['id']
@@ -1144,7 +1198,7 @@ def carrinho(request):
                 "produtosCarrinho": produtosCarrinho,
                 "total": total
             }
-            
+    print(context)  
     return render(request, 'loja/carrinho.html', context)
 
 
@@ -1594,3 +1648,62 @@ def detalhesEnvio(request):
     context['formulario'] = formulario
     return render(request, 'loja/detalhesEnvio.html', context)
 
+
+
+
+
+def getProdutosEncomenda(request, username, idEncomenda):
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    url = f'http://127.0.0.1:8000/api/{username}/consumidor/encomenda/{idEncomenda}/produtos/'
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+    resposta = sessao.get(url, headers=headers)
+    context = {"produtosCarrinho":produtosCarrinho}
+    totalEncomenda = Decimal(0)
+    try:
+        listaProdutosInEncomendas = []
+        todosProdutos = resposta.json()
+        for produto in todosProdutos:
+            produto_up = produto['produtos']
+            url = f'http://127.0.0.1:8000/api/produtos_loja/{produto_up}/'
+            resposta_2 = requests.get(url)
+            
+            preco = produto['preco']
+            precoKilo = produto['precoKilo']
+            
+            updated_temp = produto['updated']
+            updated = datetime.strptime(updated_temp, '%Y-%m-%dT%H:%M:%S.%fZ')
+            totalEncomenda += Decimal(preco)
+            estado = produto['estado']
+            try:
+                conteudo = resposta_2.json()
+                infoProduto = conteudo['produto']
+                nome_produto = infoProduto['nome']
+                imagem_produto = conteudo['imagem_produto']
+                unidade_medida = conteudo['unidade_medida']
+                preco_a_granel = True if conteudo['preco_a_granel'] is not None else False
+                if not preco_a_granel:
+                    quantidade_temp = Decimal(produto['quantidade'])
+                    quantidade = int(quantidade_temp)
+                else:
+                    quantidade = produto['quantidade']
+                
+                
+                unidadeProducaoInfo = conteudo['unidade_producao']
+                nome_up = unidadeProducaoInfo['nome']
+                fornecedorInfo = unidadeProducaoInfo['fornecedor']
+                fornecedor_nome = fornecedorInfo['utilizador']
+            except json.decoder.JSONDecodeError:
+                pass
+                
+                
+            encomenda_dicio = {"imagem_produto":imagem_produto,"nome_produto":nome_produto, "precoKilo":precoKilo, "unidade_medida":unidade_medida,"preco_a_granel":preco_a_granel ,"preco":preco, "quantidade":quantidade, "estado":estado, "updated":updated, "nome_up":nome_up, "fornecedor_nome":fornecedor_nome}
+            listaProdutosInEncomendas.append(encomenda_dicio)
+        context['produtos_encomendados'] = listaProdutosInEncomendas
+        context['numero_produtos'] = len(listaProdutosInEncomendas)
+        context['total'] = totalEncomenda
+    except json.decoder.JSONDecodeError:
+        pass
+    return render(request, 'loja/produtos_encomendados.html', context)

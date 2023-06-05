@@ -29,7 +29,7 @@ urlpatterns = [
     path('<str:username>/consumidor/encomenda/<int:idEncomenda>/', views.EncomendaDetail.as_view()),
     path('<str:username>/consumidor/encomenda/<int:idEncomenda>/produtos/', views.ProdutosEncomendaList.as_view()),
     path('<str:username>/consumidor/encomenda/<int:idEncomenda>/produtos/<int:idProdutoEncomenda>/', views.ProdutosEncomendaDetail.as_view()),
-    
+    path('<str:username>/consumidor/encomendarCarrinho/', views.EncomendarTodosOsProdutosCarrinho.as_view()),    
 
 
 
