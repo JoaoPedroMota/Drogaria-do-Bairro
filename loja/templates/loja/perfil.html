@@ -109,7 +109,13 @@ color: white;
         <div class="row">
             <div class="col-lg-8 offset-lg-2 text-center">
                 <div class="breadcrumb-text">
-                   
+                    {% if messages %}
+                        <ul class="messages">
+                            {% for message in messages %}
+                                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                     <p>O seu perfil</p>
                     <br>
                     <div id="imagemPerfil">
@@ -221,7 +227,7 @@ color: white;
                                                     <td>{{i}}</td>
                                                     <td>{{ encomenda.valor_total }}€</td>
                                                     <td>{{ encomenda.estado }}</td>
-                                                    <td>{{ encomenda.detalhes_envio }}</td>
+                                                    <td><a href="{% url 'loja-detalhes-por-encomenda' username=request.user.username idEncomenda=encomenda.idEncomenda idDetalhes=encomenda.detalhes_envio %}" >Ver detalhes</a></td>
                                                     <td>{{ encomenda.created }}</td>
                                                     <td>{{ encomenda.updated }}</td>
                                                     <td><a href="{% url 'loja-produtosEncomendados' username=request.user.username idEncomenda=encomenda.idEncomenda %}">Mais</a></td>

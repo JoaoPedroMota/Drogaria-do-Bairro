@@ -168,7 +168,7 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
     class Meta:
         model = Utilizador
         # fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais','estado' ,'cidade', 'nome', 'telemovel', 'tipo_utilizador']
-        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais','cidade','morada' ,'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
+        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'pais','cidade','freguesia','morada' ,'nome', 'telemovel', 'tipo_utilizador', 'imagem_perfil']
         extra_kwargs = {'password': {'required': True}}
     
 
@@ -219,7 +219,7 @@ class UnidadeProducaoSerializer(ModelSerializer):
     fornecedor = FornecedorSerializer(read_only=True)
     class Meta:
         model = UnidadeProducao
-        fields = ['id','nome', 'pais', 'cidade', 'morada', 'tipo_unidade','fornecedor',]
+        fields = ['id','nome', 'pais', 'cidade', 'freguesia','morada', 'tipo_unidade','fornecedor',]
     def save(self, **kwargs):
         self.validated_data['cidade'] = self.validated_data.get('cidade').upper()
         return super(UnidadeProducaoSerializer, self).save(**kwargs)

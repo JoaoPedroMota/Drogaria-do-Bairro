@@ -63,9 +63,24 @@ oauth.register(
 def quantosProdutosNoCarrinho(request):
     if request.user.is_authenticated:
         if request.user.is_superuser:
-            return "E"
+            if request.user.consumidor is None:
+                return "E"
+            elif request.user.consumidor is not None:
+                sessao = requests.Session()
+                sessao.cookies.update(request.COOKIES)
+                url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
+                resposta = sessao.get(url)
+                if resposta.status_code == 500:
+                    return -1
+            
+                if resposta.content:
+                    conteudo = resposta.json() if resposta.json() else 0
+                else:
+                    return 0
+                return len(conteudo) if len(conteudo) != 0 else 0
+            else:
+                return 0   
         if request.user.is_consumidor:
-            print("entrei aqui 1")
             sessao = requests.Session()
             sessao.cookies.update(request.COOKIES)
             url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
@@ -1464,7 +1479,7 @@ def criarAssociacaoProdutoUP(request):
         
             resposta = sessao.post(url, headers=headers,data=produto_up_data, files={"imagem_produto":imagem})
             if resposta.status_code == 201:
-                #messages.success(request, 'Produto criado com sucesso.')
+                messages.success(request, 'Produto associcado a unidade de produção com sucesso.')
                 return redirect('loja-perfil', userName=request.user.username)
             else:
                 if resposta.status_code == 400:
@@ -1724,4 +1739,47 @@ def novosDetalhesEnvioOuExistentes(request, username):
         pass
     else:
         formulario = ''
+
+
+
+
+
+
+
+
+
+def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
+    idDetalhes = int(idDetalhes)
+    url = f'http://127.0.0.1:8000/api/{username}/consumidor/detalhes_envio/{idDetalhes}'
+    url2 = f'http://127.0.0.1:8000/api/{username}/consumidor/encomenda/'
     
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+    resposta = sessao.get(url)
+    resposta_2 = sessao.get(url2)
+    context = {} 
+    try:
+        conteudo = resposta.json()
+        nome = conteudo['nome']
+        morada = f"{conteudo['morada']}, {conteudo['cidade']}, {conteudo['pais']}"
+        telemovel = conteudo['telemovel']
+        email = conteudo['email']
+        instrucoes_entrega = conteudo['instrucoes_entrega']
+        ####################
+        conteudo_2 = resposta_2.json()
+        encomenda_dicio = {}
+        for encomenda in conteudo_2:
+            if encomenda['id'] == idEncomenda:
+                encomenda_dicio = encomenda
+                break
+        index_encomenda = conteudo_2.index(encomenda_dicio)
+        index_encomenda+=1
+        
+        
+        info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega}]
+    except json.decoder.JSONDecodeError:
+        pass
+    context = {"infos":info_detalhes_envio, "encomenda_nr":index_encomenda}
+    return render(request, 'loja/infos_detalhes.html', context)

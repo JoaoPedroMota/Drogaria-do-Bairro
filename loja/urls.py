@@ -35,7 +35,7 @@ urlpatterns = [
     path('create_order/', views.create_order, name='create_order'),
     path('checkout/', views.checkout, name='loja-checkout'),
     path('perfil/<str:username>/encomenda/<int:idEncomenda>/produtos-encomendados/', views.getProdutosEncomenda,name='loja-produtosEncomendados'),
-
+    path('perfil/<str:username>/detalhesPorEncomenda/<int:idEncomenda>/<str:idDetalhes>/', views.verDetalhesEnvioNaEncomenda, name='loja-detalhes-por-encomenda')
 ]
 
 

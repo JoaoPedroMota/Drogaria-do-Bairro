@@ -9,7 +9,7 @@ from phonenumbers import is_valid_number, parse as parseTelemovel
 class UtilizadorFormulario(UserCreationForm):
     class Meta:
         model = Utilizador
-        fields = ['first_name','last_name', 'username', 'email', 'password1', 'password2', 'pais','cidade','telemovel','tipo_utilizador','imagem_perfil']
+        fields = ['first_name','last_name', 'username', 'email', 'password1', 'password2', 'pais','cidade','freguesia','morada','telemovel','tipo_utilizador','imagem_perfil']
   
 class FornecedorFormulario(ModelForm):
     pass
@@ -29,12 +29,12 @@ class CompletarPerfil(ModelForm):
     
     class Meta:
         model = Utilizador
-        fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','telemovel','tipo_utilizador', 'imagem_perfil']
+        fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','freguesia','morada','telemovel','tipo_utilizador', 'imagem_perfil']
 
 class criarUnidadeProducaoFormulario(ModelForm):
     class Meta:
         model= UnidadeProducao
-        fields = ['nome', 'pais','cidade','morada', 'tipo_unidade']
+        fields = ['nome', 'pais','cidade','freguesia','morada', 'tipo_unidade']
         widgets = {
             'tipo_unidade': forms.Select(choices=UnidadeProducao.TIPO_UNIDADE)
         }
