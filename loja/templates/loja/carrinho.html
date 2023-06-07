@@ -10,6 +10,17 @@
   }
 </style>
 <!-- breadcrumb-section -->
+
+<script>
+    
+    function atualizarPreco(input, preco) {
+        var valor = input.value;
+        var novoPreco = valor * preco;
+        var precoElement = input.parentNode.querySelector('.preco');
+        precoElement.innerText = novoPreco.toFixed(2) + "€";
+}
+</script>
+
 <div class="breadcrumb-section breadcrumb-bg">
     <div class="container">
         <div class="row">
@@ -46,6 +57,7 @@
                                 <th class="product-name">Nome</th>
                                 <th class="product-price">Preço</th>
                                 <th class="product-price">Total </th>
+                                <th>teste</th>
                                 <th class="product-quantity">Quantidade</th>
                                 
                             </tr>
@@ -62,6 +74,7 @@
             <td class="product-name">{{ produto.nomeProduto }}</td>
             <td class="product-quantity">{{produto.precoKilo}}€/{{produto.produto.unidade_medida}}</td>    
             <td class="product-price">{{produto.preco|floatformat:2}}€</td>
+            <td><input type="number" class="styled-input" step="0.5" min="0.1" max="50" placeholder="{{ produto.quantidade|floatformat:2 }}" name="quantidade" onblur="atualizarNumeroComVirgula(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoG }})">{{produto.produto.unidade_medida}}</td>
             <td class="">{{ produto.quantidade|floatformat:2 }} {{produto.produto.unidade_medida}}</td>
             {% endwith %}
         </tr>
@@ -96,7 +109,7 @@
                         </tbody>
                     </table>
                     <div class="cart-buttons">
-                        <a href="/cart" class="boxed-btn">Update Cart</a>
+                        <a href="/carrinho" class="boxed-btn">Update Cart</a>
                     </div>
                 </div>
 
