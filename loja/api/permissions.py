@@ -114,11 +114,11 @@ class IsConsumidorAndOwner2(permissions.BasePermission):
         if request.user.is_authenticated:
             if not request.user.is_consumidor:
                 raise PermissionDenied(detail="Não é um consumidor autenticado")
-            if request.user.is_superuser:
-                if request.method in permissions.SAFE_METHODS:
-                    return True
-                else:
-                    raise PermissionDenied(detail="Está logado enquanto admin")
+            # if request.user.is_superuser:
+            #     if request.method in permissions.SAFE_METHODS:
+            #         return True
+            #     else:
+            #         raise PermissionDenied(detail="Está logado enquanto admin")
             if request.user.is_consumidor:
                 username = view.kwargs.get('username')
                 user = Utilizador.objects.get(username=username)

@@ -197,7 +197,7 @@ class DetalhesEnvioForm(forms.ModelForm):
             if (utilizador.morada is None or utilizador.morada == ''): #utilizador ainda não tem morada
                     moradinha= cleaned_data.get('morada') if cleaned_data.get('morada') is not None else ''
                     vazio = moradinha.replace(" ","")
-                    print(vazio=='')
+                    # print(vazio=='')
                     if vazio == '':
 
                         self.add_error('morada',f"Selecionou utilizar informações do utilizador, mas o utilizador ainda não tem nenhuma morada guardada. Por favor adicone uma morada válida.")
@@ -205,4 +205,59 @@ class DetalhesEnvioForm(forms.ModelForm):
                 self.add_error('morada',f"Selecionou utilizar informações do utilizador, logo a morada tem de ser igual à que está definida no utilizador: {utilizador.morada}. (Se pretender alterar apenas a morada, vá a Editar Perfil)")
             if cleaned_data['email'] != utilizador.email:
                 self.add_error('email',f"Selecionou utilizar informações do utilizador, logo o email tem de ser igual ao que está definida no utilizador: {utilizador.email}")
+        return cleaned_data
+
+class ConfirmarDetalhesEnvioForm(forms.ModelForm):
+    class Meta:
+        model = DetalhesEnvio
+        fields = ['nome', 'pais', 'cidade', 'morada', 'telemovel', 'email', 'instrucoes_entrega','guardar_esta_morada']
+    
+    def __init__(self, *args, **kwargs):
+        utilizador = kwargs.pop('utilizador', None)
+        consumidor = utilizador.consumidor
+        validarNovosDetalhes=kwargs.pop('validarNovosDetalhes', None)
+        print("VALIDAR NOVOS DETALHES (init): ", validarNovosDetalhes)
+
+        super().__init__(*args, **kwargs)
+        if consumidor:
+            self.initial['consumidor'] = consumidor
+            self.initial['validarNovosDetalhes']= validarNovosDetalhes
+            utilizador = self.initial['consumidor'].utilizador
+            self.fields['nome'].initial = utilizador.nome
+            self.fields['pais'].initial = utilizador.pais
+            self.fields['cidade'].initial = utilizador.cidade
+            if utilizador.morada is not None:
+                self.fields['morada'].initial = utilizador.morada
+            self.fields['telemovel'].initial = utilizador.telemovel
+            self.fields['email'].initial = utilizador.email
+            
+    def clean(self):
+        cleaned_data = super().clean()
+        morada = cleaned_data['morada'] if cleaned_data.get('morada') is not None else None
+        consumidor = self.initial.get('consumidor')
+        validarNovosDetalhes= self.initial.get('validarNovosDetalhes')
+        utilizador = consumidor.utilizador
+        telemovel = cleaned_data.get('telemovel') if cleaned_data.get('telemovel') is not None else None
+        print("VALIDAR NOVOS DETALHES (clean): ", validarNovosDetalhes)
+
+        if cleaned_data['nome'] is None or cleaned_data['nome'] == "":
+            self.add_error("nome", f"Selecione um nome")
+        if cleaned_data['pais'] is None or cleaned_data['pais'] == "":
+            self.add_error("pais", f"Selecinoe um país")
+        if cleaned_data['cidade'] is None or cleaned_data['cidade'] == "":
+            self.add_error('cidade',f"Selecione uma cidade")
+        if telemovel is None or telemovel == "":
+            self.add_error('telemovel',f"Introduza um número de telemóvel válido. No caso do telemóvel não for de Portugal, tem de inserir o prefixo internacional.")
+        if morada is None:
+            self.add_error('morada',f"Selecione uma morada")
+        if morada is not None:
+            moradinha= cleaned_data.get('morada')
+            vazio = moradinha.replace(" ","")
+            if vazio == '':
+                self.add_error('morada',f"Selecionou utilizar informações do utilizador, mas o utilizador ainda não tem nenhuma morada guardada. Por favor adicone uma morada válida.")
+        if validarNovosDetalhes==False and cleaned_data['guardar_esta_morada']==False:
+            self.add_error("guardar_esta_morada", "Erro - Ainda não tem detalhes de envio associados ao seu perfil. Na primeira encomenda é obrigatório guardar os detalhes")
+
+        if cleaned_data['email'] is None or cleaned_data['email'] == "":
+            self.add_error('email',f"Selecione um email")
         return cleaned_data
