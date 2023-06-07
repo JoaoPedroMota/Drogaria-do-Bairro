@@ -24,7 +24,7 @@ from decimal import Decimal
 ### serializers.py ###
 from .serializers import *
 ### permissions.py ###
-from .permissions import IsOwnerOrReadOnly,IsOwner ,IsFornecedorOrReadOnly, IsFornecedorAndOwnerOrReadOnly, IsConsumidorAndOwnerOrReadOnly, IsConsumidorAndOwner, IsConsumidorAndOwner2
+from .permissions import *
 ####
 from decimal import Decimal
 import phonenumbers
@@ -703,15 +703,15 @@ class ProdutosCarrinhoList(APIView):
         except Utilizador.DoesNotExist:
             raise Http404
     def get(self, request, username, format=None):
-        print("cheguei aqui blablablabla")
         carrinho = self.get_carrinho(username)
 
         itens_carrinho = self.get_object(carrinho)
         if itens_carrinho.exists():
             serializar = ProdutosCarrinhoResponseSerializer(itens_carrinho, many=True) #serializer para responder
-        else:
+            return Response(serializar.data,status=status.HTTP_200_OK)
+        elif not itens_carrinho.exists():
             return Response(status=status.HTTP_404_NOT_FOUND)
-        return Response(serializar.data,status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
     def post(self, request, username, format=None):
         if request.user.username != username:
             return Response({'detail':"Não tem permissão para realizar esta ação, porque não é o utilizador dono deste carrinho!"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -1518,3 +1518,48 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
             else:
                 return Response({'details': "Não tem produtos no carrinho"})
         return Response({"details": "Ocorreu um erro ao processar a encomenda. Todas as alterações foram revertidas."},status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    
+    
+    
+class EncomendasPorUPList(APIView):
+    """_summary_
+
+    Args:
+        APIView (_type_): _description_
+    """
+    permission_classes = [IsFornecedorAndOwner2]
+    def get_object(self, instance):
+        try:
+            return ProdutosEncomenda.objects.filter(unidadeProducao =instance)
+        except ProdutosEncomenda.DoesNotExist:
+            raise Http404
+        
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_fornecedor(self, utilizador):
+        try:
+            return Fornecedor.objects.get(utilizador=utilizador)
+        except Fornecedor.DoesNotExist:
+            raise Http404
+
+    def get_up(self, fornecedor, idUP):
+        try:
+            return UnidadeProducao.objects.get(id=idUP, fornecedor=fornecedor)
+        except UnidadeProducao.DoesNotExist:
+            raise Http404
+          
+    def get(self, request, username,idUnidadeProducao, format=None):
+        user = self.get_utilizador(username)
+        fornecedor = self.get_fornecedor(user)
+        up = self.get_up(fornecedor, idUnidadeProducao)
+        produtos_encomenda_objetos = self.get_object(up)
+        if produtos_encomenda_objetos.exists():
+            serializar = ProdutosEncomendaSerializer(produtos_encomenda_objetos, many=True)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data,status=status.HTTP_200_OK)

@@ -702,8 +702,8 @@ class ProdutosEncomenda(models.Model):
     estado = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Em processamento')
     updated = models.DateTimeField(auto_now=True, null=True, blank=False)
     created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
-    def __str__(self):
-        return f"{self.produtos} da {self.encomenda}"
+    # def __str__(self):
+    #     return f"{self.produtos} da {self.encomenda}"
     class Meta:
         verbose_name = "Produtos Encomendados"
         verbose_name_plural = "Produtos Encomendados"
