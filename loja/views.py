@@ -9,7 +9,7 @@ from django.middleware.csrf import get_token
 from .models import *
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from .forms import PasswordConfirmForm, ProdutoUnidadeProducaoForm, UtilizadorFormulario, FornecedorFormulario, EditarPerfil, criarUnidadeProducaoFormulario, criarVeiculoFormulario, ProdutoForm, editarVeiculoFormulario, editarUnidadeProducaoFormulario, CompletarPerfil, DetalhesEnvioForm
+from .forms import *
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from .forms import ConfirmacaoForm
@@ -19,6 +19,8 @@ from django.contrib.auth.hashers import check_password
 from loja.api.serializers import *
 from .utils import fornecedor_required, consumidor_required
 from datetime import datetime
+
+from django_countries import countries
 
 
 import requests
@@ -65,7 +67,6 @@ def quantosProdutosNoCarrinho(request):
         if request.user.is_superuser:
             return "E"
         if request.user.is_consumidor:
-            print("entrei aqui 1")
             sessao = requests.Session()
             sessao.cookies.update(request.COOKIES)
             url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
@@ -79,16 +80,15 @@ def quantosProdutosNoCarrinho(request):
                 return 0
             return len(conteudo) if len(conteudo) != 0 else 0
         elif request.user.is_authenticated and request.user.is_fornecedor:
-            print("entrei aqui 2")
             return 0
     else:
-        print("entrei aqui 3")
+
         carrinho = request.session.get('carrinho') 
         if carrinho is not None:
-            print("e agora aqui")
+
             return len(carrinho)
         else:
-            print("não. fui para aqui")
+
             return 0
 
 
@@ -122,9 +122,7 @@ def about(request):
     return render(request, 'loja/about.html', context)
 
 
-# def checkout(request):
-#     context = {}
-#     return render(request, 'loja/checkout.html', context)
+
 def news(request):
     context = {}
     produtosCarrinho = quantosProdutosNoCarrinho(request)
@@ -143,6 +141,7 @@ def listaProdutosSemStock(request):
 
     resposta = sessao.get(url)
 
+
     if resposta.content:
         content=resposta.json()
 
@@ -158,6 +157,8 @@ def listaProdutosSemStock(request):
             if float(quantidadeNoCarrinho)>float(stock):
                 listaProdutosSemStock.append((content.index(item),stock))
         return listaProdutosSemStock
+    else:
+        return ["Sem produtos no carrinho"]
 
 def create_order(request):
 
@@ -235,16 +236,25 @@ def checkout(request):
     if request.method == 'POST':
 
         lista=listaProdutosSemStock(request) 
+        
         #Caso haja produtos sem stock     
         if len(lista)!=0:
-            for produto in lista:
-                messages.error(request, 'Erro: O Item '+str(int(float(produto[0])+1))+' não tem stock suficiente para a quantidade pedida, o stock atual é '+produto[1])
+            if "Sem produtos no carrinho" in lista:
+                messages.error(request,"Erro - Ainda não tem produtos no carrinho")
+            else:
+                for produto in lista:
+                    messages.error(request, 'Erro: O Item '+str(int(float(produto[0])+1))+' não tem stock suficiente para a quantidade pedida, o stock atual é '+produto[1])
 
             return redirect('loja-carrinho')
         #Caso todos os produtos tenham stock 
         else:
-            #Criar encomenda e atualizar stocks
-            create_order(request)
+            #VERIFICAR DETALHES
+            
+            
+            # context['formulario'] = formulario
+            # return render(request, 'loja/detalhesEnvio.html', context)
+
+
 
 
 
@@ -252,7 +262,7 @@ def checkout(request):
             #FALTA GUARDAR TAMBEM VERIFICAR DETALHES DE ENCOMENDA
 
             #return render(request, 'checkout.html', {'carrinho': cart})
-            return redirect('loja-carrinho')
+            return redirect('loja-confirmarDetalhesEnvio')
         
 
 
@@ -1130,7 +1140,7 @@ def carrinho(request):
                 nome = resposta.json()
                 nomeProduto = nome['nome']
                 quantidade = produto['quantidade']
-                print(f"Quantidade: {quantidade}, nome: {produtoUP['marca']}")
+                #print(f"Quantidade: {quantidade}, nome: {produtoUP['marca']}")
                 precoKilo = produto['precoKilo']
                 preco = produto['preco']
                 idProdutoNoCarrinho = produto['id']
@@ -1198,7 +1208,7 @@ def carrinho(request):
                 "produtosCarrinho": produtosCarrinho,
                 "total": total
             }
-    print(context)  
+    #print(context)  
     return render(request, 'loja/carrinho.html', context)
 
 
@@ -1221,7 +1231,7 @@ def adicionar_ao_carrinho(request, produto_id):
     # valor = Decimal(split_values[0])
 
     # quantidade = Decimal(split_values[1].split('=')[1])
-    print(request.GET)
+    #print(request.GET)
     preco = Decimal(request.GET.get('preco'))
     quantidade = Decimal(request.GET.get('quantidade'))
     preco_atualizado = Decimal(preco * quantidade)
@@ -1405,10 +1415,10 @@ def removerAssociaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProduca
         if resposta.status_code == 204:
             if resposta.text:
                 conteudo = resposta.json()
-                detial = conteudo.get('detail', 'Erro desconhecido ao apagar a associação')
+                #detail = conteudo.get('detail', 'Erro desconhecido ao apagar a associação')
                 # print(conteudo)
         else:
-            print("Erro ao apagar associação")
+            messages.error("Erro ao apagar associação")
     return redirect('loja-unidadeProducao', userName=request.user.username, id=idUnidadeProducao)
 
 
@@ -1536,8 +1546,255 @@ def adicionarProdutosCarrinhoDpsDeLogar(request):
             url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/'
             respostaUpdate = sessao.post(url, headers=headers, data = atualizar_carrinho_dict_info)
     request.session['carrinho'] = {}
+
+from django_countries import countries
+
+@consumidor_required
+def confirmarDetalhesEnvio(request): 
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context = {"produtosCarrinho":produtosCarrinho} # "produtosCarrinho":produtosCarrinho
+    formulario = ConfirmarDetalhesEnvioForm(utilizador=request.user, validarNovosDetalhes=False)
+    # print("123")
     
     
+    url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/detalhes_envio/'
+
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+
+    resposta = sessao.get(url, headers=headers)
+    # print("456")
+
+    existe=False
+
+    if resposta.content:
+        # print("HA CONTENT") 
+        conteudo = resposta.json()
+        primeiro = next(iter(conteudo))
+        existe=True
+        formulario = ConfirmarDetalhesEnvioForm(utilizador=request.user, validarNovosDetalhes=True)
+
+        formulario.initial = {
+            'nome': primeiro['nome'],
+            'pais': primeiro['pais'],
+            'cidade': primeiro['cidade'],
+            'morada': primeiro['morada'],
+            'telemovel': primeiro['telemovel'],
+            'email': primeiro['email'],
+            'instrucoes_entrega': primeiro['instrucoes_entrega'],
+            'usar_informacoes_utilizador': primeiro['usar_informacoes_utilizador'],
+            'guardar_esta_morada': primeiro['guardar_esta_morada'],            
+        }
+      
+
+
+    if request.method=="POST":
+        if existe:
+            print("EXISTE = TRUE")
+            validarNovosDetalhes=True
+        else:
+            print("EXISTE = FALSE")
+            validarNovosDetalhes=False
+
+        formulario = ConfirmarDetalhesEnvioForm(request.POST, utilizador=request.user, validarNovosDetalhes=validarNovosDetalhes )
+        
+        dicionario_mutavel = formulario.data.copy()
+        
+        dicionario_mutavel['consumidor'] = request.user.consumidor
+        dicionario_mutavel['cidade'] = formulario.data['cidade'].upper()
+        #print(dicionario_mutavel)
+        formulario.data = dicionario_mutavel
+        print("formulario.is_valid!!!:",formulario.is_valid())
+        if formulario.is_valid():
+            
+            if True: ##esconder campos que vai buscar
+                nome = formulario.cleaned_data["nome"]
+                pais_temp = formulario.cleaned_data['pais']
+                pais_long=countries.name(pais_temp)
+                cidade = formulario.cleaned_data['cidade']
+                morada = formulario.cleaned_data['morada']
+                ### campo telemovel
+                telemovel = formulario.cleaned_data['telemovel']
+                ####converter telemovel para formato internacional
+                international_phone_number = phonenumbers.format_number(telemovel, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+                ### converte para str
+                telemovel_international_str = str(international_phone_number)
+                #### atribui str ao dicionario, pq JSON  n suporta PhoneNumber
+                instrucoes_entrega=formulario.cleaned_data['instrucoes_entrega']
+                
+                
+                telemovel = telemovel_international_str
+                email = formulario.cleaned_data['email']
+                guardar_esta_morada = formulario.cleaned_data['guardar_esta_morada']
+
+                # print(guardar_esta_morada, type(guardar_esta_morada))
+
+            if resposta.status_code == 200 and guardar_esta_morada == True: ##ja existem detalhes criados para este user
+
+                
+                conteudo=resposta.json()
+                primeiro = next(iter(conteudo))
+
+                
+                #verificar se ha alguma alteracao
+                if primeiro['nome'] != nome or primeiro['pais'] != pais_long or primeiro['cidade'] != cidade or primeiro['telemovel'] != telemovel or primeiro['email'] != email or primeiro['morada'] != morada or primeiro['instrucoes_entrega'] != instrucoes_entrega:
+                    # print("ENTROU NO IF")
+                    detalhes_entrega={
+                        "nome":nome,
+                        "pais":pais_long,
+                        "cidade":cidade,
+                        "telemovel":telemovel,
+                        "morada":morada,
+                        "email" : email,
+                        "instrucoes_entrega" : instrucoes_entrega,
+                        "guardar_esta_morada" : guardar_esta_morada,
+                    }
+
+                    if guardar_esta_morada:
+                        idDetalhesEnvio= primeiro['id']
+
+                        url += f"{idDetalhesEnvio}/"
+                        resposta = sessao.put(url, headers=headers, data=detalhes_entrega)
+
+                        if resposta.status_code == 200: #correu tudo bem?
+                            messages.success(request, "Detalhes de envio guardados com sucesso")
+                            return redirect('loja-perfil', userName=request.user.username)  #FALTA VER
+                        else: #deu erro
+                            formulario.add_error('nome',f'Erro: {resposta}')
+                    # else:
+
+                    #     resposta = sessao.post(url, headers=headers, data=detalhes_entrega)
+
+                    #     conteudo=resposta.json()
+                    #     primeiro = next(iter(conteudo))
+                    #     idDetalhesEnvio= primeiro['id']
+
+                    #     if resposta.status_code == 201: #correu tudo bem?
+                    #         messages.success(request, "Detalhes de envio guardados com sucesso")
+                    #         return redirect('loja-perfil', userName=request.user.username)  #FALTA VER
+                    #     else: #deu erro
+                    #         formulario.add_error('nome',f'Erro: {resposta}')
+                else:
+
+                    # print("Resposta da API:", resposta.json())
+                    # print("PRIMEIRO!!!",primeiro)
+                    # print("CONTEUDO!!!",conteudo)
+                    idDetalhesEnvio= primeiro['id']
+
+            elif resposta.status_code == 200 and guardar_esta_morada == False:#ja existem detalhes mas nao quero guardar no perfil os novos detalhes
+                
+                conteudo=resposta.json()
+                primeiro = next(iter(conteudo))
+
+                # if primeiro['nome'] != nome or primeiro['pais'] != pais_long or primeiro['cidade'] != cidade or primeiro['telemovel'] != telemovel or primeiro['email'] != email or primeiro['morada'] != morada or primeiro['instrucoes_entrega'] != instrucoes_entrega:
+
+                detalhes_entrega={
+                    "nome":nome,
+                    "pais":pais_long,
+                    "cidade":cidade,
+                    "telemovel":telemovel,
+                    "morada":morada,
+                    "email" : email,
+                    "instrucoes_entrega" : instrucoes_entrega,
+                    "guardar_esta_morada" : guardar_esta_morada,
+                }
+
+                    # if guardar_esta_morada:
+                    #     idDetalhesEnvio= primeiro['id']
+
+                    #     url += f"{idDetalhesEnvio}/"
+                    #     resposta = sessao.put(url, headers=headers, data=detalhes_entrega)
+
+                    #     if resposta.status_code == 200: #correu tudo bem?
+                    #         messages.success(request, "Detalhes de envio guardados com sucesso")
+                    #         return redirect('loja-perfil', userName=request.user.username)  #FALTA VER
+                    #     else: #deu erro
+                    #         formulario.add_error('nome',f'Erro: {resposta}')
+                    # else:
+
+                resposta = sessao.post(url, headers=headers, data=detalhes_entrega)
+
+                conteudo=resposta.json()
+                primeiro = next(iter(conteudo))
+                # print("PRIMEIRO!!!",primeiro)
+                # print("CONTEUDO!!!",conteudo)
+                idDetalhesEnvio= conteudo["id"]
+
+                if resposta.status_code == 201: #correu tudo bem?
+                    messages.success(request, "Detalhes de envio guardados com sucesso para esta encomenda")
+                    #return redirect('loja-criarEncomenda', userName=request.user.username)
+                    return redirect('loja-criarEncomenda', idDetalhesEnvio=idDetalhesEnvio)
+                else: #deu erro
+                    formulario.add_error('nome',f'Erro: {resposta}')
+
+                
+
+                    
+
+            else: #ainda não existe detalhes de envio
+                detalhes_entrega={
+                    "nome":nome,
+                    "pais":pais_long,
+                    "cidade":cidade.upper(),
+                    "telemovel":telemovel,
+                    "morada":morada,
+                    "email" : email,
+                    "instrucoes_entrega" : instrucoes_entrega,
+                    "guardar_esta_morada":guardar_esta_morada
+                }
+                # print(detalhes_entrega["nome"])
+                # print(detalhes_entrega["pais"])
+                # print(detalhes_entrega["cidade"])
+                # print(detalhes_entrega["telemovel"])
+                # print(detalhes_entrega["morada"])
+                # print(detalhes_entrega["email"])
+                # print(detalhes_entrega["instrucoes_entrega"])
+                # print(detalhes_entrega["guardar_esta_morada"])
+                resposta = sessao.post(url, headers=headers, data=detalhes_entrega)
+                # print(resposta)
+                # print(resposta.json())
+                if resposta.status_code == 201:
+                    conteudo=resposta.json()
+                    idDetalhesEnvio=conteudo['id']
+                    messages.success(request, "Detalhes de envio guardados com sucesso")
+                    #return redirect('loja-perfil', userName=request.user.username)
+                    return redirect('loja-criarEncomenda', idDetalhesEnvio=idDetalhesEnvio)
+                else:
+                    print("FORMULARIO ERRORS", formulario.errors)
+                    formulario.add_error('nome', f'Erro:{resposta}')
+        else:
+            context = {'formulario': formulario}
+            return render(request, 'loja/confirmarDetalhesEnvio.html', context)   
+    context['formulario'] = formulario
+    return render(request, 'loja/confirmarDetalhesEnvio.html', context)
+
+# except json.decoder.JSONDecodeError:
+    
+
+
+@consumidor_required
+def criarEncomenda(request, idDetalhesEnvio):
+
+    url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/encomendarCarrinho/'
+
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+
+    data={'detalhes_envio': idDetalhesEnvio}
+
+    resposta = sessao.post(url, data=data,headers=headers)
+    if resposta.status_code == 201:
+        messages.success(request, "A sua encomenda foi criada com sucesso")
+        return redirect('loja-perfil', userName=request.user.username)
+    else:
+        messages.error(request, "Erro - Houve um problema a criar a sua encomenda")
+        return redirect('loja-carrinho')
+
+
 @consumidor_required
 def detalhesEnvio(request):
     produtosCarrinho = quantosProdutosNoCarrinho(request)
@@ -1574,7 +1831,7 @@ def detalhesEnvio(request):
         
         dicionario_mutavel['consumidor'] = request.user.consumidor
         dicionario_mutavel['cidade'] = formulario.data['cidade'].upper()
-        print(dicionario_mutavel)
+        #print(dicionario_mutavel)
         formulario.data = dicionario_mutavel
         if formulario.is_valid():
             
@@ -1646,7 +1903,6 @@ def detalhesEnvio(request):
                 if resposta.status_code == 201:
                     return redirect('loja-perfil', userName=request.user.username)
                 else:
-                    print(resposta.json())
                     formulario.add_error('nome', f'Erro:{resposta}')
         else:
             context = {'formulario': formulario}

@@ -703,7 +703,7 @@ class ProdutosCarrinhoList(APIView):
         except Utilizador.DoesNotExist:
             raise Http404
     def get(self, request, username, format=None):
-        print("cheguei aqui blablablabla")
+
         carrinho = self.get_carrinho(username)
 
         itens_carrinho = self.get_object(carrinho)
@@ -966,6 +966,7 @@ class DetalhesEnvioList(APIView):
                 deserializer.save()
                 respostaSerializar = DetalhesEnvioSerializerResponse(deserializer.instance)
                 return Response(respostaSerializar.data, status=status.HTTP_201_CREATED)
+        print(deserializer.errors) 
         return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -1464,8 +1465,10 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
         produtos_carrinho = self.get_produtos_carrinho(carrinho)
         total = 0
         produtos_sem_stock = []
+        print("ANTES DO ATOMIC!!!!!!!!!!!!!!!!!")
         with transaction.atomic():
             if produtos_carrinho is not None:
+                print("EXISTEM PRODUTOS NO CARRINHO!!!!")
                 for itemCarrinho in produtos_carrinho:
                     idProdutoUP = itemCarrinho.produto.id
                     quantidade = itemCarrinho.quantidade
@@ -1475,6 +1478,7 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
                     if stock_produtos_up < quantidade:
                         produtos_sem_stock.append((produto_up, itemCarrinho.id))
                 if produtos_sem_stock != []:
+                    print("EXISTEM PRODUTOS sem stock!!!!")
                     stringBuilder = ''
                     for par in produtos_sem_stock:
                         stringBuilder += "ERRO: O " + str(par[0]) + " com o id no carrinho " + str(
@@ -1485,6 +1489,7 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
                 id_detalhes_envio = data2['detalhes_envio']
                 detalhes_envio = self.get_detalhes_envio(consumidor, id_detalhes_envio)
                 if detalhes_envio is not None:
+                    print("EXISTEM DETALHES ENVIO!!!!")
                     encomenda = Encomenda.objects.create(
                         consumidor=consumidor,
                         detalhes_envio=detalhes_envio,
@@ -1496,6 +1501,7 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
                         produto_up = self.get_produtos_up(idProdutoUP)
                         stock_produtos_up = produto_up.stock
                         if stock_produtos_up >= quantidade_temp:
+                            print("STOCK OKKKK!!!!")
                             stock_produtos_up -= quantidade_temp
                             produto_up.stock = stock_produtos_up
                             produto_up.save()
@@ -1511,10 +1517,12 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
                         produto_encomenda.save()
 
                     serializar = EncomendaSerializer(encomenda, many=False)
-                    return Response(serializar.data, status=status.HTTP_200_OK)
+                    return Response(serializar.data, status=status.HTTP_201_CREATED)
                 else:
+                    print("PRIMEIRO ELSEEEE!!!")
                     return Response({"details": "Não enviou os detalhes de envio ou os detalhes de envio selecionados não lhe pertencem"},
                                     status=status.HTTP_400_BAD_REQUEST)
             else:
+                print("SEGUNDO ELSEEEE!!!")
                 return Response({'details': "Não tem produtos no carrinho"})
         return Response({"details": "Ocorreu um erro ao processar a encomenda. Todas as alterações foram revertidas."},status=status.HTTP_400_BAD_REQUEST)

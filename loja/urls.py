@@ -35,6 +35,11 @@ urlpatterns = [
     path('create_order/', views.create_order, name='create_order'),
     path('checkout/', views.checkout, name='loja-checkout'),
     path('perfil/<str:username>/encomenda/<int:idEncomenda>/produtos-encomendados/', views.getProdutosEncomenda,name='loja-produtosEncomendados'),
+    
+    path('confirmarDetalhesEnvio/', views.confirmarDetalhesEnvio, name='loja-confirmarDetalhesEnvio'),
+    path('criarEncomenda/<int:idDetalhesEnvio>/', views.criarEncomenda, name='loja-criarEncomenda'),
+
+
 
 ]
 
