@@ -161,13 +161,56 @@
                                 {% else %}
                                 <p>Nenhum produto associado a esta unidade de produção.</p>
                                 {% endif %}
+                                <br>
+                            {% if produtosUP %}
+                            
+                                <h2>Estado das suas encomendas</h2>    
+                                    <table id="customers">
+                                        <tr>
+                                            <th>Encomenda</th>
+                                            <th>Produto</th>
+                                            <th>Quantidade</th>
+                                            <th>Preco</th>
+                                            <th>PrecoKilo</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                        {% for produtoEncomenda in encomenda %}
+                                        <tr>
+                                            <td>{{ produtoEncomenda.encomenda}}</td>
+                                            <td>{{ produtoEncomenda.produtos}}</td>
+                                            <td>{{ produtoEncomenda.quantidade}}</td>
+                                            <td>{{ produtoEncomenda.preco}}</td>
+                                            <td>{{ produtoEncomenda.precoKilo}}</td>
+                                            
+                                            {% if produtoEncomenda.estado == "Em processamento" %}
+                                            <td style="font-weight: bold; color: rgb(255, 255, 0) ; text-shadow: -0.5px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
+                                            {% elif produtoEncomenda.estado == "Enviado" %}
+                                            <td style="font-weight: bold; color: rgb(81, 255, 191); text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
+                                            {% elif produtoEncomenda.estado == "Entregue" %}
 
+                                            <td style="font-weight: bold; color: green; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
+                                            {% elif produtoEncomenda.estado == "Cancelado" %}
+                                            
+                                            <td style="font-weight: bold; color: red; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
+                                            {% endif %}
+                                            
+                                        </tr>
+ 
+
+                                    {% endfor %}
+                                </table>
+                                {% else %}
+                                <h2>Nenhuma encomenda de momento:</h2>    
+                                {% endif %}
+                                <br>
                             <div id="botaoRemoverUnidadeProducao" style="margin-top: 15px;">
                                 <form action="{% url 'loja-removerUnidadeProducao' userName=request.user.username id=unidadeProducao %}" method="post">
                                     {% csrf_token %}
                                     <input type="submit" id="login" class ="c2" onclick="return confirm('Tem certeza que deseja remover a unidade de produção {{ unidadeProducao.nome }}?')" value="Remover Unidade Producao">
                                 </form>
                             </div>
+                            
+                            
                             <br>
                             <a href="{% url 'loja-perfil' request.user.username %}" class="layout__boxTitle">
                                 <div  class="container">

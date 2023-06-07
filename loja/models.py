@@ -103,6 +103,7 @@ class Utilizador(AbstractUser):
     username = models.CharField(max_length=200, unique=True, null=True, blank=False, validators=[ASCIIUsernameValidator()], help_text='Máximo 20 caracteres. Apenas letras, números e os seguintes símbolos @/./+/-/_ ', error_messages={ 'unique': 'Já existe um utilizador com esse nome de utilizador.',},)
     pais = CountryField(null=True, blank=False, default='PT')
     cidade = models.CharField(max_length=200, blank=True, default='') 
+    freguesia = models.CharField(max_length=200, blank=False, null=True)
     morada = models.CharField(max_length=200, null=True, blank=True, default='')
     telemovel = PhoneNumberField(null=True, blank=False, default='', unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
     tipo_utilizador = models.CharField(max_length=1, choices=TIPO_UTILIZADOR, default='', null=True)
@@ -312,7 +313,7 @@ class UnidadeProducao(models.Model):
     pais = CountryField(null=True, blank=False, default='PT')
     #pais = CountryField(null=True, blank=False, default='PT', widgets=CountrySelectWidget())
     cidade = models.CharField(max_length=100, null=True, blank=False)
-    # freguesia = models.CharField(max_length=100, null=True, blank=False)
+    freguesia = models.CharField(max_length=100, null=True, blank=False)
     morada = models.CharField(max_length=200, null=True, blank=False)
     tipo_unidade = models.CharField(max_length=5, choices=TIPO_UNIDADE, default='', null=True, blank=False)
 
@@ -409,8 +410,8 @@ class Categoria(models.Model):
     class Meta:
         verbose_name_plural = "Categorias"
         verbose_name = "Categoria"
-        ordering = [ 'id'   ,'nome']
-
+        #ordering = [ 'id'   ,'nome'] #ordem de criação. remover comentário para ver ordem de criação. 
+        ordering = ['nome'] #ordem alfabética
     def save(self, *args, **kwargs):
         # Chame o método save da classe pai para salvar a categoria
         super().save(*args, **kwargs)
@@ -431,8 +432,8 @@ class Produto(models.Model):
     class Meta:
         verbose_name = "Produto"
         verbose_name_plural = "Produtos"
-        ordering = ("id","nome")
-
+        #ordering = ("id","nome") # remover para ver por ordem de criação. comentar linha abaixo
+        ordering = ['nome'] #ordem alfabética
 class ProdutoUnidadeProducao(models.Model):
     def validar_extensao_imagens(value):
         ext = value.name.split('.')[-1].lower()
@@ -465,7 +466,7 @@ class ProdutoUnidadeProducao(models.Model):
     stock = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False, validators=[MinValueValidator(0)])
     descricao = models.TextField(max_length=200, null=True, blank=True)    
     #cenas a granel
-    unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES, null=False, blank=False)
+    unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES, null=False, blank=False, help_text="Unidade de medida de venda e do stock")
     preco_a_granel = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)], help_text='Utilize um ponto, em ve de uma vírgula')
     ###cenas à unidade
     unidade_Medida_Por_Unidade = models.CharField(max_length=2,choices=UNIDADES_MEDIDA_CHOICES_unidade, null=True, blank=True, help_text='Caso o produto seja vendido à unidade, qual é a unidade de medida dessa unidade? Por exemplo, se for uma posta de carne/peixe, que unidade de medida tem essa posta (quanto pesa a posta). Ou se forem produtos que não precisam de dizer quanto tem de peso/volume, como um brinquedo/filme, selecione unidade')
@@ -701,7 +702,8 @@ class ProdutosEncomenda(models.Model):
     estado = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Em processamento')
     updated = models.DateTimeField(auto_now=True, null=True, blank=False)
     created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
-
+    # def __str__(self):
+    #     return f"{self.produtos} da {self.encomenda}"
     class Meta:
         verbose_name = "Produtos Encomendados"
         verbose_name_plural = "Produtos Encomendados"
@@ -727,6 +729,10 @@ class DetalhesEnvio(models.Model):
     guardar_esta_morada = models.BooleanField(default=False, help_text='Deseja guardar esta morada para futuras encomendas?')
 
     consumidor = models.ForeignKey(Consumidor,  null=True, blank=False, on_delete=models.CASCADE, related_name='detalhes_envio')
+    
+    def __str__(self):
+        return f"Detalhes de envio Consumidor: {self.consumidor}"
+    
     class Meta:
         verbose_name = "Detalhes de Envio"
         verbose_name_plural = "Detalhes de Envios"
