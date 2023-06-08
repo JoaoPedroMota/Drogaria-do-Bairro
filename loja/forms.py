@@ -261,3 +261,8 @@ class ConfirmarDetalhesEnvioForm(forms.ModelForm):
         if cleaned_data['email'] is None or cleaned_data['email'] == "":
             self.add_error('email',f"Selecione um email")
         return cleaned_data
+
+
+
+class CancelarProdutoEncomendadoForm():
+    nome_produto = forms.CharField()

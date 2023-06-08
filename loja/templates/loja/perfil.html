@@ -116,13 +116,6 @@ color: white;
         <div class="row">
             <div class="col-lg-8 offset-lg-2 text-center">
                 <div class="breadcrumb-text">
-                    {% if messages %}
-                        <ul class="messages">
-                            {% for message in messages %}
-                                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
                     <p>O seu perfil</p>
                     <br>
                     <div id="imagemPerfil">
@@ -136,7 +129,7 @@ color: white;
                     {% if messages %}
                     <div class="alert alert-success">
                         {% for message in messages %}
-                        <p>{{ message }}</p>
+                            <p>{{ message }}</p>
                         {% endfor %}
                     </div>
                     {% endif %}
@@ -220,7 +213,7 @@ color: white;
         
                 {% elif request.user.is_consumidor and request.user.username == utilizadorView.username %}
                     <div id="Consumidor">
-                            <form action="{% url 'loja-detalhesEnvio'%}" method="" >
+                            <form action="{% url 'loja-detalhesEnvio' username=request.user.username %}" method="" >
                                 {% csrf_token %}
                                 <br>
                                 <input type="submit" id="login" value="Os meus detalhes de envio">

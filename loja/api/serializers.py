@@ -538,3 +538,9 @@ class ProdutosEncomendaSerializer(ModelSerializer):
         model = ProdutosEncomenda
         fields = ["id","encomenda", "produtos","unidadeProducao","quantidade","preco","precoKilo","estado","updated","created"]
 
+class ProdutosEncomendadosVeiculosSerializer(ModelSerializer):
+    veiculo = VeiculoSerializer(read_only=True)
+    produto_Encomendado = ProdutosEncomendaSerializer(read_only=True)
+    class Meta:
+        model = ProdutosEncomendadosVeiculos
+        fields = ["id", "produto_Encomendado", "veiculo", "updated", "created"]
