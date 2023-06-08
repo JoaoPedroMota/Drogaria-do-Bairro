@@ -60,6 +60,14 @@
                                     <br>
                                     <br>
                                 </div>
+                                {% if messages %}
+                                <div class="alert alert-success">
+                                    {% for message in messages %}
+                                        <p>{{ message }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
                                 <div id="divTabelaVeiculos">
                                     <table id="customers">
                                         <tr>
@@ -73,6 +81,7 @@
                                             <th>Total</th>
                                             <th>Estado</th>
                                             <th>Última Atualização</th>
+                                            <th>Ação</th>
 
                                         </tr>
                                         <tbody>
@@ -91,6 +100,16 @@
                                                     <td>{{ produto.preco }}€</td>
                                                     <td>{{ produto.estado}}</td>
                                                     <td>{{produto.updated}}</td>
+                                                    {% if produto.estado == 'Em processamento' %}
+                                                    <td>
+                                                        <form action="{% url 'loja-cancelarProdutosEncomendados' username=request.user.username idEncomenda=produto.idEncomenda idProdutoEncomendado=produto.idProdutoEncomendado nomeProduto=produto.nome_produto %}" method="post">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja cancelar o produto {{produto.nome_produto }}?')">Cancelar</button>
+                                                        </form>
+                                                    </td>
+                                                    {% else %}
+                                                        <td>Nenhuma ação disponível no momento!</td>
+                                                    {% endif %}
                                                 </tr>
                                                 {% endwith %}
                                             

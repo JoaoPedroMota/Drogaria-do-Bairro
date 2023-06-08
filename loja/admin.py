@@ -43,3 +43,5 @@ admin.site.register(ProdutosEncomenda, MyModel)
 admin.site.register(Opcao, MyModel)
 admin.site.register(ProdutoOpcao, MyModel)
 admin.site.register(DetalhesEnvio, MyModel)
+
+admin.site.register(ProdutosEncomendadosVeiculos, MyModel)
