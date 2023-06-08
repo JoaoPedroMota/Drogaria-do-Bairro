@@ -10,7 +10,7 @@ from phonenumbers import is_valid_number, parse as parseTelemovel
 class UtilizadorFormulario(UserCreationForm):
     class Meta:
         model = Utilizador
-        fields = ['first_name','last_name', 'username', 'email', 'password1', 'password2', 'pais','cidade','telemovel','tipo_utilizador','imagem_perfil']
+        fields = ['first_name','last_name', 'username', 'email', 'password1', 'password2', 'pais','cidade','freguesia','morada','telemovel','tipo_utilizador','imagem_perfil']
   
 class FornecedorFormulario(ModelForm):
     pass
@@ -21,7 +21,7 @@ class FornecedorFormulario(ModelForm):
 class EditarPerfil(ModelForm):
     class Meta:
         model = Utilizador
-        fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','telemovel','imagem_perfil',]
+        fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','morada','telemovel','imagem_perfil',]
 
 class CompletarPerfil(ModelForm):
     telemovel = PhoneNumberField(required=True)
@@ -30,12 +30,12 @@ class CompletarPerfil(ModelForm):
     
     class Meta:
         model = Utilizador
-        fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','telemovel','tipo_utilizador', 'imagem_perfil']
+        fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','freguesia','morada','telemovel','tipo_utilizador', 'imagem_perfil']
 
 class criarUnidadeProducaoFormulario(ModelForm):
     class Meta:
         model= UnidadeProducao
-        fields = ['nome', 'pais','cidade','morada', 'tipo_unidade']
+        fields = ['nome', 'pais','cidade','freguesia','morada', 'tipo_unidade']
         widgets = {
             'tipo_unidade': forms.Select(choices=UnidadeProducao.TIPO_UNIDADE)
         }
@@ -161,7 +161,7 @@ class editarProdutoUnidadeProducaoForm(forms.ModelForm):
 class DetalhesEnvioForm(forms.ModelForm):
     class Meta:
         model = DetalhesEnvio
-        fields = ['nome_morada', 'nome', 'pais', 'cidade', 'morada', 'telemovel', 'email', 'instrucoes_entrega', 'usar_informacoes_utilizador', 'guardar_esta_morada']
+        fields = ['nome', 'pais', 'cidade', 'morada', 'telemovel', 'email', 'instrucoes_entrega', 'usar_informacoes_utilizador', 'guardar_esta_morada']
     
     def __init__(self, *args, **kwargs):
         utilizador = kwargs.pop('utilizador', None)
@@ -169,9 +169,11 @@ class DetalhesEnvioForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['usar_informacoes_utilizador'].required = False
         self.fields['usar_informacoes_utilizador'].initial = True
+        self.fields['guardar_esta_morada'].initial = True
         if consumidor:
             self.initial['consumidor'] = consumidor
-        if self.fields['usar_informacoes_utilizador']:
+        if self.fields['usar_informacoes_utilizador'].initial == True:
+            self.fields['usar_informacoes_utilizador'].widget.attrs['checked'] = 'checked'
             utilizador = self.initial['consumidor'].utilizador
             self.fields['nome'].initial = utilizador.nome
             self.fields['pais'].initial = utilizador.pais
@@ -180,18 +182,89 @@ class DetalhesEnvioForm(forms.ModelForm):
                 self.fields['morada'].initial = utilizador.morada
             self.fields['telemovel'].initial = utilizador.telemovel
             self.fields['email'].initial = utilizador.email
-    
+            
     def clean(self):
         cleaned_data = super().clean()
         usar_informacoes_utilizador = cleaned_data.get('usar_informacoes_utilizador')
         consumidor = self.initial.get('consumidor')
+        utilizador = consumidor.utilizador
+        telemovel = cleaned_data.get('telemovel') if cleaned_data.get('telemovel') is not None else None
+        if usar_informacoes_utilizador:
+            if cleaned_data['nome'] != utilizador.nome:
+                self.add_error("nome", f"Selecionou utilizar informações do utilizador, logo o nome tem de ser igual ao que está definido na conta: {utilizador.nome}")
+            if cleaned_data['pais'] != utilizador.pais:
+                self.add_error("pais", f"Selecionou utilizar informações do utilizador, logo o pais tem de ser igual ao que está definido na conta: {utilizador.pais.name}")
+            if cleaned_data['cidade'] != utilizador.cidade:
+                self.add_error('cidade',f"Selecionou utilizar informações do utilizador, logo a cidade tem de ser igual à que está definido na conta: {utilizador.cidade} (tudo maiúsculas)")
+            if telemovel != None:
+                if cleaned_data['telemovel'] != utilizador.telemovel:
+                    self.add_error('telemovel',f"Selecionou utilizar informações do utilizador, logo o telemóvel tem de ser igual ao que está definido na conta: {utilizador.telemovel}")
+            if telemovel is None:
+                self.add_error('telemovel',f"Introduza um número de telemóvel válido. No caso do telemóvel não for de Portugal, tem de inserir o prefixo internacional.")
+            if (utilizador.morada is None or utilizador.morada == ''): #utilizador ainda não tem morada
+                    moradinha= cleaned_data.get('morada') if cleaned_data.get('morada') is not None else ''
+                    vazio = moradinha.replace(" ","")
+                    # print(vazio=='')
+                    if vazio == '':
 
-        if usar_informacoes_utilizador and consumidor:
-            utilizador = consumidor.utilizador
-            cleaned_data['nome'] = utilizador.nome
-            cleaned_data['pais'] = utilizador.pais
-            cleaned_data['cidade'] = utilizador.cidade
-            cleaned_data['telemovel'] = utilizador.telemovel
-            cleaned_data['email'] = utilizador.email
+                        self.add_error('morada',f"Selecionou utilizar informações do utilizador, mas o utilizador ainda não tem nenhuma morada guardada. Por favor adicone uma morada válida.")
+            if utilizador.morada is not None and utilizador.morada != cleaned_data.get('morada'):
+                self.add_error('morada',f"Selecionou utilizar informações do utilizador, logo a morada tem de ser igual à que está definida no utilizador: {utilizador.morada}. (Se pretender alterar apenas a morada, vá a Editar Perfil)")
+            if cleaned_data['email'] != utilizador.email:
+                self.add_error('email',f"Selecionou utilizar informações do utilizador, logo o email tem de ser igual ao que está definida no utilizador: {utilizador.email}")
+        return cleaned_data
 
+class ConfirmarDetalhesEnvioForm(forms.ModelForm):
+    class Meta:
+        model = DetalhesEnvio
+        fields = ['nome', 'pais', 'cidade', 'morada', 'telemovel', 'email', 'instrucoes_entrega','guardar_esta_morada']
+    
+    def __init__(self, *args, **kwargs):
+        utilizador = kwargs.pop('utilizador', None)
+        consumidor = utilizador.consumidor
+        validarNovosDetalhes=kwargs.pop('validarNovosDetalhes', None)
+        print("VALIDAR NOVOS DETALHES (init): ", validarNovosDetalhes)
+
+        super().__init__(*args, **kwargs)
+        if consumidor:
+            self.initial['consumidor'] = consumidor
+            self.initial['validarNovosDetalhes']= validarNovosDetalhes
+            utilizador = self.initial['consumidor'].utilizador
+            self.fields['nome'].initial = utilizador.nome
+            self.fields['pais'].initial = utilizador.pais
+            self.fields['cidade'].initial = utilizador.cidade
+            if utilizador.morada is not None:
+                self.fields['morada'].initial = utilizador.morada
+            self.fields['telemovel'].initial = utilizador.telemovel
+            self.fields['email'].initial = utilizador.email
+            
+    def clean(self):
+        cleaned_data = super().clean()
+        morada = cleaned_data['morada'] if cleaned_data.get('morada') is not None else None
+        consumidor = self.initial.get('consumidor')
+        validarNovosDetalhes= self.initial.get('validarNovosDetalhes')
+        utilizador = consumidor.utilizador
+        telemovel = cleaned_data.get('telemovel') if cleaned_data.get('telemovel') is not None else None
+        print("VALIDAR NOVOS DETALHES (clean): ", validarNovosDetalhes)
+
+        if cleaned_data['nome'] is None or cleaned_data['nome'] == "":
+            self.add_error("nome", f"Selecione um nome")
+        if cleaned_data['pais'] is None or cleaned_data['pais'] == "":
+            self.add_error("pais", f"Selecinoe um país")
+        if cleaned_data['cidade'] is None or cleaned_data['cidade'] == "":
+            self.add_error('cidade',f"Selecione uma cidade")
+        if telemovel is None or telemovel == "":
+            self.add_error('telemovel',f"Introduza um número de telemóvel válido. No caso do telemóvel não for de Portugal, tem de inserir o prefixo internacional.")
+        if morada is None:
+            self.add_error('morada',f"Selecione uma morada")
+        if morada is not None:
+            moradinha= cleaned_data.get('morada')
+            vazio = moradinha.replace(" ","")
+            if vazio == '':
+                self.add_error('morada',f"Selecionou utilizar informações do utilizador, mas o utilizador ainda não tem nenhuma morada guardada. Por favor adicone uma morada válida.")
+        if validarNovosDetalhes==False and cleaned_data['guardar_esta_morada']==False:
+            self.add_error("guardar_esta_morada", "Erro - Ainda não tem detalhes de envio associados ao seu perfil. Na primeira encomenda é obrigatório guardar os detalhes")
+
+        if cleaned_data['email'] is None or cleaned_data['email'] == "":
+            self.add_error('email',f"Selecione um email")
         return cleaned_data

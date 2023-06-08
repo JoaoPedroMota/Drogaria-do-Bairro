@@ -23,6 +23,7 @@
                             <form action="" method="POST" class="form-wrapper" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 {% for field in form %}
+                                <p><label for="{{ field.name }}">{{ field.label }}</label></p>
                                 <div class="form-group">
                                   {% if field.field.widget.input_type == 'select' %}
                                     <!-- Render select input -->
@@ -38,8 +39,9 @@
                                 </div>
                               {% endfor %}
                               
-                                <button type="submit" class="btn btn-primary" id="botaoEditarPeril">Gravar</button>
+                              <input type="submit" id="login" value="Guardar">
                               </form>
+                              
                         </div>
                         
                         <a href="{% url 'loja-perfil' request.user.username %}" class="layout__boxTitle">
@@ -55,6 +57,7 @@
                     
                        
                     </div> 
+                   
                 </div>
             </div>
         </div>

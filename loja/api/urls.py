@@ -23,8 +23,19 @@ urlpatterns = [
     path('<str:username>/consumidor/carrinho/<int:idProdutoCart>/', views.ProdutosCarrinhoDetail.as_view()),
     path('<str:username>/consumidor/carrinho/produtoUP/<int:idProdutoUnidadeProducao>/', views.ProdutosCarrinhoDetailProdutoUP.as_view()),
     path('<str:username>/consumidor/detalhes_envio/', views.DetalhesEnvioList.as_view()),
+    path('<str:username>/consumidor/detalhes_envio/<int:id>/', views.DetalhesEnvioDetails.as_view()),    
+
+    path('<str:username>/consumidor/encomenda/', views.EncomendaList.as_view()),
+    path('<str:username>/consumidor/encomenda/<int:idEncomenda>/', views.EncomendaDetail.as_view()),
+    path('<str:username>/consumidor/encomenda/<int:idEncomenda>/produtos/', views.ProdutosEncomendaList.as_view()),
+    path('<str:username>/consumidor/encomenda/<int:idEncomenda>/produtos/<int:idProdutoEncomenda>/', views.ProdutosEncomendaDetail.as_view()),
+    path('<str:username>/consumidor/encomendarCarrinho/', views.EncomendarTodosOsProdutosCarrinho.as_view()),    
+
+
+
+
     
-    
+
     
     # fornecedores
     path('fornecedores/', views.FornecedoresList.as_view()),
@@ -36,7 +47,7 @@ urlpatterns = [
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/produtos/', views.ProdutoUnidadeProducaoList.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/produtos/<int:idProdutoUnidadeProducao>/', views.ProdutoUnidadeProducaoDetail.as_view()),
     path('unidadesProducao/<str:id>/', views.UnidadeProducaoDetailSoInfo.as_view()),
-    
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/encomendas/',views.EncomendasPorUPList.as_view()),
     
     # loja
     path('categorias/', views.CategoriaList.as_view()),

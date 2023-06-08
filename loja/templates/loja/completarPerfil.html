@@ -24,6 +24,8 @@
                         {% csrf_token %}
                         
                         {% for field in form %}
+                        <p><label for="{{ field.name }}">{{ field.label }}</label></p>
+                        <br>
                           {% if field.field.widget.input_type == 'select' %}
                             <select name="{{ field.name }}" {% if field.required %}required{% endif %}>
                               {% for choice in field.field.choices %}

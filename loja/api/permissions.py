@@ -57,6 +57,27 @@ class IsFornecedorAndOwnerOrReadOnly(permissions.BasePermission):
 
 
 
+class IsFornecedorAndOwner2(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated and request.user.is_fornecedor:
+            username = view.kwargs.get('username') #username no link.
+
+            user = Utilizador.objects.get(username=username) # a que utilizador corresponde o username no link
+
+            idFornecedor = user.fornecedor.id #qual o fornecedor que tem como username, o username no link
+
+            idUnidadeProducao = view.kwargs.get('idUnidadeProducao') #id unidade de producao está indicada no link
+
+            try:
+                up = UnidadeProducao.objects.get(id=idUnidadeProducao) #unidade producao com o id que está no link
+                return up.fornecedor.utilizador == request.user and up.fornecedor.id == int(idFornecedor) #se o fornecedor(utilizador) da up indicada no link
+                                                                                                        # for o mesmo utilizador do request e o id do fornecedor 
+                                                                                                        # da up indicada no link for o mesmo id do fornecedor do utilizador indicado no link
+                                                                                                        #
+            except UnidadeProducao.DoesNotExist:
+                return False
+        raise PermissionDenied(detail="Não pode realizar esta ação porque não é um fornecedor")
+
 
 
 class IsFornecedorAndOwner(permissions.BasePermission):
@@ -93,6 +114,11 @@ class IsConsumidorAndOwner2(permissions.BasePermission):
         if request.user.is_authenticated:
             if not request.user.is_consumidor:
                 raise PermissionDenied(detail="Não é um consumidor autenticado")
+            # if request.user.is_superuser:
+            #     if request.method in permissions.SAFE_METHODS:
+            #         return True
+            #     else:
+            #         raise PermissionDenied(detail="Está logado enquanto admin")
             if request.user.is_consumidor:
                 username = view.kwargs.get('username')
                 user = Utilizador.objects.get(username=username)

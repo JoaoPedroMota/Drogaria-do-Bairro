@@ -40,17 +40,26 @@
     background: #c2a86f;
   }
   
+  .table-spacing td, .table-spacing th {
+        padding: 12px 8px; /* Ajuste o espaçamento conforme necessário */
+    }
+    .form-container {
+        display: flex;
+        justify-content: space-between;
+    }
+    .form-container form {
+        flex: 1;
+        margin-right: 10px;
+    }
+
     
-  
-
-
-
-
     #customers {
   font-family: Arial, Helvetica, sans-serif;
   border-collapse: collapse;
   width: 100%;
     }
+
+
 
     #customers td, #customers th {
     border: 1px solid #ddd;
@@ -68,23 +77,69 @@
     background-color: #07212e;
     color: white;
     }
+
+
+
+    
+    #cutomcustomers {
+        font-family: Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: auto;
+    }
+
+    #cutomcustomers td, #cutomcustomers th {
+    border: 1px solid #ddd;
+    padding: 8px;
+    }
+
+
+    #cutomcustomers tr{background-color: #f2f2f2;}
+
+#cutomcustomers tr:hover {background-color: #ddd;}
+
+#cutomcustomers th {
+padding-top: 12px;
+padding-bottom: 12px;
+text-align: left;
+background-color: #07212e;
+color: white;
+}
+    
+
+
 </style>
     <!-- breadcrumb-section -->
+
+
 <div class="breadcrumb-section breadcrumb-bg">
     <div class="container">
         <div class="row">
             <div class="col-lg-8 offset-lg-2 text-center">
                 <div class="breadcrumb-text">
-                   
+                    {% if messages %}
+                        <ul class="messages">
+                            {% for message in messages %}
+                                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                     <p>O seu perfil</p>
                     <br>
                     <div id="imagemPerfil">
-                        <img class="imagens" id='imagem-perfil-perfil' src="{{request.user.imagem_perfil.url}}"
+                        <img class="imagens" id='imagem-perfil-perfil' src="{{utilizadorView.imagem_perfil.url}}"
                             style="width:150px;height: 150px;border-radius: 100%;" />
                     </div>
                     <h1>Bem Vindo</h1>
                     
                     <h2>{{utilizadorView.nome}}</h2>
+                    <br>
+                    {% if messages %}
+                    <div class="alert alert-success">
+                        {% for message in messages %}
+                        <p>{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                     <br>
                     {% if request.user == utilizadorView %}
                     <form action="{% url 'loja-editarPerfil' %}" method="" >
@@ -92,13 +147,29 @@
                     <br>
                     <input type="submit" id="login" value="EDITAR PERFIL">
                     </form>
+
                     {% endif %}
-                    <br>
+                  
+
                 </div>
-                {% if request.user.is_fornecedor %}
+                {% if request.user.is_fornecedor and request.user.username == utilizadorView.username %}
                 <div id="Fornecedor">
-                    <a href="{% url 'loja-criarProduto' userName=request.user.username%}" class="btn btn-primary" id="lo">Criar Produto</a>
-                    <a href="{% url 'loja-associarProdutoUP' %}" class="btn btn-primary" id="lo"> Associar Produto a Unidade de Produção</a>
+                    <div id="botaoAdicionarUP">
+                        <form action="{% url 'loja-criarUP' request.user.username %}" method="" class="form-wrapper">
+                            {% csrf_token %}
+                            <input type="submit" id="login" value="ADICIONAR UMA UNIDADE DE PRODUÇÃO">
+                        </form>
+                    </div>
+                    <div class="form-container">
+                    <form action="{% url 'loja-criarProduto' userName=request.user.username %}" method="" >
+                        {% csrf_token %}
+                            <input type="submit" id="login" class="segundo" value="Criar Produto">
+                        </form>
+                        <form action="{% url 'loja-associarProdutoUP' %}" method="" >
+                            {% csrf_token %}
+                                <input type="submit" id="login" class="primeiro" value="Associar Produto a Unidade de Produção">
+                        </form>
+                    </div>
                     <br>
                     <br>
                     <table id="infoGeralFornecedor">
@@ -131,33 +202,68 @@
                                     <td>
                                         <form action="{% url 'loja-editarUnidadeProducao' userName=request.user.username id=up.id %}" method="get">
                                             {% csrf_token %}
-                                            <button type="submit" class="btn btn-info btn-sm" id="lo">Editar</button>
+                                            <button type="submit" class="btn btn-info btn-sm" id="">Editar</button>
                                         </form>
                                     </td>
-                                    <td><a href="{% url 'loja-unidadeProducao' userName=request.user.username id=up.id %}">Gerir Veiculos/Gerir Produtos</a></td>
+                                    <td><a href="{% url 'loja-unidadeProducao' userName=request.user.username id=up.id %}">Gerir: Produtos/Encomendas/Veículos</a></td>
                                 </tr>
                                 {% endfor %}
                             </table>
                         </div>
                         {% else %}
-                        <p>Ainda não tem unidades de produção associadas. Crie uma com o botão abaixo! </p>
+                            <p>Ainda não tem unidades de produção associadas. Crie uma com o botão abaixo! </p>
                         {% endif %}
                     </table>
                     <br>
-                    <div id="botaoAdicionarUP">
-                        <form action="{% url 'loja-criarUP' request.user.username %}" method="" class="form-wrapper">
-                            {% csrf_token %}
-                            <input type="submit" id="login" value="ADICIONAR UNIDADES DE PRODUÇÃO">
-                        </form>
-                    </div>
+                    
                 </div>
         
-                {% elif request.user.is_consumidor %}
-                <div id="Consumidor">
-                    <a href="{% url 'loja-detalhesEnvio'%}" id='login' class="btn btn-primary" id="lo">Os meus detalhes de envio</a>
-                </div>
+                {% elif request.user.is_consumidor and request.user.username == utilizadorView.username %}
+                    <div id="Consumidor">
+                            <form action="{% url 'loja-detalhesEnvio'%}" method="" >
+                                {% csrf_token %}
+                                <br>
+                                <input type="submit" id="login" value="Os meus detalhes de envio">
+                            </form>
+                            {% if numero_encomendas > 0 %}
+                                <h2>Você já fez {{numero_encomendas}} encomendas no site!</h2>
+                                <br>
+                                <br>
+                                <div id="divTabelaPerfilFornecedor">
+                                    <table id="cutomcustomers"  class="table-spacing">
+                                        <tr>
+                                            <th>Encomenda</th>
+                                            <th>Valor Total</th>
+                                            <th>Estado</th>
+                                            <th>Informações de entrega</th>
+                                            <th>Criada</th>
+                                            <th>Última Atualização</th>
+                                            <th id="semBorda">Detalhes</th>
+                                        </tr>
+                                        <tbody>
+                                            {% for encomenda in encomendas %}
+                                                {% with i=forloop.counter0|add:1 %}
+                                                <tr>
+                                                    <td>{{i}}</td>
+                                                    <td>{{ encomenda.valor_total }}€</td>
+                                                    <td>{{ encomenda.estado }}</td>
+                                                    <td><a href="{% url 'loja-detalhes-por-encomenda' username=request.user.username idEncomenda=encomenda.idEncomenda idDetalhes=encomenda.detalhes_envio %}" >Ver detalhes</a></td>
+                                                    <td>{{ encomenda.created }}</td>
+                                                    <td>{{ encomenda.updated }}</td>
+                                                    <td><a href="{% url 'loja-produtosEncomendados' username=request.user.username idEncomenda=encomenda.idEncomenda %}">Mais</a></td>
+                                                </tr>
+                                                {% endwith %}
+                                            
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                            {% else %}
+                                <h2>Ainda não tem encomendas realizadas.</p>
+                            {% endif %}
+                        </div>
+                {% endif %}                
+                    
         
-                {% endif %}
     
                 </div>
             </div>

@@ -44,8 +44,8 @@
                                 <th class="numeroCarrinhoSoTabela">Item</th>
                                 <th class="product-image">Imagem</th>
                                 <th class="product-name">Nome</th>
-                                <th class="product-price">Preço Unitário</th>
-                                <th class="product-price">Preço </th>
+                                <th class="product-price">Preço</th>
+                                <th class="product-price">Total </th>
                                 <th class="product-quantity">Quantidade</th>
                                 
                             </tr>
@@ -62,7 +62,7 @@
             <td class="product-name">{{ produto.nomeProduto }}</td>
             <td class="product-quantity">{{produto.precoKilo}}€/{{produto.produto.unidade_medida}}</td>    
             <td class="product-price">{{produto.preco|floatformat:2}}€</td>
-            <td class="">{{ produto.quantidade|floatformat:1 }} {{produto.produto.unidade_medida}}</td>
+            <td class="">{{ produto.quantidade|floatformat:2 }} {{produto.produto.unidade_medida}}</td>
             {% endwith %}
         </tr>
     </tbody>
@@ -103,12 +103,16 @@
                 <div class="coupon-section">
                    
 
-                    <h3>Apply Coupon</h3>
                     <div class="coupon-form-wrap">
-                        <form action="index.html">
-                            <p><input type="text" placeholder="Coupon"></p>
-                            <p><input type="submit" value="Apply"></p>
-                        </form>
+                        
+ 
+                            <form method="POST" action="{% url 'loja-checkout' %}">
+                                {% csrf_token %}
+                                <p><input type="submit" value="Encomendar"></p>
+                            </form>
+
+
+
                     </div>
                 </div>
             </div>

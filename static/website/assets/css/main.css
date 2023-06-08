@@ -462,11 +462,14 @@ a.boxed-btn, a.bordered-btn, a.cart-btn {
 }
 
 #cenasUtilizadorDropdown{
-  background-color: rgba(242, 129, 35,0.7)
+  background-color: rgba(242, 129, 35,0.7);
 }
 
 
-
+#cenasUtilizadorDropdown:hover{
+  background-color: rgba(242, 129, 35,0.7);
+  color: rgba(0, 0, 0,0.7);
+}
 
 
 
