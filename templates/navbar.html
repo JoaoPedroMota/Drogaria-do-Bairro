@@ -63,10 +63,10 @@
             <ul>
               <li class="current-list-item"><a href="/">Casa</a></li>
               <li><a href="/about">Sobre Nós</a></li>
-              <li><a href="/contacts">Contactos</a></li>
-              {% if not request.user.is_authenticated or request.user.is_consumidor%}
+              
+             
               <li><a href="{% url 'loja-ver-produtos' %}">Produtos</a></li>
-              {% endif %}
+          
               {% if request.user.is_authenticated %}
              
               <li>
@@ -129,6 +129,7 @@
 
 </nav>
 {% else %}
+
 </ul>
 </nav>
 </div>

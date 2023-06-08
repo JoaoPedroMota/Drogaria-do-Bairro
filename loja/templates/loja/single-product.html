@@ -125,7 +125,7 @@
                         <span class="preçoRange">  Por Kilograma: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
                         
                         {% endif %}
-
+                        {% if request.user.is_consumidor%}
                         {% if produto.unidade_medida == "kg" %}
                         
                         <p class="container">
@@ -172,6 +172,7 @@
                         <br>
                         <a href="{% url 'loja-adicionar-ao-carrinho' produto_id=produto.id %}?preco={{ produto.precoU }}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1" data-price="{{ produto.precoU }}">
                             <i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
+                        {% endif %}
                         {% endif %}
                         
                 </div>

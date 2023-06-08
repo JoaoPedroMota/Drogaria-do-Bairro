@@ -1059,81 +1059,80 @@ def sP(request,produto_id):
 
 def ver_produtos(request):
     
-    if not request.user.is_authenticated or (request.user.is_authenticated and request.user.is_consumidor):
-        q = request.GET.get('q', '')  # Usando o operador de coalescência nula para definir um valor padrão vazio para 'q'
-        url = 'http://127.0.0.1:8000/api/produtos/'
-        info = {'q': q}
-        response = requests.get(url, data=info)
-        if response.status_code == 200:
-            data = response.json()
-        else:
-            data=[]
-       
-        url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
-        info = {'q': q}
-        response2 = requests.get(url2, data=info)
-        if response2.status_code == 200:
-            data2 = response2.json()
-        else:
-            data2=[]
+    
+    q = request.GET.get('q', '')  # Usando o operador de coalescência nula para definir um valor padrão vazio para 'q'
+    url = 'http://127.0.0.1:8000/api/produtos/'
+    info = {'q': q}
+    response = requests.get(url, data=info)
+    if response.status_code == 200:
+        data = response.json()
+    else:
+        data=[]
+    
+    url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
+    info = {'q': q}
+    response2 = requests.get(url2, data=info)
+    if response2.status_code == 200:
+        data2 = response2.json()
+    else:
+        data2=[]
+    
+    FilteredProducts = []
+    for product in data:
+        if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
+            FilteredProducts.append(product)
+    
+    actualFilteredProducts = []
+    
+    for product in FilteredProducts:
+        prices = []
+        prices1 = []
         
-        FilteredProducts = []
-        for product in data:
-            if q.lower() in str(product['nome']).lower() or q.lower() in str(product['categoria']).lower():
-                FilteredProducts.append(product)
-        
-        actualFilteredProducts = []
-       
-        for product in FilteredProducts:
-            prices = []
-            prices1 = []
-            
-            for shopProduct in data2:
-                if product['id'] == shopProduct['produto']:
-                    if shopProduct['preco_a_granel'] is not None:
-                        prices.append(shopProduct['preco_a_granel'])
-                    else:
-                        prices1.append(shopProduct['preco_por_unidade'])
+        for shopProduct in data2:
+            if product['id'] == shopProduct['produto']:
+                if shopProduct['preco_a_granel'] is not None:
+                    prices.append(shopProduct['preco_a_granel'])
+                else:
+                    prices1.append(shopProduct['preco_por_unidade'])
 
-            min_price = min(prices) if prices and None not in prices else -1
-            min_price1 = min(prices1) if prices1 and None not in prices1 else -1
-            if prices or prices1:
-                product_info = {
-                    'id': product['id'],
-                    'produto': product['nome'],
-                    'min_precoG': min_price,
-                    'min_precoU': min_price1,
-                    'categoria': product['categoria']['nome'],
-                    'idCategoria': product['categoria']['id'],
-                    
+        min_price = min(prices) if prices and None not in prices else -1
+        min_price1 = min(prices1) if prices1 and None not in prices1 else -1
+        if prices or prices1:
+            product_info = {
+                'id': product['id'],
+                'produto': product['nome'],
+                'min_precoG': min_price,
+                'min_precoU': min_price1,
+                'categoria': product['categoria']['nome'],
+                'idCategoria': product['categoria']['id'],
+                
 
-                }
+            }
+            lowest_price_product = next(
+                (
+                    shopProduct for shopProduct in data2 
+                    if shopProduct['produto'] == product['id'] and shopProduct['preco_a_granel'] == min_price
+                ), None
+            )
+            if lowest_price_product is None:
                 lowest_price_product = next(
                     (
                         shopProduct for shopProduct in data2 
-                        if shopProduct['produto'] == product['id'] and shopProduct['preco_a_granel'] == min_price
+                        if shopProduct['produto'] == product['id'] and shopProduct['preco_por_unidade'] == min_price1
                     ), None
                 )
-                if lowest_price_product is None:
-                    lowest_price_product = next(
-                        (
-                            shopProduct for shopProduct in data2 
-                            if shopProduct['produto'] == product['id'] and shopProduct['preco_por_unidade'] == min_price1
-                        ), None
-                    )
 
-                if lowest_price_product is not None:
-                    product_info['imagem_produto'] = lowest_price_product['imagem_produto']
+            if lowest_price_product is not None:
+                product_info['imagem_produto'] = lowest_price_product['imagem_produto']
 
-                actualFilteredProducts.append(product_info)
-             
-        
-        produtosCarrinho = quantosProdutosNoCarrinho(request)
-        context = {'produtos_precos': actualFilteredProducts, 'termo_pesquisa': q, "produtosCarrinho":produtosCarrinho}
-        
-        return render(request, 'loja/shop.html', context)
-    else:
-        return redirect('loja-home')
+            actualFilteredProducts.append(product_info)
+            
+    
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    context = {'produtos_precos': actualFilteredProducts, 'termo_pesquisa': q, "produtosCarrinho":produtosCarrinho}
+    
+    return render(request, 'loja/shop.html', context)
+    
 
 # def adicionar_ao_carrinho(request, produto_id):
 #     quantidade = request.GET.get('quantidade')
