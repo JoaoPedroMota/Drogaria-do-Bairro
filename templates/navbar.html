@@ -28,12 +28,12 @@
     display: inline-block !important; 
     width: 179px !important;
     text-align: center !important;
-    background-color: orange;
+    /* background-color: orange; */
 
   }
-  .dropdown-item{
-    background-color: orange;
-  }
+  /* .dropdown-item{
+    background-color: rgba(242, 129, 35);
+  } */
 
 #bolinha-vermelha {
   display: inline-block;
@@ -83,10 +83,10 @@
                 <a href="#">@{{request.user.username}}</a>
                 <ul>
                   <li class="profile-link">
-                    <a class="dropdown-item" href="{% url 'loja-perfil' request.user.username %}">Perfil/Encomendas</a>
+                    <a class="dropdown-item" id="cenasUtilizadorDropdown" href="{% url 'loja-perfil' request.user.username %}">Perfil/Encomendas</a>
                   </li>
                   <li>
-                    <a class="dropdown-item" href="{% url 'loja-logout' %}">Logout</a>
+                    <a class="dropdown-item" id='cenasUtilizadorDropdown' href="{% url 'loja-logout' %}">Logout</a>
                   </li>
                 </ul>
               </li>
