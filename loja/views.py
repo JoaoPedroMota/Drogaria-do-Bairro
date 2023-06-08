@@ -18,17 +18,17 @@ from django.db.models import QuerySet
 from django.contrib.auth.hashers import check_password
 from loja.api.serializers import *
 from .utils import fornecedor_required, consumidor_required
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django_countries import countries
 
-
+import pytz
 import requests
 from django.contrib import messages
 from django.shortcuts import redirect
 from decimal import Decimal
 from .models import Encomenda, ProdutosEncomenda, ProdutoUnidadeProducao
-
+from django.utils import timezone
 
 
 import json
@@ -37,7 +37,6 @@ from django.conf import settings
 from django.shortcuts import redirect, render, redirect
 from django.urls import reverse
 from urllib.parse import quote_plus, urlencode
-
 from loja.api.serializers import UtilizadorSerializer
 
 oauth = OAuth()
@@ -65,23 +64,23 @@ oauth.register(
 def quantosProdutosNoCarrinho(request):
     if request.user.is_authenticated:
         if request.user.is_superuser:
-            return "E"
-        if request.user.is_consumidor:
-
-
-            sessao = requests.Session()
-            sessao.cookies.update(request.COOKIES)
-            url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
-            resposta = sessao.get(url)
-            if resposta.status_code == 404 or resposta.status_code == 400 or resposta.status_code==500:
-                return 0
-        
-            if resposta.content:
-                conteudo = resposta.json() if resposta.json() else 0
+            consumidor = request.user.consumidor if hasattr(request.user, 'consumidor') else None
+            fornecedor = request.user.fornecedor if hasattr(request.user, 'fornecedor') else None
+            if consumidor is not None:
+                sessao = requests.Session()
+                sessao.cookies.update(request.COOKIES)
+                url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
+                resposta = sessao.get(url)
+                if resposta.status_code == 404 or resposta.status_code == 400 or resposta.status_code==500:
+                    return 0
+                if resposta.content:
+                    conteudo = resposta.json() if resposta.json() else 0
+                else:
+                    return 0
+                return len(conteudo) if len(conteudo) != 0 else 0
             else:
-                return 0
-            return len(conteudo) if len(conteudo) != 0 else 0  
-        if request.user.is_consumidor:
+                return 0 
+        elif request.user.is_consumidor:
             sessao = requests.Session()
             sessao.cookies.update(request.COOKIES)
             url = f"http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/"
@@ -486,8 +485,45 @@ def perfil(request, userName):
     produtosCarrinho = quantosProdutosNoCarrinho(request)
     context={'pagina':pagina, 'utilizadorView': utilizadorPerfil, "produtosCarrinho":produtosCarrinho}
     if request.user.is_superuser:
-        pass
-    
+        consumidor = utilizadorPerfil.consumidor if hasattr(utilizadorPerfil, 'consumidor') else None
+        fornecedor = utilizadorPerfil.fornecedor if hasattr(utilizadorPerfil, 'fornecedor') else None
+        if consumidor is not None:
+            consumidor = utilizadorPerfil.consumidor
+            url = f'http://127.0.0.1:8000/api/{utilizadorPerfil.username}/consumidor/encomenda/'
+            
+            sessao = requests.Session()
+            sessao.cookies.update(request.COOKIES)
+            csrf_token = get_token(request)
+            headers = {'X-CSRFToken':csrf_token}
+            resposta = sessao.get(url, headers=headers)
+            try:
+                listaEncomendas = []
+                todasEncomendas = resposta.json()
+                for encomenda in todasEncomendas:
+                    idEncomenda = encomenda['id']
+                    valor_total = encomenda['valor_total']
+                    detalhes_envio = encomenda['detalhes_envio']
+                    
+                    updated_temp = encomenda['updated']
+                    updated = datetime.strptime(updated_temp, '%Y-%m-%dT%H:%M:%S.%f%z').astimezone(pytz.timezone('Europe/Lisbon'))
+                    created_temp = encomenda['created']
+                    created = datetime.strptime(created_temp, '%Y-%m-%dT%H:%M:%S.%f%z').astimezone(pytz.timezone('Europe/Lisbon'))
+                    estado = encomenda['estado']
+                    encomenda_dicio = {"idEncomenda":idEncomenda, "valor_total":valor_total, "detalhes_envio": detalhes_envio, "updated":updated, "created":created, "estado":estado}
+                    listaEncomendas.append(encomenda_dicio)
+                context['encomendas'] = listaEncomendas
+                context['numero_encomendas'] = len(listaEncomendas)
+            except json.decoder.JSONDecodeError:
+                pass
+        elif fornecedor is not None:
+            fornecedor = utilizadorPerfil.fornecedor
+            unidadesProducao = fornecedor.unidades_producao.all()
+            numero_up = unidadesProducao.count()
+            context['unidadesProducao'] = unidadesProducao
+            context['numero_up'] = numero_up
+        else:
+            pass
+            
     
     elif utilizadorPerfil.is_fornecedor:
         fornecedor = utilizadorPerfil.fornecedor
@@ -517,10 +553,9 @@ def perfil(request, userName):
                 detalhes_envio = encomenda['detalhes_envio']
                 
                 updated_temp = encomenda['updated']
-                updated = datetime.strptime(updated_temp, '%Y-%m-%dT%H:%M:%S.%fZ')
-                #
+                updated = datetime.strptime(updated_temp, '%Y-%m-%dT%H:%M:%S.%f%z').astimezone(pytz.timezone('Europe/Lisbon'))
                 created_temp = encomenda['created']
-                created = datetime.strptime(created_temp, '%Y-%m-%dT%H:%M:%S.%fZ')
+                created = datetime.strptime(created_temp, '%Y-%m-%dT%H:%M:%S.%f%z').astimezone(pytz.timezone('Europe/Lisbon'))
                 estado = encomenda['estado']
                 encomenda_dicio = {"idEncomenda":idEncomenda, "valor_total":valor_total, "detalhes_envio": detalhes_envio, "updated":updated, "created":created, "estado":estado}
                 listaEncomendas.append(encomenda_dicio)
@@ -733,7 +768,11 @@ def unidadeProducao(request, userName, id):
     unidade_producao = UnidadeProducao.objects.get(id=id)
     
     encomendas = ProdutosEncomenda.objects.filter(unidadeProducao=unidade_producao)
-  
+
+
+    
+    
+    
     context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id, "produtosUP":lista_produtos_up, 'nome_up':nome_up,'encomenda':encomendas}
     return render(request, 'loja/unidadeProducao.html', context)
 
@@ -1190,7 +1229,7 @@ def carrinho(request):
                 }
             except json.decoder.JSONDecodeError:
                 total= Decimal(0)
-                print("ENREI NO EXCEPT!")
+                # print("ENREI NO EXCEPT!")
                 produtosCarrinho = quantosProdutosNoCarrinho(request)
                 context= {
                     'total': total,
@@ -1227,7 +1266,7 @@ def carrinho(request):
             #total_price = sum(produto_carrinho.preco if produto_carrinho.preco is not None else 0 for produto_carrinho in produtos_carrinho)
         else:
             total= Decimal(0)
-            print("ENREI NO else!")
+            # print("ENREI NO else!")
             produtosCarrinho = quantosProdutosNoCarrinho(request)
             context= {
                     'total': total,
@@ -1660,10 +1699,10 @@ def confirmarDetalhesEnvio(request):
 
     if request.method=="POST":
         if existe:
-            print("EXISTE = TRUE")
+            # print("EXISTE = TRUE")
             validarNovosDetalhes=True
         else:
-            print("EXISTE = FALSE")
+            # print("EXISTE = FALSE")
             validarNovosDetalhes=False
 
         formulario = ConfirmarDetalhesEnvioForm(request.POST, utilizador=request.user, validarNovosDetalhes=validarNovosDetalhes )
@@ -1831,7 +1870,7 @@ def confirmarDetalhesEnvio(request):
                     #return redirect('loja-perfil', userName=request.user.username)
                     return redirect('loja-criarEncomenda', idDetalhesEnvio=idDetalhesEnvio)
                 else:
-                    print("FORMULARIO ERRORS", formulario.errors)
+                    #("FORMULARIO ERRORS", formulario.errors)
                     formulario.add_error('nome', f'Erro:{resposta}')
         else:
             context = {'formulario': formulario}
@@ -1847,7 +1886,7 @@ def confirmarDetalhesEnvio(request):
 def criarEncomenda(request, idDetalhesEnvio):
 
     url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/encomendarCarrinho/'
-    print("CHEGUEI A CRIAR ENCOMENDAS")
+    # print("CHEGUEI A CRIAR ENCOMENDAS")
     sessao = requests.Session()
     sessao.cookies.update(request.COOKIES)
     csrf_token = get_token(request)
@@ -1865,7 +1904,7 @@ def criarEncomenda(request, idDetalhesEnvio):
 
 
 @consumidor_required
-def detalhesEnvio(request):
+def detalhesEnvio(request, username):
     produtosCarrinho = quantosProdutosNoCarrinho(request)
     context = {"produtosCarrinho":produtosCarrinho} # "produtosCarrinho":produtosCarrinho
     formulario = DetalhesEnvioForm(utilizador=request.user)
@@ -1982,7 +2021,7 @@ def detalhesEnvio(request):
 
 
 
-
+@consumidor_required
 def getProdutosEncomenda(request, username, idEncomenda):
     produtosCarrinho = quantosProdutosNoCarrinho(request)
     url = f'http://127.0.0.1:8000/api/{username}/consumidor/encomenda/{idEncomenda}/produtos/'
@@ -2003,11 +2042,12 @@ def getProdutosEncomenda(request, username, idEncomenda):
             
             preco = produto['preco']
             precoKilo = produto['precoKilo']
-            
             updated_temp = produto['updated']
-            updated = datetime.strptime(updated_temp, '%Y-%m-%dT%H:%M:%S.%fZ')
+            updated = datetime.strptime(updated_temp, '%Y-%m-%dT%H:%M:%S.%f%z').astimezone(pytz.timezone('Europe/Lisbon'))
             totalEncomenda += Decimal(preco)
             estado = produto['estado']
+            idProdutoEncomendado = produto['id']
+            idEncomenda = idEncomenda
             try:
                 conteudo = resposta_2.json()
                 infoProduto = conteudo['produto']
@@ -2030,7 +2070,7 @@ def getProdutosEncomenda(request, username, idEncomenda):
                 pass
                 
                 
-            encomenda_dicio = {"imagem_produto":imagem_produto,"nome_produto":nome_produto, "precoKilo":precoKilo, "unidade_medida":unidade_medida,"preco_a_granel":preco_a_granel ,"preco":preco, "quantidade":quantidade, "estado":estado, "updated":updated, "nome_up":nome_up, "fornecedor_nome":fornecedor_nome}
+            encomenda_dicio = {"idEncomenda":idEncomenda, "idProdutoEncomendado":idProdutoEncomendado,"imagem_produto":imagem_produto,"nome_produto":nome_produto, "precoKilo":precoKilo, "unidade_medida":unidade_medida,"preco_a_granel":preco_a_granel ,"preco":preco, "quantidade":quantidade, "estado":estado, "updated":updated, "nome_up":nome_up, "fornecedor_nome":fornecedor_nome}
             listaProdutosInEncomendas.append(encomenda_dicio)
         context['produtos_encomendados'] = listaProdutosInEncomendas
         context['numero_produtos'] = len(listaProdutosInEncomendas)
@@ -2041,7 +2081,45 @@ def getProdutosEncomenda(request, username, idEncomenda):
 
 
 
-
+@consumidor_required
+def cancelarProdutoEncomendado(request, username, idEncomenda, idProdutoEncomendado, nomeProduto):
+    if request.method == 'POST':
+        url = f'http://127.0.0.1:8000/api/{username}/consumidor/encomenda/{idEncomenda}/produtos/{idProdutoEncomendado}/cancelar/'
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
+        csrf_token = get_token(request)
+        headers = {'X-CSRFToken':csrf_token}
+        resposta = sessao.get(url, headers=headers)
+        try:
+            conteudo = resposta.json()
+            estado = conteudo['estado']
+            criado_temp = conteudo['created']
+            if estado == "Em processamento":
+                criado = datetime.strptime(criado_temp, '%Y-%m-%dT%H:%M:%S.%f%z').astimezone(pytz.timezone('Europe/Lisbon'))
+                prazo_cancelamento = timedelta(hours=3)
+                tempo_decorrido_desde_encomenda = timezone.now() - criado
+                print(tempo_decorrido_desde_encomenda, "tempo_decorrido_desde_encomenda")
+                if tempo_decorrido_desde_encomenda < prazo_cancelamento:
+                    resposta = sessao.put(url, headers=headers)
+                    if resposta.status_code == 200:
+                        messages.success(request,f"O produto encomendado ({nomeProduto}), foi cancelado com sucesso")
+                        return redirect('loja-perfil', userName=username)
+                    else:
+                        messages.error(request,"Houve um erro a cancelar o seu produto")
+                        return redirect('loja-produtosEncomendados', idEncomenda=idEncomenda, username=username)
+                else:
+                    messages.error(request,f"Só pode cancelar encomendas até 3h depois de as realizar. Tempo decorrido desde a criação da encomenda: {tempo_decorrido_desde_encomenda}")
+                    return redirect('loja-produtosEncomendados', idEncomenda=idEncomenda, username=username)
+            elif estado == "Enviado" or estado == "Entregue" or estado == "A chegar":
+                messages.error(request, f"A encomenda já está no estado {estado}. Já não pode cancelar nesta altura.")
+                return redirect('loja-perfil', userName=username)
+            elif estado == "Cancelado":
+                messages.error(request, "Erro. A encomenda já foi cancelada")
+                return redirect('loja-perfil', userName=username)
+        except json.decoder.JSONDecodeError:
+            messages.error(request,"Erro ao realizar esta ação. Tente novamente mais tarde.")
+            return redirect('loja-perfil', userName=username)
+        return redirect('loja-perfil', userName=username)
 
 
 
@@ -2058,8 +2136,8 @@ def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
     sessao.cookies.update(request.COOKIES)
     csrf_token = get_token(request)
     headers = {'X-CSRFToken':csrf_token}
-    resposta = sessao.get(url)
-    resposta_2 = sessao.get(url2)
+    resposta = sessao.get(url, headers=headers)
+    resposta_2 = sessao.get(url2, headers=headers)
     context = {} 
     try:
         conteudo = resposta.json()
@@ -2084,3 +2162,30 @@ def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
         pass
     context = {"infos":info_detalhes_envio, "encomenda_nr":index_encomenda}
     return render(request, 'loja/infos_detalhes.html', context)
+
+
+
+
+def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao):
+    url = f'http://127.0.0.1:8000/api/{username}/fornecedor/encomenda/{idEncomenda}/detalhes_envio/'
+    
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+    
+    resposta = sessao.get(url, headers=headers)
+    try:
+        conteudo = resposta.json()
+        nome = conteudo['nome']
+        morada = f"{conteudo['morada']}, {conteudo['cidade']}, {conteudo['pais']}"
+        telemovel = conteudo['telemovel']
+        email = conteudo['email']
+        instrucoes_entrega = conteudo['instrucoes_entrega']
+        
+        info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega}]
+        context = {"infos":info_detalhes_envio}
+        return render(request, 'loja/infos_detalhes.html', context)
+    except json.decoder.JSONDecodeError:
+        messages.error(request, "Houve um erro a obter os detaalhes de envio do utilizador")
+        return redirect('loja-unidadeProducao', username=request.user.username, id=idUnidadeProducao)

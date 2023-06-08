@@ -20,9 +20,9 @@ urlpatterns = [
     path('perfil/<str:userName>/unidadeProducao/<str:id>/', views.unidadeProducao, name='loja-unidadeProducao'),
     path('perfil/<str:userName>/unidadeProducao/<str:id>/criarVeiculo/', views.criarVeiculo, name="loja-criarVeiculo"),
     path('removerVeiculo/<str:userName>/<int:id>/', removerVeiculo, name='loja-removerVeiculo'),
-    path('perfil/<str:userName>/unidadeProducao/<str:id>/editarVeiculo/<str:idVeiculo>', views.editarVeiculo, name='loja-editarVeiculo'),
+    path('perfil/<str:userName>/unidadeProducao/<str:id>/editarVeiculo/<str:idVeiculo>/', views.editarVeiculo, name='loja-editarVeiculo'),
     path('perfil/<str:userName>/unidadeProducao/<str:id>/editarUnidadeProducao/', views.editarUnidadeProducao, name='loja-editarUnidadeProducao'),
-    path('<str:userName>/unidadeProducao/<int:id>/remover', removerUnidadeProducao, name='loja-removerUnidadeProducao'),
+    path('<str:userName>/unidadeProducao/<int:id>/remover/', removerUnidadeProducao, name='loja-removerUnidadeProducao'),
     path('criar-produto/<str:userName>/', views.criar_produto, name='loja-criarProduto'),
     path('shop/', views.ver_produtos, name='loja-ver-produtos'),
     path('shop/<int:produto_id>/', views.sP, name='loja-single-product'),
@@ -31,15 +31,15 @@ urlpatterns = [
     path('remover-do-carrinho/<int:produto_id>/', views.remover_do_carrinho, name='loja-remover-do-carrinho'),
     path('remover-produto-unidadeProducao/<int:idUnidadeProducao>/<int:idProdutoUnidadeProducao>/', views.removerAssociaoProdutoUP, name='loja-removerAssociaoProdutoUP'),
     path('associar-produto-unidade-producao/', views.criarAssociacaoProdutoUP, name="loja-associarProdutoUP"),
-    path('detalhes-envio/', views.detalhesEnvio, name='loja-detalhesEnvio'),
+    path('perfil/<str:username>/detalhes-envio/', views.detalhesEnvio, name='loja-detalhesEnvio'),
     path('create_order/', views.create_order, name='create_order'),
     path('checkout/', views.checkout, name='loja-checkout'),
     path('perfil/<str:username>/encomenda/<int:idEncomenda>/produtos-encomendados/', views.getProdutosEncomenda,name='loja-produtosEncomendados'),
     path('perfil/<str:username>/detalhesPorEncomenda/<int:idEncomenda>/<str:idDetalhes>/', views.verDetalhesEnvioNaEncomenda, name='loja-detalhes-por-encomenda'),
     path('confirmarDetalhesEnvio/', views.confirmarDetalhesEnvio, name='loja-confirmarDetalhesEnvio'),
     path('criarEncomenda/<int:idDetalhesEnvio>/', views.criarEncomenda, name='loja-criarEncomenda'),
-
-
+    path('perfil/<str:username>/encomenda/<int:idEncomenda>/produtos-encomendados/<int:idProdutoEncomendado>/cancelar/<str:nomeProduto>/', views.cancelarProdutoEncomendado, name="loja-cancelarProdutosEncomendados"),
+    path('perfil/<str:username>/unidadeProducao/<int:idUnidadeProducao>/encomenda/<int:idEncomenda>/detalhes-envio/', views.getDetalhesParaFornecedor, name='loja-detalhes-envio-fornecedor'),
 ]
 
 
