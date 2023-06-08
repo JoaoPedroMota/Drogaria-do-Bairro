@@ -320,7 +320,8 @@ def callback(request):
     if created:
         return redirect('loja-completarPerfil')
     else:
-        return redirect(request.build_absolute_uri(reverse("loja-home")))
+        #return redirect(request.build_absolute_uri(reverse("loja-home")))
+        return redirect('loja-home')
 
     # username = token['userinfo']['nickname']
 
