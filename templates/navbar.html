@@ -33,6 +33,7 @@
   }
   .dropdown-item{
     background-color: orange;
+    width: 179px;
   }
 
 #bolinha-vermelha {
@@ -85,7 +86,7 @@
                   <li class="profile-link">
                     <a class="dropdown-item" href="{% url 'loja-perfil' request.user.username %}">Perfil/Encomendas</a>
                   </li>
-                  <li>
+                  <li class="profile-link1">
                     <a class="dropdown-item" href="{% url 'loja-logout' %}">Logout</a>
                   </li>
                 </ul>
