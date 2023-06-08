@@ -43,6 +43,12 @@
   top: -2px;
   text-align: center;
 }
+@media only screen and (max-width: 992px)  { 
+  .imagem_logo{
+    width: 50px;
+  }
+}
+	
 </style>
 
 <div class="top-header-area" id="sticker">
@@ -52,8 +58,8 @@
         <div class="main-menu-wrap">
           <!-- logo -->
           <div class="site-logo">
-            <a href="/">
-              <img src="{%static 'website/assets/img/logo_123.png' %}" alt="logotipo do website">
+            <a href="/" class="imagem_logo1">
+              <img src="{%static 'website/assets/img/logo_123.png' %}" alt="logotipo do website" class="imagem_logo" >
             </a>
           </div>
           <!-- logo -->
