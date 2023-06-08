@@ -3,10 +3,22 @@
 {% block content %}
 
 <style>
+  
     .input-wrapper {
     position: relative;
   }
+  .form-control {
+  font-family: system-ui, sans-serif;
+  font-size: 2rem;
+  font-weight: bold;
+  line-height: 1.1;
+  display: grid;
+  grid-template-columns: 1em auto;
+  gap: 0.5em;
+  background-color: #364b55;
+   border: none;
 
+}
   .hint-formulario {
   position: absolute;
   top: 0;
@@ -60,9 +72,13 @@
                         
                       </div>
                     {% elif field.name == 'usar_informacoes_utilizador' %}
-                      <input type="checkbox" name="{{field.name}}" placeholder="field.name" value="True" {% if field.value %} checked {% endif %} >
-                    {% elif field.name == 'guardar_esta_morada' %}
-                    <input type="checkbox" name="{{field.name}}" placeholder="{{field.name}}" value="True" {% if field.value %} checked {% endif %} >
+                    <label class="form-control">
+                      <input type="checkbox" class="botao" name="{{field.name}}" placeholder="field.name" value="True" {% if field.value %} checked {% endif %} >
+                    </label>
+                      {% elif field.name == 'guardar_esta_morada' %}
+                      <label class="form-control">  
+                    <input type="checkbox" class="botao" name="{{field.name}}" placeholder="{{field.name}}" value="True" {% if field.value %} checked {% endif %} >
+                      </label>
                     {% else %}
 
                     <div class="input-wrapper">
