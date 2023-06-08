@@ -91,7 +91,7 @@
                                     </table>
                                 </div>
                                 {% else %}
-                                <h5>Ainda não tem veículos nesta unidade de produção </h5>
+                                <p>Ainda não tem veículos nesta unidade de produção </p>
 
                               
                                 {% endif %}
@@ -110,7 +110,7 @@
                             <br>
                         
                             {% if produtosUP %}
-                                <h2>Produtos associados a esta Unidade de Producao</h4>
+                                <h2>Produtos associados a esta Unidade de Producao (UP)</h2>
                                     
                                     <table id="customers">
                                         <tr>
@@ -123,7 +123,7 @@
                                             <th>Qnt. por Unid.</th>
                                             <th>Data de Produção</th>
                                             <th>Marca</th>
-                                            <th>Remover Produto de Unidade de Produção</th>
+                                            <th>Remover Produto da UP</th>
                                         </tr>
                                         {% for produto in produtosUP %}
                                         <tr>
@@ -159,7 +159,7 @@
                                     {% endfor %}
                                 </table>
                                 {% else %}
-                                <p>Nenhum produto associado a esta unidade de produção.</p>
+                                <p>Nenhum produto associado a esta unidade de produção</p>
                                 {% endif %}
                                 <br>
                             {% if produtosUP %}
@@ -200,7 +200,7 @@
                                     {% endfor %}
                                 </table>
                                 {% else %}
-                                <h2>Nenhuma encomenda de momento:</h2>    
+                                <p>Nenhuma encomenda de momento</p>    
                                 {% endif %}
                                 <br>
                             <div id="botaoRemoverUnidadeProducao" style="margin-top: 15px;">

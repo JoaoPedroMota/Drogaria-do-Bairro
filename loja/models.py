@@ -466,8 +466,8 @@ class ProdutoUnidadeProducao(models.Model):
     stock = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False, validators=[MinValueValidator(0)])
     descricao = models.TextField(max_length=200, null=True, blank=True)    
     #cenas a granel
-    unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES, null=False, blank=False, help_text="Unidade de medida de venda e do stock")
-    preco_a_granel = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)], help_text='Utilize um ponto, em ve de uma vírgula')
+    unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES, null=False, blank=False, help_text="Unidade de medida de venda e do stock. O seu produto vende-se à unidade/peso/volume?")
+    preco_a_granel = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)], help_text='Preço de venda a granel. Unidade monetária: Euro(€). Utilize um ponto, em vez de uma vírgula')
     ###cenas à unidade
     unidade_Medida_Por_Unidade = models.CharField(max_length=2,choices=UNIDADES_MEDIDA_CHOICES_unidade, null=True, blank=True, help_text='Caso o produto seja vendido à unidade, qual é a unidade de medida dessa unidade? Por exemplo, se for uma posta de carne/peixe, que unidade de medida tem essa posta (quanto pesa a posta). Ou se forem produtos que não precisam de dizer quanto tem de peso/volume, como um brinquedo/filme, selecione unidade')
     quantidade_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)], help_text='Quanto tem o produto que vende à unidade? Quanto pesa a posta de carne/peixe? Ou se forem berlindes, quantos berlindes vende de uma vez?')
@@ -475,7 +475,7 @@ class ProdutoUnidadeProducao(models.Model):
     # outras cenas
     data_producao = models.DateField( null=True,blank=True, default=timezone.now)
     marca = models.CharField(max_length=100, null=True, blank=True)
-    imagem_produto = models.ImageField(null=True, blank=False,upload_to='products/', validators=[validar_extensao_imagens, validar_tamanho_imagens])
+    imagem_produto = models.ImageField(null=True, blank=False,upload_to='products/', validators=[validar_extensao_imagens, validar_tamanho_imagens], help_text='Formatos aceites: PNG,JPG,SVG,GIF, Tamanho máximo:2MB')
     def get_imagem(self):
         from .imagem import Imagem
         return Imagem.objects.get(produto=self)
