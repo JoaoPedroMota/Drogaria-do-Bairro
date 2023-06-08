@@ -29,7 +29,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["0.0.0.0", "127.0.0.1", "localhost", "34.0.207.66", "drogariadobairro.pt"]
 
-CSRF_TRUSTED_ORIGINS = ['https://drogariadobairro.pt', "127.0.0.1"]
+CSRF_TRUSTED_ORIGINS = ['https://drogariadobairro.pt', 'http://drogariadobairro.pt']
 
 # Application definition
 
