@@ -75,8 +75,8 @@
                     {% if field.errors %}
                     <ul class="field-error-list">
                       {% for error in field.errors %}
-                      <li>{{ error }}</li>
-                      {% endfor %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
                     </ul>
                     {% endif %}
                   </div>

@@ -157,7 +157,7 @@ class editarProdutoUnidadeProducaoForm(forms.ModelForm):
         self.user = kwargs.pop("user", None)
         super(editarProdutoUnidadeProducaoForm, self).__init__(*args, **kwargs)
 
-
+    
 class DetalhesEnvioForm(forms.ModelForm):
     class Meta:
         model = DetalhesEnvio

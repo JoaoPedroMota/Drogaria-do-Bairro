@@ -274,8 +274,7 @@ def completarPerfil(request):
             utilizador.pais = request.POST.get('pais')
             utilizador.cidade = request.POST.get('cidade').upper()
             utilizador.telemovel = request.POST.get('telemovel')
-            if request.POST.get('imagem_perfil'):
-                utilizador.imagem_perfil = request.POST.get('imagem_perfil')
+            utilizador.imagem_perfil = request.POST.get('imagem_perfil')
             utilizador.tipo_utilizador = request.POST.get('tipo_utilizador')
             utilizador.save()
             if utilizador.tipo_utilizador == "C":
@@ -439,7 +438,7 @@ def unidadeProducao(request, userName, id):
             
             dicionarioFornecedor = respostaFornecedor.json()
             dicionarioUtilizador = respostaUtilizador.json()
-            print(dicionarioUtilizador)
+            # print(dicionarioUtilizador)
             
             
             user_temp = Utilizador(**dicionarioUtilizador)
@@ -1334,7 +1333,7 @@ def adicionarProdutosCarrinhoDpsDeLogar(request):
 
 
 def editarAssociacaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProducao):
-    formulario = editarProdutoUnidadeProducaoForm(user=request.user)
+    form = editarProdutoUnidadeProducaoForm(user=request.user)
     if request.method == 'POST':
         form = editarProdutoUnidadeProducaoForm(request.POST, request.FILES,user=request.user)
         if form.is_valid():
@@ -1357,8 +1356,6 @@ def editarAssociacaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProduc
 
             url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/produtos/{idProdutoUnidadeProducao}/'
             response = sessao.get(url, headers=headers)
-
-            idProduto = response.json()['produto']
             
             produto_up_data= {
                 "descricao": descricao,
@@ -1385,8 +1382,11 @@ def editarAssociacaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProduc
             else:
                 if resposta.status_code == 400:
                     error_code = resposta.json().get('error_code')
-
-    context = {'formulario': formulario}
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}_error::{error}')
+    context = {'formulario': form}
     return render(request, 'loja/editarAssociacaoProdutoUP.html', context)
     
     
