@@ -28,4 +28,4 @@ jobs:
         pip install -r requirements.txt
     - name: Testar com manage.py
       run: |
-        python manage.py test loja
+        python manage.py test loja --noinput
