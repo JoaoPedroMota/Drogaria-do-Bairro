@@ -125,7 +125,7 @@
                         <span class="preçoRange">  Por Kilograma: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
                         
                         {% endif %}
-                        {% if request.user.is_consumidor%}
+                        {% if request.user.is_consumidor or not request.user.is_authenticated %}
                         {% if produto.unidade_medida == "kg" %}
                         
                         <p class="container">
