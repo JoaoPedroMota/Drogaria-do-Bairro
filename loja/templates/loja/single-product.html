@@ -66,6 +66,7 @@
     <br>
     <div class="row product-lists">
         {% for produto in filtered_products %}
+        
         <div class="col-lg-4 col-md-6 text-center mx-auto">
             <div class="single-product-item">
                
@@ -73,8 +74,10 @@
                     
                         <div class="mais-informacao">
                             <img src="{% static produto.imagem_produto %}" alt="{{produto.produto}}" width="220" height="220">
-                            {% if produto.stock < "10" %}
-                            <p style="font-weight: bold; color: red">Quase a acabar</p>
+                            {% if produto.stock < "10" and produto.stock > "0.00" %}
+                                <p style="font-weight: bold; color: red">Ultimas Unidades...</p>
+                            {% elif produto.stock == '0.00' %}
+                                <p style="font-weight: bold; color: red">Esgotado!</p>
                             {% endif %}
                             <br>
                             <p>Categoria: {{ produto.categoria }}</p>
@@ -86,7 +89,7 @@
                             <p>Morada: {{ produto.morada }}, {{ produto.cidade }}, {{ produto.pais}}</p>
                            
                             <hr>
-                            {% if produto.descricao is not None %}
+                            {% if produto.descricao is not None and produto.descricao != '' %}
                                 <p>Descrição: {{ produto.descricao }}</p>
                             {% else %}
                                 <p>Descrição: Não foi fornecida nenhuma descrição.</p>
@@ -102,9 +105,10 @@
                             <br>
                             {% endif %}
                             <hr>
-                            <p>Marca: {{ produto.marca }}</p>
+                            <p>Marca: {% if produto.marca is not None %}{{ produto.marca }}{% else %}(Sem Marca/Fornecedor não especificou a marca){% endif %}</p>
                         <br>
                         </div>
+                        
                         {% if produto.precoG == null %}
                         <span class="preçoRange"> Por Unidade: <span class="preçoRange2">{{ produto.precoU }}€ </span> </span>
                         
@@ -125,11 +129,12 @@
                         <span class="preçoRange">  Por Kilograma: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
                         
                         {% endif %}
-
+                        {% if request.user.is_consumidor or not request.user.is_authenticated %}
                         {% if produto.unidade_medida == "kg" %}
                         
                         <p class="container">
                             <br>
+
                             <input type="number" class="styled-input" step="0.5" min="0.1" max="50" placeholder="1 Kilograma" name="quantidade" onblur="atualizarNumeroComVirgula(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoG }})">
                             <span class="preco" name="preco">{{ produto.precoG}}€</span>
                         </p>
@@ -148,30 +153,32 @@
                         {% elif produto.unidade_medida == "g" %}
                         <p class="container">
                             <br>
-                            <input type="number" class="styled-input" step="1" min="1" max="50" placeholder="1 Grama" name="quantidade" onblur="atualizarNumero(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoU }})">
-                            <span class="preco" name="preco">{{ produto.precoU }}€</span>
+            
+                            <input type="number" class="styled-input" step="1" min="1" max="50" placeholder="1 Grama" name="quantidade" onblur="atualizarNumero(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoG }})">
+                            <span class="preco" name="preco">{{ produto.precoG }}€</span>
                         </p>
                         <br>
-                        <a href="{% url 'loja-adicionar-ao-carrinho' produto_id=produto.id %}?preco={{ produto.precoU }}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1" data-price="{{ produto.precoU }}">
+                        <a href="{% url 'loja-adicionar-ao-carrinho' produto_id=produto.id %}?preco={{ produto.precoG }}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1" data-price="{{ produto.precoG }}">
                             <i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
                         {% elif produto.unidade_medida == "l" %}
                         <p class="container">
                             <br>
-                            <input type="number" class="styled-input" step="1" min="1" max="50" placeholder="1 Litro" name="quantidade" onblur="atualizarNumero(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoU }})">
-                            <span class="preco" name="preco">{{ produto.precoU }}€</span>
+                            <input type="number" class="styled-input" step="1" min="1" max="50" placeholder="1 Litro" name="quantidade" onblur="atualizarNumero(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoG }})">
+                            <span class="preco" name="preco">{{ produto.precoG }}€</span>
                         </p>
                         <br>
-                        <a href="{% url 'loja-adicionar-ao-carrinho' produto_id=produto.id %}?preco={{ produto.precoU }}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1" data-price="{{ produto.precoU }}">
+                        <a href="{% url 'loja-adicionar-ao-carrinho' produto_id=produto.id %}?preco={{ produto.precoG }}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1" data-price="{{ produto.precoG }}">
                             <i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
                         {% elif produto.unidade_medida == "ml" %}
                         <p class="container">
                             <br>
-                            <input type="number" class="styled-input" step="1" min="1" max="50" placeholder="1 Unidade" name="quantidade" onblur="atualizarNumero(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoU }})">
-                            <span class="preco" name="preco">{{ produto.precoU }}€</span>
+                            <input type="number" class="styled-input" step="1" min="1" max="50" placeholder="1 Unidade" name="quantidade" onblur="atualizarNumero(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoG }})">
+                            <span class="preco" name="preco">{{ produto.precoG }}€</span>
                         </p>
                         <br>
-                        <a href="{% url 'loja-adicionar-ao-carrinho' produto_id=produto.id %}?preco={{ produto.precoU }}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1" data-price="{{ produto.precoU }}">
+                        <a href="{% url 'loja-adicionar-ao-carrinho' produto_id=produto.id %}?preco={{ produto.precoG }}" onclick="adicionarAoCarrinho(event, this)" class="cart-btn" data-quantidade="1" data-price="{{ produto.precoG }}">
                             <i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
+                        {% endif %}
                         {% endif %}
                         
                 </div>
@@ -190,6 +197,7 @@
 <script>
     
     function atualizarPreco(input, preco) {
+       
         var valor = input.value;
         var novoPreco = valor * preco;
         var precoElement = input.parentNode.querySelector('.preco');

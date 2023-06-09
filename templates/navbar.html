@@ -24,6 +24,18 @@
   padding: 10px;
 }
 
+.profile-link {
+    display: inline-block !important; 
+    width: 179px !important;
+    text-align: center !important;
+    background-color: orange;
+
+  }
+  .dropdown-item{
+    width: 179px !important;
+    background-color: orange;
+  }
+
 #bolinha-vermelha {
   display: inline-block;
   width: 20px;
@@ -36,6 +48,12 @@
   top: -2px;
   text-align: center;
 }
+@media only screen and (max-width: 992px)  { 
+  .imagem_logo{
+    width: 80px;
+  }
+}
+	
 </style>
 
 <div class="top-header-area" id="sticker">
@@ -45,8 +63,8 @@
         <div class="main-menu-wrap">
           <!-- logo -->
           <div class="site-logo">
-            <a href="/">
-              <img src="{%static 'website/assets/img/logo_123.png' %}" alt="logotipo do website">
+            <a href="/" class="imagem_logo1">
+              <img src="{%static 'website/assets/img/logo_123.png' %}" alt="logotipo do website" class="imagem_logo" >
             </a>
           </div>
           <!-- logo -->
@@ -56,16 +74,21 @@
             <ul>
               <li class="current-list-item"><a href="/">Casa</a></li>
               <li><a href="/about">Sobre Nós</a></li>
-              <li><a href="/contacts">Contactos</a></li>
-              {% if not request.user.is_authenticated or request.user.is_consumidor%}
+              
+             
               <li><a href="{% url 'loja-ver-produtos' %}">Produtos</a></li>
-              {% endif %}
+          
               {% if request.user.is_authenticated %}
              
-              <li><a href="#">@{{request.user.username}}</a>
+              <li>
+                <a href="#">@{{request.user.username}}</a>
                 <ul>
-                  <li><a class="dropdown-item" id="cenasUtilizadorDropdown" href="{% url 'loja-perfil' request.user.username %}">Perfil/Encomendas</a></li>
-                  <li><a class="dropdown-item" id="cenasUtilizadorDropdown" href="{% url 'loja-logout' %}">Logout</a></li>
+                  <li class="profile-link">
+                    <a class="dropdown-item" href="{% url 'loja-perfil' request.user.username %}">Perfil/Encomendas</a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="{% url 'loja-logout' %}">Logout</a>
+                  </li>
                 </ul>
               </li>
               
@@ -117,11 +140,44 @@
 
 </nav>
 {% else %}
+
+<li>
+  <div class="header-icons">
+ 
+    <a class="mobile-hide search-bar-icon" href="#"><i class="fas fa-search"></i></a>
+  </div>
+</li>
 </ul>
 </nav>
+<a class="mobile-show search-bar-icon" href="#"><i class="fas fa-search"></i></a>
+<div class="mobile-menu"></div>
+<!-- menu end -->
 </div>
 </div>
 </div>
 </div>
 </div>
+
+
+<!-- end header -->
+
+<!-- search area -->
+<div class="search-area">
+<div class="container">
+<div class="row">
+<div class="col-lg-12">
+<span class="close-btn"><i class="fas fa-window-close"></i></span>
+<div class="search-bar">
+<div class="search-bar-tablecell">
+<h3></h3>
+<!-- <input type="text" placeholder="Keywords">
+<button type="submit">Search <i class="fas fa-search"></i></button> -->
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</nav>
 {% endif %}

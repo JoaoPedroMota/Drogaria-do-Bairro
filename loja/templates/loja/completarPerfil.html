@@ -10,38 +10,45 @@
         <div class="row">
             <div class="col-lg-8 offset-lg-2 text-center">
                 <div class="breadcrumb-text">
-                   
                     <p>Complete o seu perfil</p>
                     <br>
-                <div>
-                    <form action="" method="POST" class="form-wrapper" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        
-                        {% for field in form %}
-                        <p><label for="{{ field.name }}">{{ field.label }}</label></p>
-                        <br>
-                          {% if field.field.widget.input_type == 'select' %}
-                            <select name="{{ field.name }}" {% if field.required %}required{% endif %}>
-                              {% for choice in field.field.choices %}
-                                <option value="{{ choice.0 }}" {% if choice.0 == field.value %}selected{% endif %}>{{ choice.1 }}</option>
-                              {% endfor %}
-                            </select>
-                          {% else %}
-                            <input type="{{ field.field.widget.input_type }}"
-                                   name="{{ field.name }}"
-                                   value="{{ field.value }}"
-                                   placeholder="{{ field.label }}"
-                                   {% if field.required %}required{% endif %}
-                                   {% if field.id %}id="{{ field.id }}"{% endif %}>
-                          {% endif %}
+                    <div>
+                        <form action="" method="POST" class="form-wrapper" enctype="multipart/form-data">
+                          {% csrf_token %}
+                          {% for field in form %}
+                          <p><label for="{{ field.name }}">{{ field.label }}</label></p>
                           <br>
-                        {% endfor %}
-                        
-                        <input type="submit" id="login" value="GUARDAR">
-                      </form>
-                    
-                    
-                </div>
+                            {% if field.field.widget.input_type == 'select' %}
+                              <select name="{{ field.name }}" {% if field.required %}required{% endif %}>
+                                {% for choice in field.field.choices %}
+                                  <option value="{{ choice.0 }}" {% if choice.0 == field.value %}selected{% endif %}>{{ choice.1 }}</option>
+                                {% endfor %}
+                              </select>
+                            {% else %}
+                              {% if field.name == 'freguesia' and field.value == None %}
+                                {% with '' as empty_string %}
+                                  <input type="{{ field.field.widget.input_type }}"
+                                         name="{{ field.name }}"
+                                         value="{{ empty_string }}"
+                                         placeholder="{{ field.label }}"
+                                         {% if field.required %}required{% endif %}
+                                         {% if field.id %}id="{{ field.id }}"{% endif %}>
+                                {% endwith %}
+                              {% else %}
+                                <input type="{{ field.field.widget.input_type }}"
+                                       name="{{ field.name }}"
+                                       value="{{ field.value }}"
+                                       placeholder="{{ field.label }}"
+                                       {% if field.required %}required{% endif %}
+                                       {% if field.id %}id="{{ field.id }}"{% endif %}>
+                              {% endif %}
+                            {% endif %}
+                            <br>
+                          {% endfor %}
+                          
+                          <input type="submit" id="login" value="GUARDAR">
+                        </form>
+                      </div>
             </div>
         </div>
         </div>

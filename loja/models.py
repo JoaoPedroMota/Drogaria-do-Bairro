@@ -233,19 +233,18 @@ class Veiculo(models.Model):
         (camiao, 'Camião'),
     ]
     disponivel = 'D'
-    aCaminho = 'A-C'
     aEntregar = 'E'
     indisponivel = 'I/M'
     regresso = 'R'
-    espera = 'W'
+    carregar = 'C'
     ESTADO_VEICULO = [
         (disponivel, 'Disponível'),
-        (aCaminho, 'A caminho'),
+        (carregar, "A carregar"),
         (aEntregar, 'A entregar'),
         (indisponivel, 'Indisponível/Manutenção'),
         (regresso, 'Regresso'),
-        (espera, 'À espera'),
         
+
     ]
     nome = models.CharField(max_length=200, null=True, blank=False)
     unidadeProducao = models.ForeignKey("UnidadeProducao", null=True, blank=False, on_delete=models.CASCADE, related_name='veiculos')
@@ -434,6 +433,8 @@ class Produto(models.Model):
         verbose_name_plural = "Produtos"
         #ordering = ("id","nome") # remover para ver por ordem de criação. comentar linha abaixo
         ordering = ['nome'] #ordem alfabética
+
+
 class ProdutoUnidadeProducao(models.Model):
     def validar_extensao_imagens(value):
         ext = value.name.split('.')[-1].lower()
@@ -671,6 +672,7 @@ class Encomenda(models.Model):
     STATUS_CHOICES = [
         ('Em processamento', 'Em processamento'),
         ('Enviado', 'Enviado'),
+        ('A chegar', 'A chegar'),
         ('Entregue', 'Entregue'),
         ('Cancelado', 'Cancelado'),
     ]
@@ -696,14 +698,15 @@ class ProdutosEncomenda(models.Model):
     STATUS_CHOICES = [
         ('Em processamento', 'Em processamento'),
         ('Enviado', 'Enviado'),
+        ('A chegar', 'A chegar'),
         ('Entregue', 'Entregue'),
         ('Cancelado', 'Cancelado'),
     ]
     estado = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Em processamento')
     updated = models.DateTimeField(auto_now=True, null=True, blank=False)
     created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
-    # def __str__(self):
-    #     return f"{self.produtos} da {self.encomenda}"
+    def __str__(self):
+        return f"{self.produtos} da {self.encomenda}"
     class Meta:
         verbose_name = "Produtos Encomendados"
         verbose_name_plural = "Produtos Encomendados"
@@ -738,3 +741,21 @@ class DetalhesEnvio(models.Model):
         verbose_name_plural = "Detalhes de Envios"
         ordering = ['id']
 
+
+
+
+class ProdutosEncomendadosVeiculos(models.Model):
+    produto_Encomendado = models.OneToOneField(ProdutosEncomenda, on_delete=models.CASCADE, related_name="veiculo_transporte")
+    veiculo = models.ForeignKey(Veiculo, on_delete=models.CASCADE, related_name="produtos_no_veiculo")
+    updated = models.DateTimeField(auto_now=True, null=True, blank=False)
+    created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
+    def save(self, *args, **kwargs):
+        if self.veiculo.unidadeProducao != self.produto_Encomendado.unidadeProducao:
+            raise ValueError("Este veículo não pertence à unidade de produção dona do produto encomendado")
+        super().save(*args, **kwargs)
+    def __str__(self):
+        return f"{self.produto_Encomendado} carregado no veiculo {self.veiculo}"
+    class Meta:
+        verbose_name_plural = "Produtos Associados a Veículos"
+        verbose_name = "Produto Associado a Veículo"
+        ordering = ['id']

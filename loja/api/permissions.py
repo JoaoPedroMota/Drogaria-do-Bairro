@@ -125,7 +125,7 @@ class IsConsumidorAndOwner2(permissions.BasePermission):
                 userLogadoConsumidor = request.user.consumidor
                 userConsumidorRequestURL = user.consumidor
                 return int(userLogadoConsumidor.id) == int(userConsumidorRequestURL.id)
-        raise PermissionDenied(detail='Não pode aceder/criar esta informações. Não lhe pertence/tem autorização. Autentique-se com a conta do seu consumidor!')
+        raise PermissionDenied(detail='Não pode aceder/criar/editar esta informações. Não lhe pertence/tem autorização. Autentique-se com a conta do seu consumidor!')
                 
 
 
