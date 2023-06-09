@@ -48,11 +48,14 @@ urlpatterns = [
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/produtos/<int:idProdutoUnidadeProducao>/', views.ProdutoUnidadeProducaoDetail.as_view()),
     path('unidadesProducao/<str:id>/', views.UnidadeProducaoDetailSoInfo.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/encomendas/',views.EncomendasPorUPList.as_view()),
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/encomendas/<int:idEncomenda>/',views.EncomendasPorUPList.as_view()),
     path('<str:username>/fornecedor/encomenda/<int:idEncomenda>/detalhes_envio/', views.getDetalhesParaForncedorDetails.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/carregar/', views.ProdutosEncomendadosVeiculosList.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/sair/', views.VeiculoSaida.as_view()),
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/veiculosDisponiveis/', views.VeiculosDisponiveisParaCarregar.as_view()),
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/produtoEncomendadoVeiculo/<int:idProdutoEncomendado>/', views.ProdutosEncomendadosVeiculosPorProduto.as_view()),
     
-    #VeiculoSaida
+    #ProdutosEncomendadosVeiculosPorProduto
     
     
     # loja

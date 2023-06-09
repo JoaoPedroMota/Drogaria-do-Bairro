@@ -644,8 +644,9 @@ def getVeiculos(request, username, idUnidadeProducao, format=None):
     return Response(respostaDevolver.data)
 
 @api_view(['GET'])
-def getVeiculo(request, idVeiculo, idFornecedor, idUnidadeProducao, format=None):
-    fornecedor = Fornecedor.objects.get(id=idFornecedor)
+def getVeiculo(request,username, idVeiculo, idUnidadeProducao, format=None):
+    utilizador = Utilizador.objects.get(username=username)
+    fornecedor = Fornecedor.objects.get(utilizador=utilizador)
     unidadeProducao = fornecedor.unidades_producao.get(pk=idUnidadeProducao)
     veiculo = unidadeProducao.veiculos.get(id=idVeiculo)
     respostaDevolver = VeiculoSerializer(veiculo, many=False)
@@ -1667,6 +1668,47 @@ class EncomendasPorUPList(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(serializar.data,status=status.HTTP_200_OK)
     
+class EncomendasPorUPDetail(APIView):
+    """_summary_
+
+    Args:
+        APIView (_type_): _description_
+    """
+    permission_classes = [IsFornecedorAndOwner2]
+    def get_object(self, instance, idEncomenda):
+        try:
+            return ProdutosEncomenda.objects.filter(unidadeProducao =instance, id=idEncomenda)
+        except ProdutosEncomenda.DoesNotExist:
+            raise Http404
+        
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_fornecedor(self, utilizador):
+        try:
+            return Fornecedor.objects.get(utilizador=utilizador)
+        except Fornecedor.DoesNotExist:
+            raise Http404
+
+    def get_up(self, fornecedor, idUP):
+        try:
+            return UnidadeProducao.objects.get(id=idUP, fornecedor=fornecedor)
+        except UnidadeProducao.DoesNotExist:
+            raise Http404
+          
+    def get(self, request, username,idUnidadeProducao,idEncomenda, format=None):
+        user = self.get_utilizador(username)
+        fornecedor = self.get_fornecedor(user)
+        up = self.get_up(fornecedor, idUnidadeProducao)
+        produtos_encomenda_objetos = self.get_object(up, idEncomenda)
+        if produtos_encomenda_objetos.exists():
+            serializar = ProdutosEncomendaSerializer(produtos_encomenda_objetos, many=False)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data,status=status.HTTP_200_OK)
+    
     
     
     
@@ -1772,7 +1814,7 @@ class ProdutosEncomendadosVeiculosList(APIView):
             return Response({"details":f"Não pode realizar esta ação. O produto já se encontra no estado {produto_encomendado.estado}"}, status=status.HTTP_400_BAD_REQUEST)
         if veiculo.estado_veiculo != 'D' and veiculo.estado_veiculo !='C':
             return Response({"details":f"Não pode adicionar produtos encomendados a um veículo que não esteja disponível. Estado do veículo {veiculo.estado_veiculo}"}, status=status.HTTP_400_BAD_REQUEST)
-        
+        data2['veiculo'] =  veiculo.id
         with transaction.atomic():
             serializar = ProdutosEncomendadosVeiculosSerializer(data=data2)
             if serializar.is_valid():
@@ -1782,6 +1824,52 @@ class ProdutosEncomendadosVeiculosList(APIView):
                 return Response(serializar.data, status=status.HTTP_201_CREATED)
             else:
                 return Response(serializar.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class ProdutosEncomendadosVeiculosPorProduto(APIView):
+    """_summary_
+
+    Args:
+        APIView (_type_): _description_
+    """
+    permisson_classes = [IsFornecedorAndOwner2]
+    def get_object(self, instance):
+        try:
+            return ProdutosEncomendadosVeiculos.objects.filter(produto_Encomendado=instance)
+        except ProdutosEncomendadosVeiculos.DoesNotExist:
+            raise Http404        
+    def get_user(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    def get_produto_encomendado(self, idProdutoEncomendado, idUnidadeProducao):
+        try:
+            return ProdutosEncomenda.objects.get(id=idProdutoEncomendado, unidadeProducao=idUnidadeProducao)
+        except ProdutosEncomenda.DoesNotExist:
+            raise Http404
+    def get(self, request, username, idProdutoEncomendado, idUnidadeProducao,format=None):
+        """
+        Listar todos os produtos encomendados associados a um dado veículo, por id de produto encomendado
+
+        Args:
+            request (): request do django
+            username (str): username do link
+            idUnidadeProducao (int): id da unidade de produção onde existe o produto encomendado e o veículo
+            idVeiculo (_type_): id do veículo que está carregado com o produto encomendado
+        Returns:
+            json list: Par produto encomendado e veiculo que o carrega
+        """
+        produtoEncomendado = self.get_produto_encomendado(idProdutoEncomendado, idUnidadeProducao)
+        produtos_encomendados_por_veiculo = self.get_object(produtoEncomendado)
+        if produtos_encomendados_por_veiculo.exists():
+            serializar = ProdutosEncomendadosVeiculosSerializer(produtos_encomendados_por_veiculo, many=True)
+            return Response(serializar.data, status=status.HTTP_200_OK)
+        return Response({"details":"Este produto não está em nenhum veiculo"}, status=status.HTTP_404_NOT_FOUND)
+
+
+
 
 
 
@@ -1855,3 +1943,32 @@ class VeiculoSaida(APIView):
                 return Response({"details":f"Não pode realizar esta ação! O veículo não está no estado a carregar. Está no estado {veiculo.estado_veiculo}"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"details":"Veículo não encotrado, ou veículo sem produtos carregados"}, stauts=status.HTTP_404_NOT_FOUND)
+        
+        
+        
+        
+        
+class VeiculosDisponiveisParaCarregar(APIView):
+    permisson_classes = [IsFornecedorAndOwner2]
+    def get_object(self, instanciaUP):
+        try:
+            return Veiculo.objects.filter(
+            Q(unidadeProducao=instanciaUP) &
+            (
+                Q(estado_veiculo='D') | Q(estado_veiculo="C")
+            )
+            )
+        except Veiculo.DoesNotExist:
+            raise Http404
+    def get_up(self, idUP):
+        try:
+            return UnidadeProducao.objects.get(id=idUP)
+        except UnidadeProducao.DoesNotExist:
+            raise Http404
+    def get(self, request,username, idUnidadeProducao):
+        instanciaUP = self.get_up(idUnidadeProducao)
+        veiculos = self.get_object(instanciaUP)
+        if veiculos.exists():
+            serializar = VeiculoSerializer(veiculos, many=True)
+            return Response(serializar.data, status=status.HTTP_200_OK)
+        return Response({"details":f"Veiculos disponiveis para serem carregados na UP:{instanciaUP}, não foram encontrados"}, status=status.HTTP_404_NOT_FOUND)

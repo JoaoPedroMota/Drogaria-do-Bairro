@@ -729,11 +729,33 @@ def unidadeProducao(request, userName, id):
     
     encomendas = ProdutosEncomenda.objects.filter(unidadeProducao=unidade_producao)
 
+    
+    dicionarioProdutosEstaoVeiculos = {}
+    ###### produtos encomendados em veiculos de transporte
+    for produto in encomendas:
+        urlProdutosVeiculos = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{id}/produtoEncomendadoVeiculo/{produto.id}/'
+        #print(urlProdutosVeiculos)
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
+        csrf_token = get_token(request)
+        headers = {'X-CSRFToken':csrf_token}
+        resposta = sessao.get(urlProdutosVeiculos, headers=headers)
+        print(produto.id)
+        if resposta.status_code == 404:
+            dicionarioProdutosEstaoVeiculos[produto.id] = (False, None)
+        else:
+            conteudo = resposta.json()
+            print(conteudo)
+            id_veiculo = conteudo[0]['veiculo']
+            urlVeiculo = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{id}/veiculos/{id_veiculo}/'
+            print(urlVeiculo)
+            resposta = sessao.get(urlVeiculo, headers=headers)
+            nome_veiculo_conteudo = resposta.json()
+            nome_mesmo = nome_veiculo_conteudo['nome']
+            dicionarioProdutosEstaoVeiculos[produto.id] = (True, nome_mesmo)
+        
 
-    
-    
-    
-    context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id, "produtosUP":lista_produtos_up, 'nome_up':nome_up,'encomenda':encomendas}
+    context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id, "produtosUP":lista_produtos_up, 'nome_up':nome_up,'encomenda':encomendas, "produtosEstaoEmVeiculos":dicionarioProdutosEstaoVeiculos}
     return render(request, 'loja/unidadeProducao.html', context)
 
 #######################ZONA DE TESTE######################################################
@@ -1929,6 +1951,45 @@ def getProdutosEncomenda(request, username, idEncomenda):
         pass
     return render(request, 'loja/produtos_encomendados.html', context)
 
+@consumidor_required
+def cancelarProdutoEncomendado(request, username, idEncomenda, idProdutoEncomendado, nomeProduto):
+    if request.method == 'POST':
+        url = f'http://127.0.0.1:8000/api/{username}/consumidor/encomenda/{idEncomenda}/produtos/{idProdutoEncomendado}/cancelar/'
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
+        csrf_token = get_token(request)
+        headers = {'X-CSRFToken':csrf_token}
+        resposta = sessao.get(url, headers=headers)
+        try:
+            conteudo = resposta.json()
+            estado = conteudo['estado']
+            criado_temp = conteudo['created']
+            if estado == "Em processamento":
+                criado = datetime.strptime(criado_temp, '%Y-%m-%dT%H:%M:%S.%f%z').astimezone(pytz.timezone('Europe/Lisbon'))
+                prazo_cancelamento = timedelta(hours=3)
+                tempo_decorrido_desde_encomenda = timezone.now() - criado
+                #print(tempo_decorrido_desde_encomenda, "tempo_decorrido_desde_encomenda")
+                if tempo_decorrido_desde_encomenda < prazo_cancelamento:
+                    resposta = sessao.put(url, headers=headers)
+                    if resposta.status_code == 200:
+                        messages.success(request,f"O produto encomendado ({nomeProduto}), foi cancelado com sucesso")
+                        return redirect('loja-perfil', userName=username)
+                    else:
+                        messages.error(request,"Houve um erro a cancelar o seu produto")
+                        return redirect('loja-produtosEncomendados', idEncomenda=idEncomenda, username=username)
+                else:
+                    messages.error(request,f"Só pode cancelar encomendas até 3h depois de as realizar. Tempo decorrido desde a criação da encomenda: {tempo_decorrido_desde_encomenda}")
+                    return redirect('loja-produtosEncomendados', idEncomenda=idEncomenda, username=username)
+            elif estado == "Enviado" or estado == "Entregue" or estado == "A chegar":
+                messages.error(request, f"A encomenda já está no estado {estado}. Já não pode cancelar nesta altura.")
+                return redirect('loja-perfil', userName=username)
+            elif estado == "Cancelado":
+                messages.error(request, "Erro. A encomenda já foi cancelada")
+                return redirect('loja-perfil', userName=username)
+        except json.decoder.JSONDecodeError:
+            messages.error(request,"Erro ao realizar esta ação. Tente novamente mais tarde.")
+            return redirect('loja-perfil', userName=username)
+        return redirect('loja-perfil', userName=username)
 
 def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
     idDetalhes = int(idDetalhes)
@@ -1993,8 +2054,7 @@ def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao):
         messages.error(request, "Houve um erro a obter os detaalhes de envio do utilizador")
         return redirect('loja-unidadeProducao', username=request.user.username, id=idUnidadeProducao)
     
-    
-    
+
 def colocarProdutoEmVeiculoTransporte(request, username, idUnidadeProducao, idProdutoEncomenda):
     formulario = ProdutosEncomendadosVeiculosForm(idUnidadeProducao=idUnidadeProducao)
     if request.method == 'POST':
@@ -2009,5 +2069,60 @@ def colocarProdutoEmVeiculoTransporte(request, username, idUnidadeProducao, idPr
     context={"formulario":formulario}
     return render(request, 'loja/colocarEncomendaEmVeiculo.html', context)
 
+@fornecedor_required
+def colocarProdutoEmVeiculoTransporte(request, username, idUnidadeProducao, idProdutoEncomenda):
+    formulario = ProdutosEncomendadosVeiculosForm(idUnidadeProducao=idUnidadeProducao)
+    url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/veiculosDisponiveis/'
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+    resposta = sessao.get(url, headers=headers)
+    if resposta.status_code == 200:
+        if request.method == 'POST':
+            formulario = ProdutosEncomendadosVeiculosForm(request.POST, idUnidadeProducao=idUnidadeProducao)
+            # dicionario_mutavel = formulario.data.copy()
+            # print(type(dicionario_mutavel['veiculo']))
+            # print(dicionario_mutavel['veiculo'])
+            if formulario.is_valid():
+                veiculo = formulario.cleaned_data['veiculo']
+                idVeiculo = veiculo.id
+                data_enviar = {
+                    "produto_Encomendado": idProdutoEncomenda
+                }
+                url2 = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/veiculos/{idVeiculo}/carregar/'
+                resposta = sessao.post(url2, headers=headers, data=data_enviar)
+                if resposta.status_code == 201:
+                    messages.error(request, f"Encomenda colocado no veículo com sucesso!")
+                    return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
+                else:
+                    # print(resposta.content)
+                    messages.error(request, f"Algo correu mal ao colocar o produto no veículo")
+                    return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
+            
+        context={"formulario":formulario}
+        return render(request, 'loja/colocarEncomendaEmVeiculo.html', context)
+    if resposta.status_code != 200 and request.method == 'GET':
+        messages.error(request, f"Não tem veículos disponíveis para colocar este produto, de momento.")
+        return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
+
 
 # form = ProdutoUnidadeProducaoForm(request.POST, request.FILES,user=request.user)
+def veiculoSairParaEntrega(request, username, idVeiculo, idUnidadeProducao):
+    url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/veiculos/{idVeiculo}/sair/'
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+    resposta = sessao.put(url, headers=headers)
+    if resposta.status_code == 200:
+        messages.success(request, "Veiculo saiu para entregar encomendas!")
+        return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
+    elif resposta.status_code == 404:
+        messages.error(request, "Erro - O veículo não tem produtos carregados!")
+        return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
+    elif resposta.status_code==400:
+        mensagem_erro = resposta.json()['details']
+        messages.error(request, f"Erro - {mensagem_erro}")
+        return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
+        

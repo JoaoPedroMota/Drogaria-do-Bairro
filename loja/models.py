@@ -239,8 +239,8 @@ class Veiculo(models.Model):
     carregar = 'C'
     ESTADO_VEICULO = [
         (disponivel, 'Disponível'),
-        (carregar, "A carregar"),
-        (aEntregar, 'A entregar'),
+        (carregar, "A  ser carregado"),
+        (aEntregar, 'A entregar encomendas'),
         (indisponivel, 'Indisponível/Manutenção'),
         (regresso, 'Regresso'),
         
