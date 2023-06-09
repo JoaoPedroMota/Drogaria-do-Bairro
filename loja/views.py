@@ -256,7 +256,7 @@ def confirm_password_view(request):
 
 def loginUtilizador(request):
     return oauth.auth0.authorize_redirect(
-        request, request.build_absolute_uri(reverse("loja-callback"))
+        request, request.build_absolute_uri('https://drogariadobairro.pt/callback')
     )
 
 
