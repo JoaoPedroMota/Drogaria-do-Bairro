@@ -15,7 +15,7 @@
     </div>
 
     <br>
-    <div >
+    <div>
         <form action="" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             {% for field in form %}
@@ -23,14 +23,24 @@
             <br>
             <p><label for="{{ field.name }}">{{ field.label }}</label></p>
             <br>
-            <input type="{{ field.field.widget.input_type }}"
-                   placeholder="{{ field.label }}"
-                   name="{{ field.name }}"
-                   id="{{ field.id_for_label }}"
-                   {% if field.value %}value="{{ field.value }}"{% endif %}>
-        {% endfor %}
+            {% if field.field.widget.input_type == 'select' %}
+                <select name="{{ field.name }}" id="{{ field.id_for_label }}">
+                    {% for choice_value, choice_label in field.field.choices %}
+                        <option value="{{ choice_value }}" {% if choice_value == field.value %}selected{% endif %}>{{ choice_label }}</option>
+                    {% endfor %}
+                </select>
+            {% else %}
+                <input type="{{ field.field.widget.input_type }}"
+                       placeholder="{{ field.label }}"
+                       name="{{ field.name }}"
+                       id="{{ field.id_for_label }}"
+                       {% if field.value %}value="{{ field.value }}"{% endif %}>
+            {% endif %}
+            {% endfor %}
             <input type="submit" id="login" value="Guardar">
+        </form>
     </div>
+    
       
     <a href="{% url 'loja-unidadeProducao' userName=request.user.username id=unidadeProducao.id %}" class="layout__boxTitle">
         <div  class="container">
