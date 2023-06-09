@@ -2190,3 +2190,22 @@ def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao):
     except json.decoder.JSONDecodeError:
         messages.error(request, "Houve um erro a obter os detaalhes de envio do utilizador")
         return redirect('loja-unidadeProducao', username=request.user.username, id=idUnidadeProducao)
+    
+    
+    
+def colocarProdutoEmVeiculoTransporte(request, username, idUnidadeProducao, idProdutoEncomenda):
+    formulario = ProdutosEncomendadosVeiculosForm(idUnidadeProducao=idUnidadeProducao)
+    if request.method == 'POST':
+        formulario = ProdutosEncomendadosVeiculosForm(request.POST, idUnidadeProducao=idUnidadeProducao)
+        # dicionario_mutavel = formulario.data.copy()
+        # print(type(dicionario_mutavel['veiculo']))
+        # print(dicionario_mutavel['veiculo'])
+        if formulario.is_valid():
+            veiculo = formulario.cleaned_data['veiculo']
+            
+        
+    context={"formulario":formulario}
+    return render(request, 'loja/colocarEncomendaEmVeiculo.html', context)
+
+
+# form = ProdutoUnidadeProducaoForm(request.POST, request.FILES,user=request.user)

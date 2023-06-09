@@ -40,6 +40,7 @@ urlpatterns = [
     path('criarEncomenda/<int:idDetalhesEnvio>/', views.criarEncomenda, name='loja-criarEncomenda'),
     path('perfil/<str:username>/encomenda/<int:idEncomenda>/produtos-encomendados/<int:idProdutoEncomendado>/cancelar/<str:nomeProduto>/', views.cancelarProdutoEncomendado, name="loja-cancelarProdutosEncomendados"),
     path('perfil/<str:username>/unidadeProducao/<int:idUnidadeProducao>/encomenda/<int:idEncomenda>/detalhes-envio/', views.getDetalhesParaFornecedor, name='loja-detalhes-envio-fornecedor'),
+    path('perfil/<str:username>/unidadeProducao/<int:idUnidadeProducao>/colocarEncomendaEmVeiculo/<int:idProdutoEncomenda>/', views.colocarProdutoEmVeiculoTransporte, name="loja-colocar-encomenda-veiculo"),
 ]
 
 

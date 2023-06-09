@@ -1,11 +1,12 @@
 from django.forms import ModelForm, ModelChoiceField
 from django import forms
-from .models import Utilizador, Fornecedor, UnidadeProducao,Categoria , Veiculo, Produto, ProdutoUnidadeProducao, DetalhesEnvio
+from .models import *
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django_countries.widgets import CountrySelectWidget
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumbers import is_valid_number, parse as parseTelemovel
+from django.db.models import Q
 class UtilizadorFormulario(UserCreationForm):
     class Meta:
         model = Utilizador
@@ -266,3 +267,21 @@ class ConfirmarDetalhesEnvioForm(forms.ModelForm):
 
 class CancelarProdutoEncomendadoForm():
     nome_produto = forms.CharField()
+    
+    
+    
+class ProdutosEncomendadosVeiculosForm(forms.ModelForm):
+    veiculo = forms.ModelChoiceField(queryset=Veiculo.objects.filter())
+    def __init__(self, *args, **kwargs):
+        idUnidadeProducao = kwargs.pop('idUnidadeProducao',)
+        super().__init__(*args, **kwargs)
+        self.fields['veiculo'].queryset = Veiculo.objects.filter(
+            Q(unidadeProducao_id=idUnidadeProducao) &
+            (
+                Q(estado_veiculo='D') | Q(estado_veiculo="C")
+            )
+            )
+
+    class Meta:
+        model = ProdutosEncomendadosVeiculos
+        fields = ['veiculo']

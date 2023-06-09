@@ -64,7 +64,6 @@ def getRotas(request, format=None):
             }
     return Response(rotas)
 
-#################################################
 
 
 
