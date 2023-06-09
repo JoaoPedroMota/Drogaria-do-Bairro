@@ -272,10 +272,10 @@ def callback(request):
     login(request, user)
 
     if created:
-        return redirect('loja-completarPerfil')
+        return redirect('https://drogariadobairro.pt/completarPerfil')
     else:
         #return redirect(request.build_absolute_uri(reverse("loja-home")))
-        return redirect('loja-home')
+        return redirect('https://drogariadobairro.pt')
 
     # username = token['userinfo']['nickname']
 
@@ -301,7 +301,7 @@ def logout(request):
         f"https://{settings.AUTH0_DOMAIN}/v2/logout?"
         + urlencode(
             {
-                "returnTo": request.build_absolute_uri(reverse("loja-home")),
+                "returnTo": request.build_absolute_uri('https://drogariadobairro.pt'),
                 "client_id": settings.AUTH0_CLIENT_ID,
             },
             quote_via=quote_plus,
