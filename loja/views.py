@@ -256,7 +256,7 @@ def confirm_password_view(request):
 
 def loginUtilizador(request):
     return oauth.auth0.authorize_redirect(
-        request, request.build_absolute_uri(reverse("loja-callback"))
+        request, request.build_absolute_uri('https://drogariadobairro.pt/callback')
     )
 
 
@@ -272,10 +272,10 @@ def callback(request):
     login(request, user)
 
     if created:
-        return redirect('loja-completarPerfil')
+        return redirect('https://drogariadobairro.pt/completarPerfil')
     else:
         #return redirect(request.build_absolute_uri(reverse("loja-home")))
-        return redirect('loja-home')
+        return redirect('https://drogariadobairro.pt')
 
     # username = token['userinfo']['nickname']
 
@@ -301,7 +301,7 @@ def logout(request):
         f"https://{settings.AUTH0_DOMAIN}/v2/logout?"
         + urlencode(
             {
-                "returnTo": request.build_absolute_uri(reverse("loja-home")),
+                "returnTo": request.build_absolute_uri('https://drogariadobairro.pt'),
                 "client_id": settings.AUTH0_CLIENT_ID,
             },
             quote_via=quote_plus,
@@ -2053,7 +2053,6 @@ def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao):
     except json.decoder.JSONDecodeError:
         messages.error(request, "Houve um erro a obter os detaalhes de envio do utilizador")
         return redirect('loja-unidadeProducao', username=request.user.username, id=idUnidadeProducao)
-    
 
 def colocarProdutoEmVeiculoTransporte(request, username, idUnidadeProducao, idProdutoEncomenda):
     formulario = ProdutosEncomendadosVeiculosForm(idUnidadeProducao=idUnidadeProducao)
@@ -2126,3 +2125,4 @@ def veiculoSairParaEntrega(request, username, idVeiculo, idUnidadeProducao):
         messages.error(request, f"Erro - {mensagem_erro}")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
         
+
