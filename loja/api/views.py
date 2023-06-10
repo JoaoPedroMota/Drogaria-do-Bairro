@@ -77,9 +77,12 @@ class UtilizadoresList(APIView):
     """
     #parser_classes = (MultiPartParser, FormParser)
     def get(self, request, format=None):
-        utilizadores = Utilizador.objects.all()
-        serializar = UtilizadorSerializer(utilizadores, many=True)
-        return Response(serializar.data)
+        if request.user.is_superuser:
+            utilizadores = Utilizador.objects.all()
+            serializar = UtilizadorSerializer(utilizadores, many=True)
+            return Response(serializar.data)
+        else:
+            return Response({"details":"Não tem autorização para aceder a estes dados"}, status=status.HTTP_403_FORBIDDEN)
     def post(self, request, format=None):
         request.data['username'] = request.data['username'].lower()
         utilizador = UtilizadorSerializer(data=request.data)
@@ -104,7 +107,7 @@ class UtilizadoresDetail(APIView):
     """
     Devolve, atualiza ou apaga uma instância de Utilizador
     """
-    permission_classes = [IsOwnerOrReadOnly, IsAuthenticated]
+    permission_classes = [IsOwner] # , IsAuthenticated]
     def get_object(self, identifier):
         try:
             return Utilizador.objects.get(username=identifier)
@@ -1978,6 +1981,7 @@ class VeiculosDisponiveisParaCarregar(APIView):
 class FazerEntrega(APIView):
     """
     """
+    permission_classes = [IsFornecedorAndOwner2]
     def get_object(self, instanciaVeiculo):
         try:
             return ProdutosEncomendadosVeiculos.objects.filter(veiculo=instanciaVeiculo)
@@ -2052,18 +2056,27 @@ class FazerEntrega(APIView):
                     veiculo.save()
                 
 
-                if produtoEncomendo_2 is not None:
-                    encomendaGeral = produtoEncomendo_2.encomenda
-                    #encomenda = self.get_encomenda(idEncomendaGeral)
+                
+                
+                
+                
+                if produtoEncomendo is not None:
+                    print("entrei!!!!")
+                    print("produtoEncomendo", produtoEncomendo)
+                    encomendaGeral = produtoEncomendo.encomenda
+                    print(encomendaGeral, type(encomendaGeral))
                     produtos_da_encomenda_geral = self.get_produtosEncomenda_por_Encomenda(encomendaGeral)
                     quantosProdutosFinalizados = 0
                     for produto in produtos_da_encomenda_geral:
+                        print("PRODUTO DA ENCOMENDA GERAK:", produto)
                         if produto.estado == 'Entregue':
                             quantosProdutosFinalizados+=1
                     if len(produtos_da_encomenda_geral) == quantosProdutosFinalizados:
+                        print("Encomenda antes de alterar o estado", encomendaGeral)
                         encomendaGeral.estado = 'Entregue'
                         encomendaGeral.save()
-                    
+                        print("Encomenda depois de alterar o estado", encomendaGeral)
+
                 
                 
             if novos_produtosEncomendaVeiculo.exists():

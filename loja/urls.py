@@ -42,7 +42,7 @@ urlpatterns = [
     path('perfil/<str:username>/unidadeProducao/<int:idUnidadeProducao>/encomenda/<int:idEncomenda>/detalhes-envio/', views.getDetalhesParaFornecedor, name='loja-detalhes-envio-fornecedor'),
     path('perfil/<str:username>/unidadeProducao/<int:idUnidadeProducao>/colocarEncomendaEmVeiculo/<int:idProdutoEncomenda>/', views.colocarProdutoEmVeiculoTransporte, name="loja-colocar-encomenda-veiculo"),
     path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/sairParaEntrega/', views.veiculoSairParaEntrega, name='loja-veiculoSairEntrega'),
-
+    path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/entregarEncomenda/', views.entregarEncomenda, name='loja-entregarEncomenda'),
 ]
 
 

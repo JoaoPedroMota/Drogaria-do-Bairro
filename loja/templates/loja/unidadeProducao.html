@@ -240,9 +240,20 @@
                                                         {% endif %}
                                                     {% else %} <!--Está num veículo-->
                                                         {% if produtoEncomenda.estado == "Enviado" %}
-                                                            <td>Existem produtos a serem entregues primeiro</td>
+                                                            <td>
+                                                                Existem produtos no veículo {{estaNumVeiculoPar.1}} a serem entregues primeiro
+                                                            </td>
                                                         {% elif produtoEncomenda.estado == "A chegar" %}
-                                                            <td><button>Finalizar encomenda</button></td>
+                                                            <td>
+                                                                <form action="{% url 'loja-entregarEncomenda' username=request.user.username idUnidadeProducao=unidadeProducao idVeiculo=estaNumVeiculoPar.2 %}" method="post">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-info btn-sm" onclick="return confirm('Tem certeza que esta encomenda ({{produtoEncomenda.encomenda}}), com o produto ({{produtoEncomenda.produtos}}) foram entregues?')">
+                                                                        Entregar e finalizar encomenda
+                                                                    </button>
+                                                                    
+                                                                </form>
+                                                                <p>Produto está a ser entregue no veículo {{estaNumVeiculoPar.1}}</p>
+                                                            </td>
                                                         {% elif produtoEncomenda.estado == 'Em processamento' %}
                                                             <td>Produto já está no veículo {{estaNumVeiculoPar.1}}</td>
                                                         {% else %}

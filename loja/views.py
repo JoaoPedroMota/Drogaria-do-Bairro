@@ -740,19 +740,20 @@ def unidadeProducao(request, userName, id):
         csrf_token = get_token(request)
         headers = {'X-CSRFToken':csrf_token}
         resposta = sessao.get(urlProdutosVeiculos, headers=headers)
-        print(produto.id)
+        # print(produto.id)
         if resposta.status_code == 404:
             dicionarioProdutosEstaoVeiculos[produto.id] = (False, None)
         else:
             conteudo = resposta.json()
-            print(conteudo)
+            # print(conteudo)
             id_veiculo = conteudo[0]['veiculo']
             urlVeiculo = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{id}/veiculos/{id_veiculo}/'
-            print(urlVeiculo)
+            # print(urlVeiculo)
             resposta = sessao.get(urlVeiculo, headers=headers)
             nome_veiculo_conteudo = resposta.json()
             nome_mesmo = nome_veiculo_conteudo['nome']
-            dicionarioProdutosEstaoVeiculos[produto.id] = (True, nome_mesmo)
+            id_veiculo = nome_veiculo_conteudo['id']
+            dicionarioProdutosEstaoVeiculos[produto.id] = (True, nome_mesmo, id_veiculo)
         
 
     context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id, "produtosUP":lista_produtos_up, 'nome_up':nome_up,'encomenda':encomendas, "produtosEstaoEmVeiculos":dicionarioProdutosEstaoVeiculos}
@@ -2126,3 +2127,18 @@ def veiculoSairParaEntrega(request, username, idVeiculo, idUnidadeProducao):
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
         
 
+
+
+def entregarEncomenda(request, username, idUnidadeProducao,idVeiculo):
+    url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/veiculos/{idVeiculo}/entregar/'
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+    resposta = sessao.put(url, headers=headers)
+    if resposta.status_code == 200:
+        messages.success(request, "Encomenda entregue e finalizada!")
+        return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
+    elif resposta.status_code == 404:
+        messages.error(request, "Veiculo não tem encomendas para entregar")
+        return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
