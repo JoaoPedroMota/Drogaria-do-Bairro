@@ -1001,26 +1001,32 @@ def ver_produtos(request):
     response1 = requests.get(url1).json()
     response2 = requests.get(url2).json()
 
+    response2_dict = {product['produto']: product for product in response2}
+
     merged_data = []
     for product1 in response1:
-        for product2 in response2:
-            if product1['id'] == product2['produto']:
-                merged_product = {
-                    'id': product1['id'],
-                    'nome': product1['nome'],
-                    'preco_a_granel': product2['preco_a_granel'],
-                    'preco_por_unidade': product2['preco_por_unidade'],
-                    'imagem_produto': product2['imagem_produto']
-                }
-                if 'categoria' in product1:
-                    merged_product['categoria'] = product1['categoria']['nome']
-                    merged_product['idCategoria'] = product1['categoria']['id']
-                else:
-                    merged_product['categoria'] = None
-                    merged_product['idCategoria'] = None
-                merged_data.append(merged_product)
+        product2 = response2_dict.get(product1['id'])
+        if product2 is not None:
+            merged_product = {
+                'id': product1['id'],
+                'nome': product1['nome'],
+                'preco_a_granel': product2['preco_a_granel'],
+                'preco_por_unidade': product2['preco_por_unidade'],
+                'imagem_produto': product2['imagem_produto']
+            }
+            if 'categoria' in product1:
+                merged_product['categoria'] = product1['categoria']['nome']
+                merged_product['idCategoria'] = product1['categoria']['id']
+            else:
+                merged_product['categoria'] = None
+                merged_product['idCategoria'] = None
+            merged_data.append(merged_product)
 
-    filtered_data = filter(lambda p: p['categoria'] is not None and (q.lower() in p['categoria'].lower() or q.lower() in p['nome'].lower()), merged_data)
+    filtered_data = filter(
+        lambda p: p['categoria'] is not None and
+        (q.lower() in p['categoria'].lower() or q.lower() in p['nome'].lower()),
+        merged_data
+    )
 
     actualFilteredProducts = []
     for product in filtered_data:
@@ -1047,14 +1053,14 @@ def ver_produtos(request):
             }
             lowest_price_product = next(
                 (
-                    shopProduct for shopProduct in response2 
+                    shopProduct for shopProduct in response2
                     if shopProduct['produto'] == product['id'] and shopProduct['preco_a_granel'] == min_price
                 ), None
             )
             if lowest_price_product is None:
                 lowest_price_product = next(
                     (
-                        shopProduct for shopProduct in response2 
+                        shopProduct for shopProduct in response2
                         if shopProduct['produto'] == product['id'] and shopProduct['preco_por_unidade'] == min_price1
                     ), None
                 )
@@ -1065,7 +1071,7 @@ def ver_produtos(request):
             actualFilteredProducts.append(product_info)
 
     produtosCarrinho = quantosProdutosNoCarrinho(request)
-    context = {'produtos_precos': actualFilteredProducts, 'termo_pesquisa': q, "produtosCarrinho":produtosCarrinho}
+    context = {'produtos_precos': actualFilteredProducts, 'termo_pesquisa': q, "produtosCarrinho": produtosCarrinho}
     return render(request, 'loja/shop.html', context)
 
 
