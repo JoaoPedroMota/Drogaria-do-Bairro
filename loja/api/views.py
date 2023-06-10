@@ -1972,3 +1972,106 @@ class VeiculosDisponiveisParaCarregar(APIView):
             serializar = VeiculoSerializer(veiculos, many=True)
             return Response(serializar.data, status=status.HTTP_200_OK)
         return Response({"details":f"Veiculos disponiveis para serem carregados na UP:{instanciaUP}, não foram encontrados"}, status=status.HTTP_404_NOT_FOUND)
+    
+
+
+class FazerEntrega(APIView):
+    """
+    """
+    def get_object(self, instanciaVeiculo):
+        try:
+            return ProdutosEncomendadosVeiculos.objects.filter(veiculo=instanciaVeiculo)
+        except ProdutosEncomendadosVeiculos.DoesNotExist:
+            raise Http404
+    def get_veiculo(self, idVeiculo, instanciaUP):
+        try:
+            return Veiculo.objects.get(id=idVeiculo, unidadeProducao=instanciaUP)
+        except Veiculo.DoesNotExist:
+            raise Http404
+    def get_up(self, idUP):
+        try:
+            return UnidadeProducao.objects.get(id=idUP)
+        except:
+            raise Http404
+    
+    def get_produto_encomendado(self, idProdutoEncomendado):
+        try:
+            return ProdutosEncomenda.objects.get(id=idProdutoEncomendado)
+        except ProdutosEncomenda.DoesNotExist:
+            raise Http404
+    def get_produtosEncomenda_por_Encomenda(self, instanciaEncomenda):
+        try:
+            return ProdutosEncomenda.objects.filter(encomenda=instanciaEncomenda)
+        except ProdutosEncomenda.DoesNotExist:
+            raise Http404
+    def get_encomenda(self, idEncomenda):
+        try:
+            return Encomenda.objects.get(id=idEncomenda)
+        except Encomenda.DoesNotExist:
+            raise Http404
+    
+    
+    def get(self, request, username, idUnidadeProducao, idVeiculo, format=None):
+        up = self.get_up(idUnidadeProducao)
+        veiculo = self.get_veiculo(idVeiculo, up)
+        produtosEncomendadosVeiculo = self.get_object(veiculo)
+        if produtosEncomendadosVeiculo.exists():
+            primeiro_da_lista = produtosEncomendadosVeiculo.first()
+            serializar = ProdutosEncomendadosVeiculosSerializer(primeiro_da_lista, many=False)
+            return Response(serializar.data, status=status.HTTP_200_OK)
+        return Response({"details":"Este veículo não tem produtos carregados para serem entregues."})
+    def put(self, request, username, idUnidadeProducao, idVeiculo, format=None):
+        up = self.get_up(idUnidadeProducao)
+        veiculo = self.get_veiculo(idVeiculo, up)
+        produtosEncomendadosVeiculo = self.get_object(veiculo)      
+        data2 = request.data.copy()
+        if produtosEncomendadosVeiculo.exists():
+            with transaction.atomic():
+                primeiro_da_lista = produtosEncomendadosVeiculo.first()
+                produtoEncomendo = primeiro_da_lista.produto_Encomendado
+                print("PRIMEIRO PRODUTO A SER ENTREGUE:",primeiro_da_lista)
+                print("TIPO DO PRIMEIRO PRODUTO  A SER ENTREGUE:",type(primeiro_da_lista))
+                #produtoEncomenda = self.get_produto_encomendado(idProdutoEncomenda)
+                produtoEncomendo.estado = 'Entregue'
+                produtoEncomendo.save()
+                primeiro_da_lista.delete()                
+                novos_produtosEncomendaVeiculo = self.get_object(veiculo)
+                produtoEncomendo_2 = None
+                if novos_produtosEncomendaVeiculo.exists():
+                    print("PRODUTOS CARREGADOS NO CARRO:",novos_produtosEncomendaVeiculo)
+                    novo_primeiro_da_lista = novos_produtosEncomendaVeiculo.first()
+                    print("NOVO PRIMEIRO DA LISTA:", novo_primeiro_da_lista)
+                    produtoEncomendo_2 = novo_primeiro_da_lista.produto_Encomendado
+                    #novo_produto_encomendado = self.get_produto_encomendado(idProdutoEncomenda)
+                    produtoEncomendo_2.estado = "A chegar"
+                    produtoEncomendo_2.save()
+                    print("PRODUTO ENCOMENDADO 2:", produtoEncomendo_2)
+                    print("TIPO PRODUTO ENCOMENDADO:", type(produtoEncomendo_2))
+                else:
+                    veiculo.estado_veiculo = 'R'
+                    veiculo.save()
+                
+
+                if produtoEncomendo_2 is not None:
+                    encomendaGeral = produtoEncomendo_2.encomenda
+                    #encomenda = self.get_encomenda(idEncomendaGeral)
+                    produtos_da_encomenda_geral = self.get_produtosEncomenda_por_Encomenda(encomendaGeral)
+                    quantosProdutosFinalizados = 0
+                    for produto in produtos_da_encomenda_geral:
+                        if produto.estado == 'Entregue':
+                            quantosProdutosFinalizados+=1
+                    if len(produtos_da_encomenda_geral) == quantosProdutosFinalizados:
+                        encomendaGeral.estado = 'Entregue'
+                        encomendaGeral.save()
+                    
+                
+                
+            if novos_produtosEncomendaVeiculo.exists():
+                serializar = ProdutosEncomendadosVeiculosSerializer(novos_produtosEncomendaVeiculo, many=True)
+                return Response(serializar.data,status=status.HTTP_200_OK)
+            else:
+                serializar = VeiculoSerializer(veiculo, many=False)
+                return Response(serializar.data,status=status.HTTP_200_OK)
+        else:
+            return Response({"details":"Não foram encontrados produtos para entregar neste veiculo"},status.HTTP_404_NOT_FOUND)
+        
