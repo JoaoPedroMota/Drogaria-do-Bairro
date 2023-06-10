@@ -13,8 +13,9 @@ from django.utils import timezone
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator
 from django.core.validators import RegexValidator
-
-
+from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 
 # from mptt.models import MPTTModel, TreeForeignKey
@@ -712,7 +713,12 @@ class ProdutosEncomenda(models.Model):
         verbose_name_plural = "Produtos Encomendados"
         ordering = ['id']
 
-        
+@receiver(pre_save, sender=Encomenda)
+def update_produtos_encomenda_estado(sender, instance, **kwargs):
+    produtos_encomenda = instance.produtos.all()
+    for produto_encomenda in produtos_encomenda:
+        produto_encomenda.estado = instance.estado
+        produto_encomenda.save()  
         
         
 
