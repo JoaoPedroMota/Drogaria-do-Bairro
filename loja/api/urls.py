@@ -50,7 +50,7 @@ urlpatterns = [
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/veiculosDisponiveis/', views.VeiculosDisponiveisParaCarregar.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/produtoEncomendadoVeiculo/<int:idProdutoEncomendado>/', views.ProdutosEncomendadosVeiculosPorProduto.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/entregar/', views.FazerEntrega.as_view()),
-    #ProdutosEncomendadosVeiculosPorProduto
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/regressou/', views.VeiculoRegressou.as_view()),
     
     
     # loja

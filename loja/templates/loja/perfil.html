@@ -158,7 +158,7 @@ color: white;
                         {% csrf_token %}
                             <input type="submit" id="login" class="segundo" value="Criar Produto">
                         </form>
-                        <form action="{% url 'loja-associarProdutoUP' %}" method="" >
+                        <form action="{% url 'loja-associarProdutoUP' username=request.user.username %}" method="" >
                             {% csrf_token %}
                                 <input type="submit" id="login" class="primeiro" value="Associar Produto a Unidade de Produção">
                         </form>

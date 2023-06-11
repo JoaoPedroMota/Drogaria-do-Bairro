@@ -94,8 +94,19 @@
                                                         
                                                     </form>
                                                 </td>
+                                            {% elif veiculo.estado_veiculo == 'Regresso' %}
+                                                <td>
+                                                    <form action="{% url 'loja-veiculoRegressou' username=request.user.username idUnidadeProducao=unidadeProducao idVeiculo=veiculo.id %}" method="post">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-info btn-sm">
+
+                                                            Veículo regressou à unidade de produção
+                                                        </button>
+                                                    </form>
+
+                                                </td>
                                             {% else %}
-                                            <td>Nenhuma ação de momento</td>
+                                                <td>Nenhuma ação de momento</td>
                                             {% endif %}
                                             {% if veiculo.estado_veiculo == 'Disponível' or veiculo.estado_veiculo == 'Indisponível/Manutenção' %}
                                             <td>
@@ -171,7 +182,7 @@
                                             <td> {{produto.data_producao}}</td>
                                             <td> {{produto.marca}}</td>
                                             <td>
-                                                <form action="{% url 'loja-removerAssociaoProdutoUP' idUnidadeProducao=unidadeProducao idProdutoUnidadeProducao=produto.id %}" method="post">
+                                                <form action="{% url 'loja-removerAssociaoProdutoUP' username=request.user.username idUnidadeProducao=unidadeProducao idProdutoUnidadeProducao=produto.id %}" method="post">
                                                     {% csrf_token %}
                                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja remover a associação entre o Produto: {{produto.produto}} e a Unidade de Produção atual ({{nome_up}}) ?')">Remover</button>
                                                 </form>
@@ -252,6 +263,7 @@
                                                                     </button>
                                                                     
                                                                 </form>
+                                                                <br>
                                                                 <p>Produto está a ser entregue no veículo {{estaNumVeiculoPar.1}}</p>
                                                             </td>
                                                         {% elif produtoEncomenda.estado == 'Em processamento' %}
