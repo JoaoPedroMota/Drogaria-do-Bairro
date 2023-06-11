@@ -1334,6 +1334,16 @@ def adicionarProdutosCarrinhoDpsDeLogar(request):
 
 def editarAssociacaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProducao):
     form = editarProdutoUnidadeProducaoForm(user=request.user)
+
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+
+    url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/produtos/{idProdutoUnidadeProducao}/'
+    response = sessao.get(url, headers=headers)
+
     if request.method == 'POST':
         form = editarProdutoUnidadeProducaoForm(request.POST, request.FILES,user=request.user)
         if form.is_valid():
@@ -1348,16 +1358,9 @@ def editarAssociacaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProduc
             data_producao = form.cleaned_data['data_producao']
             marca = form.cleaned_data['marca']
 
-            sessao = requests.Session()
-            sessao.cookies.update(request.COOKIES)
             
-            csrf_token = get_token(request)
-            headers = {'X-CSRFToken':csrf_token}
-
-            url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/produtos/{idProdutoUnidadeProducao}/'
-            response = sessao.get(url, headers=headers)
             
-            produto_up_data= {
+            produto_up_data = {
                 "descricao": descricao,
                 "stock": float(stock),
                 "unidade_medida": unidade_medida,
@@ -1386,7 +1389,33 @@ def editarAssociacaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProduc
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f'{field}_error::{error}')
-    context = {'formulario': form}
+    
+    try:
+        content = response.json()
+        form.initial = {
+            'produto': content['produto'],
+            'unidade_producao': content['unidade_producao'],
+            'stock': content['stock'],
+            'descricao': content['descricao'],
+            'unidade_medida': content['unidade_medida'],
+            'preco_a_granel': content['preco_a_granel'],
+            'unidade_Medida_Por_Unidade': content['unidade_Medida_Por_Unidade'],
+            'quantidade_por_unidade': content['quantidade_por_unidade'],
+            'preco_por_unidade': content['preco_por_unidade'],
+            'data_producao': content['data_producao'],         
+            'marca': content['marca'],                          
+        }
+    except json.decoder.JSONDecodeError:
+        pass
+    
+    url_up = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/'
+    response_up = sessao.get(url_up, headers=headers).json()
+
+    idProduto = content['produto']
+    url_produto = f'http://127.0.0.1:8000/api/produtosID/{idProduto}/'
+    response_produto = sessao.get(url_produto, headers=headers).json()
+
+    context = {'formulario': form, 'produto': response_produto, 'unidade_producao': response_up}
     return render(request, 'loja/editarAssociacaoProdutoUP.html', context)
     
     
