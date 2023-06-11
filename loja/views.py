@@ -2172,7 +2172,8 @@ def colocarProdutoEmVeiculoTransporte(request, username, idUnidadeProducao, idPr
 # form = ProdutoUnidadeProducaoForm(request.POST, request.FILES,user=request.user)
 @fornecedor_required
 def veiculoSairParaEntrega(request, username, idVeiculo, idUnidadeProducao):
-    if request.user.username == username:
+    
+    if request.user.username != username:
         return redirect("loja-perfil", userName=request.user.username)
     
     

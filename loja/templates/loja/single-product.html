@@ -74,7 +74,7 @@
                     
                         <div class="mais-informacao">
                             <img src="{% static produto.imagem_produto %}" alt="{{produto.produto}}" width="220" height="220">
-                            {% if produto.stock < "10" and produto.stock > "0.00" %}
+                            {% if produto.stock < "10.00" and produto.stock > "0.00" %}
                                 <p style="font-weight: bold; color: red">Ultimas Unidades...</p>
                             {% elif produto.stock == '0.00' %}
                                 <p style="font-weight: bold; color: red">Esgotado!</p>

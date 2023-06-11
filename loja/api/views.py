@@ -2147,3 +2147,31 @@ class VeiculoRegressou(APIView):
                 return Response(respostaErro,status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"details":"Veiculo não encontrado."}, stauts=status.HTTP_404_NOT_FOUND)
+
+
+
+
+class RelatoiroImpactoLocalAdmin(APIView):
+    def get_object(self):
+        try:
+            return Encomenda.objects.all()
+        except Encomenda.DoesNotExist:
+            raise Http404
+    def get(self, request, username, format=None):
+        if not request.user.is_authenticated:
+            return Response({"details":"Não autenticado"}, status=status.HTTP_401_UNAUTHORIZED)
+        if not request.user.is_superuser:
+            return Response({"detaisl":"Não autorizado"}, status=status.HTTP_403_FORBIDDEN)
+        dinheiroGastoNoSite = 0
+        encomendas = self.get_object()
+        for encomenda in encomendas:
+            dinheiroGastoNoSite+= encomenda.valor_total
+            consumidor = encomenda.consumidor.utilizador # vai buscar o utilizador que é consumidor nesta encomenda
+            
+        
+        
+        print("UTILIZADOR:", repr(consumidor))
+        print("DINHEIRO GASTO NO SITE: "+str(dinheiroGastoNoSite)+"€")
+        serializar = EncomendaSerializer(encomendas, many=True)
+        return Response(serializar.data, status=status.HTTP_200_OK)
+        

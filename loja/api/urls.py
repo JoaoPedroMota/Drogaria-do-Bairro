@@ -68,7 +68,8 @@ urlpatterns = [
     path('produtos_loja/em_stock/', views.ProdutoUnidadeProducaoEmStock.as_view()),
     path('produtos_loja/<int:idProduto>/', views.SingleProductDetails.as_view()),
     
-
+    #admin
+    path('<str:username>/relatorioImpactoLocal/', views.RelatoiroImpactoLocalAdmin.as_view()),
 ]   
 
 

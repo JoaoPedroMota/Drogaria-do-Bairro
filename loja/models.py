@@ -141,7 +141,7 @@ class Utilizador(AbstractUser):
     
     #legibilidade na bd e do objeto
     def __repr__(self):
-        return f"Utilizador(nome='{self.nome}', email='{self.email}', username='{self.username}', pais='{self.pais}', cidade='{self.cidade}', telemovel='{self.telemovel}', tipo_utilizador='{self.tipo_utilizador}', imagem_perfil='{self.imagem_perfil}', is_staff={self.is_staff}, is_admin={self.is_admin}, updated='{self.updated}', created='{self.created}')"
+        return f"Utilizador(nome='{self.nome}', email='{self.email}', username='{self.username}', pais='{self.pais}', cidade='{self.cidade}', freguesia='{self.freguesia}', telemovel='{self.telemovel}', tipo_utilizador='{self.tipo_utilizador}', imagem_perfil='{self.imagem_perfil}', is_staff={self.is_staff}, is_admin={self.is_admin}, updated='{self.updated}', created='{self.created}')"
     def __str__(self):
         return self.username
     # legibilidade humana para debug e cenas
@@ -154,6 +154,7 @@ class Utilizador(AbstractUser):
                 Username:{self.username}\n\
                 País:{self.pais}\n\
                 Cidade:{self.cidade}\n\
+                Freguesia:{self.freguesia}\n\
                 Telemóvel:{numero_formatado}\n\
                 "
         if self.tipo_utilizador == 'C':
