@@ -500,12 +500,14 @@ class ProdutoUnidadeProducaoDetail(APIView):
     def put(self, request, username, idUnidadeProducao, idProdutoUnidadeProducao, format=None):
         produto = self.get_object(idProdutoUnidadeProducao)
         unidadeProducao = UnidadeProducao.objects.get(id=idUnidadeProducao)
-        if request.data['produto'] != produto.produto.id:
-            return Response(f"Não pode alterar o campo produto após a criação da associação entre o produto e uma unidade de produção. Para adicionar uma associação entre produto e unidade produção nova, crie uma nova associação com o método POST. Para remover a atual use o método DELETE")
-        if request.data['unidade_producao'] != idUnidadeProducao:
-            return Response(f'Não pode alterar a unidade de producao de um dado produto para outra unidade de produção. Este valor não é editável. Você está na unidade de produção:{unidadeProducao.nome}. Use o id {unidadeProducao.id}', status=status.HTTP_400_BAD_REQUEST)
-        request.data['unidade_producao'] = idUnidadeProducao
-        informacao = request.data
+        # if request.data['produto'] != produto.produto.id:
+        #     return Response(f"Não pode alterar o campo produto após a criação da associação entre o produto e uma unidade de produção. Para adicionar uma associação entre produto e unidade produção nova, crie uma nova associação com o método POST. Para remover a atual use o método DELETE")
+        # if request.data['unidade_producao'] != idUnidadeProducao:
+        #     return Response(f'Não pode alterar a unidade de producao de um dado produto para outra unidade de produção. Este valor não é editável. Você está na unidade de produção:{unidadeProducao.nome}. Use o id {unidadeProducao.id}', status=status.HTTP_400_BAD_REQUEST)
+        data2 = request.data.copy()
+        data2['unidade_producao'] = idUnidadeProducao
+        data2['produto'] = produto.produto.id
+        informacao = data2
         deserializar = ProdutoUnidadeProducaoSerializer(produto, data=informacao)
         if deserializar.is_valid():
             try:
@@ -513,6 +515,9 @@ class ProdutoUnidadeProducaoDetail(APIView):
                 return Response(deserializar.data, status=status.HTTP_200_OK)
             except IntegrityError:
                 return Response({"detail": "Já existe este produto nesta unidade de produção.", "error_code": "INTEGRITY_ERROR"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        print(deserializar.errors)
+
         return Response(deserializar.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def delete(self, request, username, idUnidadeProducao, idProdutoUnidadeProducao, format=None):
