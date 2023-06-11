@@ -31,6 +31,7 @@ urlpatterns = [
     path('remover-do-carrinho/<int:produto_id>/', views.remover_do_carrinho, name='loja-remover-do-carrinho'),
     path('<str:username>/remover-produto-unidadeProducao/<int:idUnidadeProducao>/<int:idProdutoUnidadeProducao>/', views.removerAssociaoProdutoUP, name='loja-removerAssociaoProdutoUP'),
     path('perfil/<str:username>/associar-produto-unidade-producao/', views.criarAssociacaoProdutoUP, name="loja-associarProdutoUP"),
+    path('editar_produto_unidadeProducao/<int:idUnidadeProducao>/<int:idProdutoUnidadeProducao>/', views.editarAssociacaoProdutoUP, name='loja-editarAssociacaoProdutoUP'),
     path('perfil/<str:username>/detalhes-envio/', views.detalhesEnvio, name='loja-detalhesEnvio'),
     path('checkout/', views.checkout, name='loja-checkout'),
     path('perfil/<str:username>/encomenda/<int:idEncomenda>/produtos-encomendados/', views.getProdutosEncomenda,name='loja-produtosEncomendados'),
