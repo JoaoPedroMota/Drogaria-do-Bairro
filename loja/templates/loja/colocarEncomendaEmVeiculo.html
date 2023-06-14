@@ -7,41 +7,38 @@
           <div class="col-lg-8 offset-lg-2 text-center">
               <div class="breadcrumb-text">
                 <div class="row">
+                  <p>{{respostaNomeEncomenda}}</p>
                   <br>
                  
               </div>
-              <h1>Registar novo produto</h1>
+              <h1>Colocar Encomenda em veiculo de Transporte</h1>
               <br>
-              <br>
-              <br>
-              <form method="POST" enctype="multipart/form-data">
+              <form method="POST">
                 {% csrf_token %}
-                {% for field in form %}
+                {% for field in formulario %}
 
                 <div class="form-group">
                   {% if field.errors %}
-                  <ul class="field-error-list">
-                    {% for error in field.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                  </ul>
+                    <ul class="field-error-list">
+                        {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
                   {% endif %}
                   <p><label for="{{ field.name }}">{{ field.label }}</label></p>
-                  {% if field.name == 'categoria' %}
-                  <select name="{{ field.name }}">
-                    <option value="" {% if not field.value %}selected{% endif %}>Categoria</option>
-                    {% for choice_value, choice_label in field.field.choices %}
-                    <option value="{{ choice_value }}" {% if field.value == choice_value %}selected{% endif %}>{{ choice_label }}</option>
-                    {% endfor %}
+                  {% if field.name == 'veiculo' %}
+                    <select name="{{ field.name }}">
+                        <option value="" {% if not field.value %}selected{% endif %}>Veículo</option>
+                            {% for choice_value, choice_label in field.field.choices %}
+                                <option value="{{ choice_value }}" {% if field.value == choice_value %}selected{% endif %}>{{ choice_label }}</option>
+                            {% endfor %}
+                {% endif %}
                   </select>
-                  {% else %}
-                  <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.label }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
-                  {% endif %}
                 </div>
                 {% endfor %}
-                <input type="submit" id="login" value="SALVAR">
+                <input type="submit" id="login" value="GUARDAR E COLOCAR">
               </form>
-              <a href="{% url 'loja-perfil' userName=request.user.username  %}" class="layout__boxTitle">
+              <a href="{% url 'loja-unidadeProducao' userName=request.user.username id=idUnidadeProducao %}" class="layout__boxTitle">
                 <div  class="container">
                     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
                     <title>arrow-left</title>
@@ -50,7 +47,6 @@
                     <h6>Voltar</h6>
                 </div>
             </a>
-
 
     
               </div>

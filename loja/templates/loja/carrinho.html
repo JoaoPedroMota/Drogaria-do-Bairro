@@ -62,6 +62,7 @@
                                 
                             </tr>
                         </thead>
+<<<<<<< HEAD
     <tbody>
     {% for produto in produtos %}
     {% with i=forloop.counter0|add:1 %}
@@ -80,6 +81,26 @@
         </tr>
     </tbody>
 {% endfor %}
+=======
+                        <tbody>
+                            {% for produto in produtos %}
+                                {% with i=forloop.counter0|add:1 %}
+                                <tr class="table-body-row">
+                                    <td class="product-remove"><a href="{% url 'loja-remover-do-carrinho' produto.idNoCarrinho %}"><i class="far fa-window-close"></i></a></td>
+                                    <td class="numeroCarrinhoSoTabela">{{i}}</td>
+                                    <td class="product-image">
+                                        <img src="{% static produto.produto.imagem_produto %}" alt="produto.nomeProduto">
+                                    </td>
+                                    <td class="product-name">{{ produto.nomeProduto }}</td>
+                                    <td class="product-quantity">{{produto.precoKilo}}€/{{produto.produto.unidade_medida}}</td>    
+                                    <td class="product-price">{{produto.preco|floatformat:2}}€</td>
+                                    <td class="">{{ produto.quantidade|floatformat:2 }} {{produto.produto.unidade_medida}}</td>
+                                    
+                                </tr>
+                                {% endwith %}
+                        </tbody>
+                        {% endfor %}
+>>>>>>> main
                     </table>
                 </div>
             </div>

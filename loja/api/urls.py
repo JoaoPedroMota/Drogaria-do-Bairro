@@ -6,13 +6,13 @@ from rest_framework import routers
 urlpatterns = [
     path('', views.getRotas),
     # utilizadores
-    path('utilizadores/', views.UtilizadoresList.as_view()),
-    path('<str:username>/utilizadores/', views.UtilizadoresDetail.as_view()),
+    path('utilizadores/', views.UtilizadoresList.as_view()), # já está no swagger
+    path('<str:username>/utilizadores/', views.UtilizadoresDetail.as_view()), # já está no swagger
     
     
     
     # consumidores
-    path('consumidores/', views.ConsumidoresList.as_view()),
+    path('consumidores/', views.ConsumidoresList.as_view()), # já está no swagger
     path('consumidores/carrinhos/', views.CarrinhoList.as_view()),
     
     path('consumidores/carrinhos/<int:idCarrinho>/', views.CarrinhoDetail.as_view()),
@@ -32,13 +32,8 @@ urlpatterns = [
     path('<str:username>/consumidor/encomendarCarrinho/', views.EncomendarTodosOsProdutosCarrinho.as_view()),    
     path('<str:username>/consumidor/encomenda/<int:idEncomenda>/produtos/<int:idProdutoEncomenda>/cancelar/', views.ProdutoEncomendasCancelarView.as_view()),
 
-
-
-    
-
-    
     # fornecedores
-    path('fornecedores/', views.FornecedoresList.as_view()),
+    path('fornecedores/', views.FornecedoresList.as_view()), # já está no swagger
     path('<str:username>/fornecedor/', views.FornecedoresDetail.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/', views.UnidadeProducaoList.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/', views.UnidadeProducaoDetail.as_view()),
@@ -48,12 +43,15 @@ urlpatterns = [
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/produtos/<int:idProdutoUnidadeProducao>/', views.ProdutoUnidadeProducaoDetail.as_view()),
     path('unidadesProducao/<str:id>/', views.UnidadeProducaoDetailSoInfo.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/encomendas/',views.EncomendasPorUPList.as_view()),
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/encomendas/<int:idEncomenda>/',views.EncomendasPorUPList.as_view()),
     path('<str:username>/fornecedor/encomenda/<int:idEncomenda>/detalhes_envio/', views.getDetalhesParaForncedorDetails.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/carregar/', views.ProdutosEncomendadosVeiculosList.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/sair/', views.VeiculoSaida.as_view()),
-    
-    #VeiculoSaida
-    
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/veiculosDisponiveis/', views.VeiculosDisponiveisParaCarregar.as_view()),
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/produtoEncomendadoVeiculo/<int:idProdutoEncomendado>/', views.ProdutosEncomendadosVeiculosPorProduto.as_view()),
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/entregar/', views.FazerEntrega.as_view()),
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/regressou/', views.VeiculoRegressou.as_view()),
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/encomendas/<int:idEncomenda>/emString/', views.RetornarNomeEncomenda.as_view()),
     
     # loja
     path('categorias/', views.CategoriaList.as_view()),
@@ -70,7 +68,8 @@ urlpatterns = [
     path('produtos_loja/em_stock/', views.ProdutoUnidadeProducaoEmStock.as_view()),
     path('produtos_loja/<int:idProduto>/', views.SingleProductDetails.as_view()),
     
-
+    #admin
+    path('<str:username>/relatorioImpactoLocal/', views.RelatorioImpactoLocalAdmin.as_view()),
 ]   
 
 

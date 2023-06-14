@@ -197,7 +197,7 @@ class VeiculoSerializer(ModelSerializer):
     estado_veiculo= EstadoVeiculoField()
     class Meta:
         model = Veiculo
-        fields = ['id','nome', 'unidadeProducao', 'tipo_veiculo', 'estado_veiculo']
+        fields = ['id','nome', 'unidadeProducao', 'tipo_veiculo', 'estado_veiculo', "updated", "created"]
     def create(self, validated_data):
         if 'nome' not in validated_data:
             raise ValidationError("Nome is required")
@@ -295,7 +295,7 @@ class CarrinhoSerializer(ModelSerializer):
 logger = logging.getLogger(__name__)
 
 class ProdutoUnidadeProducaoSerializer(serializers.ModelSerializer):
-    imagem_produto = serializers.ImageField(required=True)
+    imagem_produto = serializers.ImageField(required=False)
     class Meta:
         model = ProdutoUnidadeProducao
         fields = ["id", "produto", "unidade_producao", "stock", "descricao", "unidade_medida", "preco_a_granel", "unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade", "data_producao", "marca", "imagem_produto"]
@@ -539,8 +539,8 @@ class ProdutosEncomendaSerializer(ModelSerializer):
         fields = ["id","encomenda", "produtos","unidadeProducao","quantidade","preco","precoKilo","estado","updated","created"]
 
 class ProdutosEncomendadosVeiculosSerializer(ModelSerializer):
-    veiculo = VeiculoSerializer(read_only=True)
-    produto_Encomendado = ProdutosEncomendaSerializer(read_only=True)
+    # veiculo = VeiculoSerializer()
+    # produto_Encomendado = ProdutosEncomendaSerializer(read_only=True)
     class Meta:
         model = ProdutosEncomendadosVeiculos
         fields = ["id", "produto_Encomendado", "veiculo", "updated", "created"]

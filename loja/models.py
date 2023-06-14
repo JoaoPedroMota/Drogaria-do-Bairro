@@ -107,7 +107,7 @@ class Utilizador(AbstractUser):
     morada = models.CharField(max_length=200, null=True, blank=True, default='')
     telemovel = PhoneNumberField(null=True, blank=False, default='', unique=True, error_messages={'unique': 'Já existe um utilizador com esse número de telefone.'}, help_text='O País default para os números de telemóvel é Portugal(+351). Se o seu número for de um país diferente tem de adicionar o identificador desse país.')
     tipo_utilizador = models.CharField(max_length=1, choices=TIPO_UTILIZADOR, default='', null=True)
-    imagem_perfil = models.ImageField(null=True, blank=True,default="imagens_perfil\\avatar.png", upload_to='imagens_perfil/',validators=[validar_extensao_imagens, validar_tamanho_imagens])
+    imagem_perfil = models.ImageField(null=True, blank=True,default="imagens_perfil/avatar.png", upload_to='imagens_perfil/',validators=[validar_extensao_imagens, validar_tamanho_imagens])
     updated = models.DateTimeField(auto_now=True, null=True, blank=False)
     created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
     
@@ -141,7 +141,7 @@ class Utilizador(AbstractUser):
     
     #legibilidade na bd e do objeto
     def __repr__(self):
-        return f"Utilizador(nome='{self.nome}', email='{self.email}', username='{self.username}', pais='{self.pais}', cidade='{self.cidade}', telemovel='{self.telemovel}', tipo_utilizador='{self.tipo_utilizador}', imagem_perfil='{self.imagem_perfil}', is_staff={self.is_staff}, is_admin={self.is_admin}, updated='{self.updated}', created='{self.created}')"
+        return f"Utilizador(nome='{self.nome}', email='{self.email}', username='{self.username}', pais='{self.pais}', cidade='{self.cidade}', freguesia='{self.freguesia}', telemovel='{self.telemovel}', tipo_utilizador='{self.tipo_utilizador}', imagem_perfil='{self.imagem_perfil}', is_staff={self.is_staff}, is_admin={self.is_admin}, updated='{self.updated}', created='{self.created}')"
     def __str__(self):
         return self.username
     # legibilidade humana para debug e cenas
@@ -154,6 +154,7 @@ class Utilizador(AbstractUser):
                 Username:{self.username}\n\
                 País:{self.pais}\n\
                 Cidade:{self.cidade}\n\
+                Freguesia:{self.freguesia}\n\
                 Telemóvel:{numero_formatado}\n\
                 "
         if self.tipo_utilizador == 'C':
@@ -187,7 +188,7 @@ class Utilizador(AbstractUser):
 
         # Transformar a cidade em uppercase
         self.cidade = self.cidade.upper()
-
+        self.freguesia = self.freguesia.upper()
         # Chamar o método save padrão do modelo
         super().save(*args, **kwargs)
 
@@ -239,8 +240,8 @@ class Veiculo(models.Model):
     carregar = 'C'
     ESTADO_VEICULO = [
         (disponivel, 'Disponível'),
-        (carregar, "A carregar"),
-        (aEntregar, 'A entregar'),
+        (carregar, "A  ser carregado"),
+        (aEntregar, 'A entregar encomendas'),
         (indisponivel, 'Indisponível/Manutenção'),
         (regresso, 'Regresso'),
         
@@ -335,6 +336,15 @@ class UnidadeProducao(models.Model):
         
     def __str__(self):
         return self.nome
+    def save(self, *args, **kwargs):
+        # Transformar a cidade em uppercase
+        self.cidade = self.cidade.upper()
+        self.freguesia = self.freguesia.upper()
+        # Chamar o método save padrão do modelo
+        super().save(*args, **kwargs)
+    
+    
+    
     class Meta:
         verbose_name_plural = "Unidades de Producao"
         verbose_name = "Unidade de Producao"
@@ -467,8 +477,8 @@ class ProdutoUnidadeProducao(models.Model):
     stock = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False, validators=[MinValueValidator(0)])
     descricao = models.TextField(max_length=200, null=True, blank=True)    
     #cenas a granel
-    unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES, null=False, blank=False, help_text="Unidade de medida de venda e do stock")
-    preco_a_granel = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)], help_text='Utilize um ponto, em ve de uma vírgula')
+    unidade_medida = models.CharField(max_length=2, choices=UNIDADES_MEDIDA_CHOICES, null=False, blank=False, help_text="Unidade de medida de venda e do stock. O seu produto vende-se à unidade/peso/volume?")
+    preco_a_granel = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)], help_text='Preço de venda a granel. Unidade monetária: Euro(€). Utilize um ponto, em vez de uma vírgula')
     ###cenas à unidade
     unidade_Medida_Por_Unidade = models.CharField(max_length=2,choices=UNIDADES_MEDIDA_CHOICES_unidade, null=True, blank=True, help_text='Caso o produto seja vendido à unidade, qual é a unidade de medida dessa unidade? Por exemplo, se for uma posta de carne/peixe, que unidade de medida tem essa posta (quanto pesa a posta). Ou se forem produtos que não precisam de dizer quanto tem de peso/volume, como um brinquedo/filme, selecione unidade')
     quantidade_por_unidade = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)], help_text='Quanto tem o produto que vende à unidade? Quanto pesa a posta de carne/peixe? Ou se forem berlindes, quantos berlindes vende de uma vez?')
@@ -476,7 +486,7 @@ class ProdutoUnidadeProducao(models.Model):
     # outras cenas
     data_producao = models.DateField( null=True,blank=True, default=timezone.now)
     marca = models.CharField(max_length=100, null=True, blank=True)
-    imagem_produto = models.ImageField(null=True, blank=False,upload_to='products/', validators=[validar_extensao_imagens, validar_tamanho_imagens])
+    imagem_produto = models.ImageField(null=True, blank=False,upload_to='products/', validators=[validar_extensao_imagens, validar_tamanho_imagens], help_text='Formatos aceites: PNG,JPG,SVG,GIF, Tamanho máximo:2MB')
     def get_imagem(self):
         from .imagem import Imagem
         return Imagem.objects.get(produto=self)
@@ -530,7 +540,6 @@ class ProdutoUnidadeProducao(models.Model):
             elif self.unidade_medida in ['kg', 'g', 'l', 'ml']:
                 if self.preco_a_granel is None:
                    raise ValidationError('O preço a granel é obrigatório para produtos vendidos por peso ou volume. Preencha o campo: Preço a granel.') 
-    
                 
                 
 # class Imagem(models.Model):
@@ -637,7 +646,7 @@ class Carrinho(models.Model):
 
 class ProdutosCarrinho(models.Model):
     carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='produtos_carrinho')
-    produto = models.ForeignKey(ProdutoUnidadeProducao, on_delete=models.SET_NULL, null=True, blank = True)
+    produto = models.ForeignKey(ProdutoUnidadeProducao, on_delete=models.CASCADE, null=True, blank = True)
     quantidade = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank = False, default= 1)
     preco = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     precoKilo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -671,8 +680,8 @@ class Encomenda(models.Model):
 
     STATUS_CHOICES = [
         ('Em processamento', 'Em processamento'),
-        ('Enviado', 'Enviado'),
-        ('A chegar', 'A chegar'),
+        # ('Enviado', 'Enviado'),
+        # ('A chegar', 'A chegar'),
         ('Entregue', 'Entregue'),
         ('Cancelado', 'Cancelado'),
     ]
@@ -697,12 +706,13 @@ class ProdutosEncomenda(models.Model):
     precoKilo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     STATUS_CHOICES = [
         ('Em processamento', 'Em processamento'),
+        ('A sair da Unidade de Producao', 'A sair da Unidade de Producao'),
         ('Enviado', 'Enviado'),
         ('A chegar', 'A chegar'),
         ('Entregue', 'Entregue'),
         ('Cancelado', 'Cancelado'),
     ]
-    estado = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Em processamento')
+    estado = models.CharField(max_length=30, choices=STATUS_CHOICES, default='Em processamento')
     updated = models.DateTimeField(auto_now=True, null=True, blank=False)
     created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
     def __str__(self):

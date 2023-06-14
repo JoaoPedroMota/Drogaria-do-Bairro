@@ -7,6 +7,7 @@
     position: relative;
   }
 
+
   .hint-formulario {
   position: absolute;
   top: 0;
@@ -51,7 +52,19 @@
                   {% csrf_token %}
                   {% for field in formulario %}
                   <div class="form-group">
+                    {% if field.name == 'preco_a_granel' %}
+                    <p><label for="{{ field.name }}">Preço a granel (caso não seja vendido à unidade) </label></p>
+                    {% elif field.name == 'unidade_Medida_Por_Unidade' %}
+                    <p><label for="{{ field.name }}">Unidade de medida da embalagem/unidade (caso o produto seja vendido à unidade) </label></p>
+                    {% elif field.name == 'quantidade_por_unidade' %}
+                    <p><label for="{{ field.name }}">Quantidade de produto por embalagem/unidade (caso seja vendido à unidade) </label></p>
+                    {% elif field.name == 'preco_por_unidade' %}
+                    <p><label for="{{ field.name }}">Preco por embalagem/unidade (caso seja vendido à unidade) </label></p>
+                    {% elif field.name == 'imagem_produto' %}
+                    <p><label for="{{ field.name }}">Imagem do produto (formatos aceites: PNG,JPG,SVG,GIF, tamanho máximo:2mb) </label></p>
+                    {% else %}
                     <p><label for="{{ field.name }}">{{ field.label }}</label></p>
+                    {% endif %}
                     {% if field.field.widget.input_type != 'file' %}
                     <div class="input-wrapper">
                       {% if field.name == 'produto' or field.name == 'unidade_producao' or field.name == 'unidade_medida' or field.name == 'unidade_Medida_Por_Unidade' %}
@@ -82,8 +95,8 @@
                     {% if field.errors %}
                     <ul class="field-error-list">
                       {% for error in field.errors %}
-                      <li>{{ error }}</li>
-                      {% endfor %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
                     </ul>
                     {% endif %}
                   </div>

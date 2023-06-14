@@ -18,6 +18,19 @@
     table{
         border: 1px solid;
     }
+    #lo {
+    font-size: .9em;
+    color: #fff;
+    background: #F28123;
+    outline: none;
+    border: 1px solid #F28123;
+    cursor: pointer;
+    padding: 0.9em;
+    -webkit-appearance: none;
+    width: 100%;
+    margin: 2em 0;
+    letter-spacing: 4px;
+  }
     #customers {
   font-family: Arial, Helvetica, sans-serif;
   border-collapse: collapse;
@@ -48,7 +61,11 @@
 				<div class="col-lg-8 offset-lg-2 text-center">
 					<div class="breadcrumb-text">
 						<div id="UnidadeProducao">
-                           
+                            {% for message in messages %}
+                            <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% endif %}">
+                                <p>{{ message }}</p>
+                            </div>
+                            {% endfor %}
                             <div id="infoGeralUnidadeProducao">
                                 <h2>Unidade de Produção:</h2>
                                 <h3>{{nome_up}}</h3>
@@ -64,26 +81,62 @@
                                             <th>Nome</th>
                                             <th>Tipo Veículo</th>
                                             <th>Estado</th>
-                                            <th>Editar</th>
+                                            <th>Última Atualização</th>
+                                            <th>Criado a:</th>
+                                            <th>Ação</th>
                                             <th>Remover</th>
+
                                         </tr>
                                         {% for veiculo in veiculos %}
                                         <tr>
                                             <td>{{ veiculo.nome }}</td>
                                             <td>{{ veiculo.tipo_veiculo }}</td>
                                             <td>{{ veiculo.estado_veiculo }}</td>
+                                            <td>{{ veiculo.updated }}</td>
+                                            <td>{{ veiculo.created }}</td>
+                                            {% if veiculo.estado_veiculo == 'Disponível' or veiculo.estado_veiculo == 'Indisponível/Manutenção' %}
                                             <td>
                                                 <form action="{% url 'loja-editarVeiculo' userName=request.user.username id=unidadeProducao idVeiculo=veiculo.id %}" method="get">
                                                     {% csrf_token %}
                                                     <button type="submit" class="btn btn-info btn-sm">Editar</button>
                                                 </form>
                                             </td>
+                                            {% elif veiculo.estado_veiculo == 'A  ser carregado' %}
+                                                <td>
+                                                    <form action="{% url 'loja-veiculoSairEntrega' username=request.user.username idUnidadeProducao=unidadeProducao idVeiculo=veiculo.id %}" method="post">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-info btn-sm" onclick="return confirm('Tem certeza que deseja enviar o veículo {{ veiculo.nome }} para entregas?')">
+
+                                                            Sair para Entregas
+                                                        </button>
+                                                        
+                                                    </form>
+                                                </td>
+                                            {% elif veiculo.estado_veiculo == 'Regresso' %}
+                                                <td>
+                                                    <form action="{% url 'loja-veiculoRegressou' username=request.user.username idUnidadeProducao=unidadeProducao idVeiculo=veiculo.id %}" method="post">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-info btn-sm">
+                                                            Confirmar regresso do veículo à Unidade de Produção
+                                                        </button>
+                                                    </form>
+
+                                                </td>
+                                            {% else %}
+                                                <td>Nenhuma ação de momento</td>
+                                            {% endif %}
+                                            {% if veiculo.estado_veiculo == 'Disponível' or veiculo.estado_veiculo == 'Indisponível/Manutenção' %}
                                             <td>
                                                 <form action="{% url 'loja-removerVeiculo' userName=request.user.username id=veiculo.id %}" method="post">
                                                     {% csrf_token %}
                                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja remover o veículo {{ veiculo.nome }}?')">Remover</button>
                                                 </form>
                                             </td>
+                                            {% else %}
+                                                <td>Só pode remover um veículo Disponivel ou em Indisponivel/Manuntenção</td>
+                                            {% endif %}
+
+
                                         </tr>
                                         
                                         {% endfor %}
@@ -91,7 +144,7 @@
                                     </table>
                                 </div>
                                 {% else %}
-                                <h5>Ainda não tem veículos nesta unidade de produção </h5>
+                                <p>Ainda não tem veículos nesta unidade de produção </p>
 
                               
                                 {% endif %}
@@ -110,7 +163,7 @@
                             <br>
                         
                             {% if produtosUP %}
-                                <h2>Produtos associados a esta Unidade de Producao</h4>
+                                <h2>Produtos associados a esta Unidade de Producao (UP)</h2>
                                     
                                     <table id="customers">
                                         <tr>
@@ -123,6 +176,7 @@
                                             <th>Qnt. por Unid.</th>
                                             <th>Data de Produção</th>
                                             <th>Marca</th>
+                                            <th>Editar Produto de Unidade de Produção</th>
                                             <th>Remover Produto de Unidade de Produção</th>
                                         </tr>
                                         {% for produto in produtosUP %}
@@ -147,8 +201,18 @@
                                             {% endif %}
                                             <td> {{produto.data_producao}}</td>
                                             <td> {{produto.marca}}</td>
+
+
                                             <td>
-                                                <form action="{% url 'loja-removerAssociaoProdutoUP' idUnidadeProducao=unidadeProducao idProdutoUnidadeProducao=produto.id %}" method="post">
+                                                <form action="{% url 'loja-editarAssociacaoProdutoUP' idUnidadeProducao=unidadeProducao idProdutoUnidadeProducao=produto.id %}" method="get">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-info btn-sm" id="lo">Editar</button>
+                                                </form>
+                                            </td>
+
+
+                                            <td>
+                                                <form action="{% url 'loja-removerAssociaoProdutoUP' username=request.user.username idUnidadeProducao=unidadeProducao idProdutoUnidadeProducao=produto.id %}" method="post">
                                                     {% csrf_token %}
                                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja remover a associação entre o Produto: {{produto.produto}} e a Unidade de Produção atual ({{nome_up}}) ?')">Remover</button>
                                                 </form>
@@ -159,7 +223,7 @@
                                     {% endfor %}
                                 </table>
                                 {% else %}
-                                <p>Nenhum produto associado a esta unidade de produção.</p>
+                                <p>Nenhum produto associado a esta unidade de produção</p>
                                 {% endif %}
                                 <br>
                             {% if produtosUP %}
@@ -174,6 +238,7 @@
                                             <th>PrecoKilo</th>
                                             <th>Estado</th>
                                             <th>Detalhes Entrega</th>
+                                            <th>Ação</th>
                                         </tr>
                                         {% for produtoEncomenda in encomenda %}
                                         <tr>
@@ -187,24 +252,69 @@
                                             <td style="font-weight: bold; color: rgb(255, 255, 0) ; text-shadow: -0.5px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
                                             {% elif produtoEncomenda.estado == "Enviado" %}
                                             <td style="font-weight: bold; color: rgb(81, 255, 191); text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
+                                            {% elif produtoEncomenda.estado == 'A chegar' %}
+                                            <td style="font-weight: bold; color: rgb(255, 255, 0); text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
                                             {% elif produtoEncomenda.estado == "Entregue" %}
 
                                             <td style="font-weight: bold; color: green; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
                                             {% elif produtoEncomenda.estado == "Cancelado" %}
                                             
                                             <td style="font-weight: bold; color: red; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
+                                            {% elif produtoEncomenda.estado == 'A sair da Unidade de Producao' %}
+                                            <td style="font-weight: bold; color: rgb(84, 29, 95); text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>"
+                                            
+                                            
                                             {% endif %}
                                             <td>
                                                 <a href="{% url 'loja-detalhes-envio-fornecedor' username=request.user.username idUnidadeProducao=unidadeProducao   idEncomenda=produtoEncomenda.encomenda.id %}">Ver detalhes</a>
                                             </td>
-                                            
+                                            {% for idProdutoEncomendado, estaNumVeiculoPar in produtosEstaoEmVeiculos.items %}
+                                                {% if idProdutoEncomendado == produtoEncomenda.id %}
+                                                    {% if not estaNumVeiculoPar.0 %}<!--Não está num veículo-->
+                                                        {% if produtoEncomenda.estado == "Cancelado" %}
+                                                            <td>Este produto não pode ser colocado em nenhum veículo. Foi cancelado.</td>
+                                                        {% elif produtoEncomenda.estado == "Entregue" %}
+                                                            <td>O produto já foi entregue</td>
+                                                        {% elif produtoEncomenda.estado == "Em processamento" %}
+                                                            <form action="{% url 'loja-colocar-encomenda-veiculo' username=request.user.username idUnidadeProducao=unidadeProducao idProdutoEncomenda=produtoEncomenda.id %}" method="get">
+                                                                {% csrf_token %}
+                                                                <td><button type="submit" class="btn btn-info btn-sm">Adicionar a um veículo</button></td>
+                                                            </form>
+                                                        {% else %}
+                                                            <td>Nada para fazer por agora</td>
+                                                        {% endif %}
+                                                    {% else %} <!--Está num veículo-->
+                                                        {% if produtoEncomenda.estado == "Enviado" %}
+                                                            <td>
+                                                                Existem produtos no veículo {{estaNumVeiculoPar.1}} a serem entregues primeiro
+                                                            </td>
+                                                        {% elif produtoEncomenda.estado == "A chegar" %}
+                                                            <td>
+                                                                <form action="{% url 'loja-entregarEncomenda' username=request.user.username idUnidadeProducao=unidadeProducao idVeiculo=estaNumVeiculoPar.2 %}" method="post">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-info btn-sm" onclick="return confirm('Tem certeza que esta encomenda ({{produtoEncomenda.encomenda}}), com o produto ({{produtoEncomenda.produtos}}) foram entregues?')">
+                                                                        Entregar e finalizar encomenda
+                                                                    </button>
+                                                                    
+                                                                </form>
+                                                                <br>
+                                                                <p>Produto está a ser entregue no veículo {{estaNumVeiculoPar.1}}</p>
+                                                            </td>
+                                                        {% elif produtoEncomenda.estado == 'Em processamento' or produtoEncomenda.estado == 'A sair da Unidade de Producao' %}
+                                                            <td>Produto já está no veículo {{estaNumVeiculoPar.1}}</td>
+                                                        {% else %}
+                                                            <td>Nada para fazer aqui</td>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
                                         </tr>
  
 
                                     {% endfor %}
                                 </table>
                                 {% else %}
-                                <h2>Nenhuma encomenda de momento:</h2>    
+                                <p>Nenhuma encomenda de momento</p>    
                                 {% endif %}
                                 <br>
                             <div id="botaoRemoverUnidadeProducao" style="margin-top: 15px;">

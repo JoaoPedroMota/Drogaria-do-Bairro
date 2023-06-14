@@ -29,10 +29,10 @@ urlpatterns = [
     path('carrinho/', views.carrinho, name='loja-carrinho'),
     path('adicionar-ao-carrinho/<int:produto_id>/', views.adicionar_ao_carrinho, name='loja-adicionar-ao-carrinho'),
     path('remover-do-carrinho/<int:produto_id>/', views.remover_do_carrinho, name='loja-remover-do-carrinho'),
-    path('remover-produto-unidadeProducao/<int:idUnidadeProducao>/<int:idProdutoUnidadeProducao>/', views.removerAssociaoProdutoUP, name='loja-removerAssociaoProdutoUP'),
-    path('associar-produto-unidade-producao/', views.criarAssociacaoProdutoUP, name="loja-associarProdutoUP"),
+    path('<str:username>/remover-produto-unidadeProducao/<int:idUnidadeProducao>/<int:idProdutoUnidadeProducao>/', views.removerAssociaoProdutoUP, name='loja-removerAssociaoProdutoUP'),
+    path('perfil/<str:username>/associar-produto-unidade-producao/', views.criarAssociacaoProdutoUP, name="loja-associarProdutoUP"),
+    path('editar_produto_unidadeProducao/<int:idUnidadeProducao>/<int:idProdutoUnidadeProducao>/', views.editarAssociacaoProdutoUP, name='loja-editarAssociacaoProdutoUP'),
     path('perfil/<str:username>/detalhes-envio/', views.detalhesEnvio, name='loja-detalhesEnvio'),
-    path('create_order/', views.create_order, name='create_order'),
     path('checkout/', views.checkout, name='loja-checkout'),
     path('perfil/<str:username>/encomenda/<int:idEncomenda>/produtos-encomendados/', views.getProdutosEncomenda,name='loja-produtosEncomendados'),
     path('perfil/<str:username>/detalhesPorEncomenda/<int:idEncomenda>/<str:idDetalhes>/', views.verDetalhesEnvioNaEncomenda, name='loja-detalhes-por-encomenda'),
@@ -40,6 +40,10 @@ urlpatterns = [
     path('criarEncomenda/<int:idDetalhesEnvio>/', views.criarEncomenda, name='loja-criarEncomenda'),
     path('perfil/<str:username>/encomenda/<int:idEncomenda>/produtos-encomendados/<int:idProdutoEncomendado>/cancelar/<str:nomeProduto>/', views.cancelarProdutoEncomendado, name="loja-cancelarProdutosEncomendados"),
     path('perfil/<str:username>/unidadeProducao/<int:idUnidadeProducao>/encomenda/<int:idEncomenda>/detalhes-envio/', views.getDetalhesParaFornecedor, name='loja-detalhes-envio-fornecedor'),
+    path('perfil/<str:username>/unidadeProducao/<int:idUnidadeProducao>/colocarEncomendaEmVeiculo/<int:idProdutoEncomenda>/', views.colocarProdutoEmVeiculoTransporte, name="loja-colocar-encomenda-veiculo"),
+    path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/sairParaEntrega/', views.veiculoSairParaEntrega, name='loja-veiculoSairEntrega'),
+    path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/entregarEncomenda/', views.entregarEncomenda, name='loja-entregarEncomenda'),
+    path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/veiculoRegressou/', views.veiculoRegressou, name='loja-veiculoRegressou'),
 ]
 
 

@@ -1,11 +1,12 @@
 from django.forms import ModelForm, ModelChoiceField
 from django import forms
-from .models import Utilizador, Fornecedor, UnidadeProducao,Categoria , Veiculo, Produto, ProdutoUnidadeProducao, DetalhesEnvio
+from .models import *
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django_countries.widgets import CountrySelectWidget
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumbers import is_valid_number, parse as parseTelemovel
+from django.db.models import Q
 class UtilizadorFormulario(UserCreationForm):
     class Meta:
         model = Utilizador
@@ -16,9 +17,7 @@ class FornecedorFormulario(ModelForm):
     # class Meta:
     #     model = Fornecedor
     #     fields = ['descricao']
-        
-        
-        
+         
 class EditarPerfil(ModelForm):
     class Meta:
         model = Utilizador
@@ -26,6 +25,8 @@ class EditarPerfil(ModelForm):
 
 class CompletarPerfil(ModelForm):
     telemovel = PhoneNumberField(required=True)
+    first_name = forms.CharField(required=True)
+    last_name = forms.CharField(required=True)
     
     class Meta:
         model = Utilizador
@@ -45,6 +46,12 @@ class criarVeiculoFormulario(ModelForm):
         fields = ['nome', 'tipo_veiculo']
 
 class editarVeiculoFormulario(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['estado_veiculo'].choices = [
+            ('D', 'Disponível'),
+            ('I/M', 'Indisponível/Manutenção')
+        ]
     class Meta:
         model=Veiculo
         fields = ['nome', 'estado_veiculo']
@@ -60,9 +67,6 @@ class ConfirmacaoForm(forms.Form):
 class PasswordConfirmForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
     confirm_password = forms.CharField(widget=forms.PasswordInput)
-
-
-
 
 class ProdutoAPIForm(forms.ModelForm):
     categoria = ModelChoiceField(queryset=Categoria.objects.exclude(id__in=Categoria.objects.values_list('categoria_pai', flat=True).filter(categoria_pai__isnull=False)))
@@ -149,8 +153,17 @@ class ProdutoUnidadeProducaoForm(forms.ModelForm):
                 if preco_a_granel is None:
                     self.add_error("preco_a_granel", 'O preço a granel é obrigatório para produtos vendidos por peso ou volume. Preencha o campo: Preço a granel.')
 
+class editarProdutoUnidadeProducaoForm(forms.ModelForm):
+    data_producao = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
+    imagem_produto = forms.ImageField(required=False)
+    class Meta:
+        model = ProdutoUnidadeProducao
+        fields = ["descricao","stock" ,"unidade_medida", "preco_a_granel","unidade_Medida_Por_Unidade", "quantidade_por_unidade", "preco_por_unidade","data_producao","marca", "imagem_produto"]
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super(editarProdutoUnidadeProducaoForm, self).__init__(*args, **kwargs)
 
-
+    
 class DetalhesEnvioForm(forms.ModelForm):
     class Meta:
         model = DetalhesEnvio
@@ -216,7 +229,7 @@ class ConfirmarDetalhesEnvioForm(forms.ModelForm):
         utilizador = kwargs.pop('utilizador', None)
         consumidor = utilizador.consumidor
         validarNovosDetalhes=kwargs.pop('validarNovosDetalhes', None)
-        print("VALIDAR NOVOS DETALHES (init): ", validarNovosDetalhes)
+        # print("VALIDAR NOVOS DETALHES (init): ", validarNovosDetalhes)
 
         super().__init__(*args, **kwargs)
         if consumidor:
@@ -238,7 +251,7 @@ class ConfirmarDetalhesEnvioForm(forms.ModelForm):
         validarNovosDetalhes= self.initial.get('validarNovosDetalhes')
         utilizador = consumidor.utilizador
         telemovel = cleaned_data.get('telemovel') if cleaned_data.get('telemovel') is not None else None
-        print("VALIDAR NOVOS DETALHES (clean): ", validarNovosDetalhes)
+        # print("VALIDAR NOVOS DETALHES (clean): ", validarNovosDetalhes)
 
         if cleaned_data['nome'] is None or cleaned_data['nome'] == "":
             self.add_error("nome", f"Selecione um nome")
@@ -266,3 +279,21 @@ class ConfirmarDetalhesEnvioForm(forms.ModelForm):
 
 class CancelarProdutoEncomendadoForm():
     nome_produto = forms.CharField()
+    
+    
+    
+class ProdutosEncomendadosVeiculosForm(forms.ModelForm):
+    veiculo = forms.ModelChoiceField(queryset=Veiculo.objects.filter())
+    def __init__(self, *args, **kwargs):
+        idUnidadeProducao = kwargs.pop('idUnidadeProducao',)
+        super().__init__(*args, **kwargs)
+        self.fields['veiculo'].queryset = Veiculo.objects.filter(
+            Q(unidadeProducao_id=idUnidadeProducao) &
+            (
+                Q(estado_veiculo='D') | Q(estado_veiculo="C")
+            )
+            )
+
+    class Meta:
+        model = ProdutosEncomendadosVeiculos
+        fields = ['veiculo']
