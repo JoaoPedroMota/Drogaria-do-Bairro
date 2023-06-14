@@ -69,11 +69,11 @@
         
         <div class="col-lg-4 col-md-6 text-center mx-auto">
             <div class="single-product-item">
-               
+    
                 <div>
-                    
                         <div class="mais-informacao">
                             <img src="{% static produto.imagem_produto %}" alt="{{produto.produto}}" width="220" height="220">
+                            
                             {% if produto.stock < "10.00" and produto.stock > "0.00" %}
                                 <p style="font-weight: bold; color: red">Ultimas Unidades...</p>
                             {% elif produto.stock == '0.00' %}
@@ -87,6 +87,7 @@
                             <hr>
                             <p>Fornecedor: {{ produto.fornecedor }}</p>
                             <hr>
+                           
                             <p>Unidade de Produção: {{ produto.up }}</p>
                             <hr>
                             <p>Morada: {{ produto.morada }}, {{ produto.cidade }}, {{ produto.pais}}</p>
@@ -105,13 +106,87 @@
                             {% if produto.unidade_medida == 'un' %}
                             <p>Quantidade por Unidade: {{produto.quantidade_por_unidade}} {{produto.unidade_Medida_Por_Unidade}}</p>
                             {% else %}
-                            <br>
+                           
+                            {% if produto.stock < "10.00" and produto.stock > "0.00" %}
+                            <p style="font-weight: bold;" >Stock atual: {{ produto.stock }}</p>
+                            {% endif %}
                             {% endif %}
                             <hr>
                             <p>Marca: {% if produto.marca is not None %}{{ produto.marca }}{% else %}(Sem Marca/Fornecedor não especificou a marca){% endif %}</p>
                         <br>
                         </div>
+                        {% if produto.stock == '0.00' %}
+                        {% if produto.precoG == null %}
+                        <span class="preçoRange"> Por Unidade: <span class="preçoRange2">{{ produto.precoU }}€ </span> </span>
                         
+                        {% elif produto.precoU == null %}
+                            {% if produto.unidade_medida == "ml" %}
+                                <span class="preçoRange"> Por Mililitro: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
+                            {% elif produto.unidade_medida == "l" %}
+                                <span class="preçoRange"> Por Litro: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
+                            {% elif produto.unidade_medida == "g" %}
+                                <span class="preçoRange"> Por Grama: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
+                            {% elif produto.unidade_medida == "kg" %}
+                                <span class="preçoRange"> Por Kilograma: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
+                            {% endif %}
+                        {% else %}
+                        
+                        <span class="preçoRange"> Por Unidade: <span class="preçoRange2">{{ produto.precoU }}€ ||</span> </span>
+                        
+                        <span class="preçoRange">  Por Kilograma: <span class="preçoRange2">{{ produto.precoG }}€ </span> </span>
+                        
+                        {% endif %}
+                        {% if request.user.is_consumidor or not request.user.is_authenticated %}
+                        {% if produto.unidade_medida == "kg" %}
+                        
+                        <p class="container">
+                            <br>
+
+                            <input type="number" class="styled-input" step="0.5" min="0.1" max="50" placeholder="1 Kilograma" name="quantidade" onblur="atualizarNumeroComVirgula(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoG }})"disabled>
+                            <span class="preco" name="preco">{{ produto.precoG}}€</span>
+                        </p>
+                        <br>
+                       
+                        {% elif produto.unidade_medida == "un" %}
+                        <p class="container">
+                            <br>
+                            <input type="number" class="styled-input" step="1" min="1" max="50" placeholder="1 Unidade" name="quantidade" onblur="atualizarNumero(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoU }})"disabled>
+                            <span class="preco" name="preco">{{ produto.precoU }}€</span>
+                        </p>
+                        <br>
+                        
+                           
+                        {% elif produto.unidade_medida == "g" %}
+                        <p class="container">
+                            <br>
+            
+                            <input type="number" class="styled-input" step="1" min="1" max="50" placeholder="1 Grama" name="quantidade" onblur="atualizarNumero(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoG }})"disabled>
+                            <span class="preco" name="preco">{{ produto.precoG }}€</span>
+                        </p>
+                        <br>
+                       
+                            
+                        {% elif produto.unidade_medida == "l" %}
+                        <p class="container">
+                            <br>
+                            <input type="number" class="styled-input" step="1" min="1" max="50" placeholder="1 Litro" name="quantidade" onblur="atualizarNumero(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoG }})"disabled>
+                            <span class="preco" name="preco">{{ produto.precoG }}€</span>
+                        </p>
+                        <br>
+                        
+                           
+                        {% elif produto.unidade_medida == "ml" %}
+                        <p class="container">
+                            <br>
+                            <input type="number" class="styled-input" step="1" min="1" max="50" placeholder="1 Unidade" name="quantidade" onblur="atualizarNumero(this), atualizarPreco(this, {{ produto.precoU }})" oninput="atualizarPreco(this, {{ produto.precoG }})"disabled>
+                            <span class="preco" name="preco">{{ produto.precoG }}€</span>
+                        </p>
+                        <br>
+                       
+                          
+                        {% endif %}
+                        {% endif %}
+                        {% else %}
                         {% if produto.precoG == null %}
                         <span class="preçoRange"> Por Unidade: <span class="preçoRange2">{{ produto.precoU }}€ </span> </span>
                         
@@ -183,7 +258,7 @@
                             <i class="fas fa-shopping-cart"></i> Adicionado ao Carrinho</a>
                         {% endif %}
                         {% endif %}
-                        
+                        {% endif %}
                 </div>
             </div> 
         </div>

@@ -1630,6 +1630,7 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
                         valor_total=total
                     )
                     encomenda.save()
+
                     for itemCarrinho in produtos_carrinho:
                         idProdutoUP = itemCarrinho.produto.id
                         quantidade_temp = itemCarrinho.quantidade
@@ -1650,8 +1651,51 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
                         )
                         itemCarrinho.delete()
                         produto_encomenda.save()
+                    mensagem=""
+                    encomendas_cliente = Encomenda.objects.filter(consumidor=consumidor)
+                    max_id=0
+                    
+                    for encomenda in encomendas_cliente:
+                        encomendaI=int(encomenda.id)
+                        if encomendaI > max_id:
+                            max_id = encomendaI
+                    
+                    encomendaNova = Encomenda.objects.get(id=max_id)
+                    
+                    produtos_encomenda = encomendaNova.produtos.all()
+                    
+                    mensagem+="Voce recebeu uma encomenda de "+str(consumidor)+" "
+                    fornecedores={}
+                
+                    for produto_encomendado in produtos_encomenda:
+                    
+                        pd = str(produto_encomendado.produtos)
+                        produto_parts = pd.split("da", 1)[0].strip().split(":", 1)
+                        if len(produto_parts) == 2:
+                            produto = produto_parts[1].strip()
+                            up = produto_encomendado.unidadeProducao
+                            if up in fornecedores:
+                                fornecedores[up].append(produto)
+                            else:
+                                fornecedores[up] = [produto]
 
+
+                    for up, produtos in fornecedores.items():
+                        mensagem=""
+                        fornecedor = up.fornecedor
+                        notificacao = Notificacao()
+                        notificacao.fornecedor = fornecedor
+                        notificacao.consumidor = consumidor
+                        mensagem="O(s) seguinte(s) produto(s) "
+                        for produtos in produtos:
+                            mensagem+=str(produtos)+", "
+                        
+                        mensagem+="foram encomendas da sua Unidade de Produção "+str(up)
+                        notificacao.mensagem = mensagem
+                        notificacao.destinatario = "Fornecedor"
+                        notificacao.save()
                     serializar = EncomendaSerializer(encomenda, many=False)
+
                     return Response(serializar.data, status=status.HTTP_201_CREATED)
                 else:
                     # print("PRIMEIRO ELSEEEE!!!")

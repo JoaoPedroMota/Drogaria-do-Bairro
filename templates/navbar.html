@@ -67,11 +67,7 @@
               <img src="{%static 'website/assets/img/logo_123.png' %}" alt="logotipo do website" class="imagem_logo" >
             </a>
           </div>
-          <!-- logo -->
-
-          <!-- menu start -->
-          <!-- <h1>{{request.path}}</h1>
-          <h1>{{request.path}}</h1> -->
+          
           <nav class="main-menu">
             <ul>
               <li {% if request.path == "/" %}class="current-list-item"{% endif %}>
@@ -82,13 +78,13 @@
               </li>
               
              
-              <li {% if request.path|lower == "/shop/" %}class="current-list-item"{% endif %}>
+              <li {% if "/shop" in request.path|lower %}class="current-list-item"{% endif %}>
                 <a href="{% url 'loja-ver-produtos' %}">Produtos</a>
               </li>
           
               {% if request.user.is_authenticated %}
               
-              <li {% if request.path|lower == "/perfil/{{request.user.username}}/" %}class="current-list-item"{% endif %}>
+              <li {% if "/perfil" in request.path|lower %}class="current-list-item"{% endif %}>
                 <a href="#">@{{request.user.username}}</a>
                 <ul>
                   <li class="profile-link">
@@ -155,7 +151,7 @@
     <a class="mobile-hide search-bar-icon" href="#"><i class="fas fa-search"></i></a>
     <a class="notification-icon" >
       <i class="fas fa-bell"></i>
-      <span id="bolinha-vermelha">{{produtosCarrinho}}</span>
+      <span id="bolinha-vermelha"></span>
     </a>
   </div>
 </li>
