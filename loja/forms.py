@@ -229,7 +229,7 @@ class ConfirmarDetalhesEnvioForm(forms.ModelForm):
         utilizador = kwargs.pop('utilizador', None)
         consumidor = utilizador.consumidor
         validarNovosDetalhes=kwargs.pop('validarNovosDetalhes', None)
-        print("VALIDAR NOVOS DETALHES (init): ", validarNovosDetalhes)
+        # print("VALIDAR NOVOS DETALHES (init): ", validarNovosDetalhes)
 
         super().__init__(*args, **kwargs)
         if consumidor:
@@ -251,7 +251,7 @@ class ConfirmarDetalhesEnvioForm(forms.ModelForm):
         validarNovosDetalhes= self.initial.get('validarNovosDetalhes')
         utilizador = consumidor.utilizador
         telemovel = cleaned_data.get('telemovel') if cleaned_data.get('telemovel') is not None else None
-        print("VALIDAR NOVOS DETALHES (clean): ", validarNovosDetalhes)
+        # print("VALIDAR NOVOS DETALHES (clean): ", validarNovosDetalhes)
 
         if cleaned_data['nome'] is None or cleaned_data['nome'] == "":
             self.add_error("nome", f"Selecione um nome")

@@ -727,7 +727,7 @@ def unidadeProducao(request, userName, id):
         num_veiculos = len(data2)
         #print("num_veiculos",num_veiculos)
         veiculos = data2
-        print("veiculos",veiculos)
+        #print("veiculos",veiculos)
         formatted_veiculos = []
         for veiculo in veiculos:
             updated = datetime.strptime(veiculo['updated'], "%Y-%m-%dT%H:%M:%S.%f%z")
@@ -1136,9 +1136,9 @@ def carrinho(request):
                 total= Decimal(0)
                 produtos = []
                 for produto in conteudo:
-                    print("\n\n")
-                    print(produto)
-                    print("\n\n")
+                    # print("\n\n")
+                    # print(produto)
+                    # print("\n\n")
                     produtoUP = produto['produto']
                     idParaReceberNome = produtoUP['produto']
                     urlNomeProduto = f'http://127.0.0.1:8000/api/produtosID/{idParaReceberNome}/'
@@ -2249,13 +2249,13 @@ def veiculoRegressou(request, username, idUnidadeProducao, idVeiculo):
     if resposta.status_code == 200:
         conteudo = resposta.json()
         mensagem = conteudo['message']
-        print(mensagem)
+        #print(mensagem)
         messages.success(request, f"{mensagem}")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
     elif resposta.status_code == 400:
         conteudo = resposta.json()
         mensagem = conteudo['message']
-        print(mensagem)
+        #print(mensagem)
         messages.error(request, f"{mensagem}")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
     else:
