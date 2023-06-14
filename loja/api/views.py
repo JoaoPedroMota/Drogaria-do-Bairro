@@ -84,30 +84,31 @@ class UtilizadoresList(APIView):
         else:
             return Response({"details":"Não tem autorização para aceder a estes dados"}, status=status.HTTP_403_FORBIDDEN)
     def post(self, request, format=None):
-        request.data['username'] = request.data['username'].lower()
-        utilizador = UtilizadorSerializer(data=request.data)
+        data2 = request.data.copy()
+        data2['username'] = data2['username'].lower()
+        utilizador = UtilizadorSerializer(data=data2)
         with transaction.atomic():
             if utilizador.is_valid():
                 utilizador_temp = utilizador.save()
                 if utilizador_temp.tipo_utilizador == "C":
                     cons = Consumidor.objects.create(utilizador=utilizador_temp)
                     carrinho = Carrinho.objects.create(consumidor=cons)
-                    print("Sou consumidor")
+                    #print("Sou consumidor")
                 else:
 
                     Fornecedor.objects.create(utilizador=utilizador_temp)
-                    print("Sou fornecedor")
+                    #print("Sou fornecedor")
                 return Response(utilizador.data, status=status.HTTP_201_CREATED)
         return Response(utilizador.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
-@method_decorator(csrf_protect, name='dispatch')
+#@method_decorator(csrf_protect, name='dispatch')
 class UtilizadoresDetail(APIView):
     """
     Devolve, atualiza ou apaga uma instância de Utilizador
     """
-    permission_classes = [IsOwner] # , IsAuthenticated]
+    #permission_classes = [IsOwner] # , IsAuthenticated]
     def get_object(self, identifier):
         try:
             return Utilizador.objects.get(username=identifier)
@@ -115,16 +116,20 @@ class UtilizadoresDetail(APIView):
             raise Http404
     def get(self, request, username, format=None):
         utilizador = self.get_object(username)
-        serializar = UtilizadorSerializer(utilizador, many=False)
-        return Response(serializar.data)
+        if utilizador is not None:
+            serializar = UtilizadorSerializer(utilizador, many=False)
+            return Response(serializar.data)
+        return Response(stauts=status.HTTP_404_NOT_FOUND)
     
     def put(self, request, username, format=None):
         utilizador = self.get_object(username)
-        deserializar = UtilizadorSerializer(utilizador, data = request.data)
-        if deserializar.is_valid():
-            deserializar.save()
-            return Response(deserializar.data)
-        return Response(deserializar.errors, status=status.HTTP_400_BAD_REQUEST)
+        if utilizador is not None:
+            deserializar = UtilizadorSerializer(utilizador, data = request.data)
+            if deserializar.is_valid():
+                deserializar.save()
+                return Response(deserializar.data)
+            return Response(deserializar.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_404_NOT_FOUND)
     
     def delete(self,request, username, format=None):
         # if 'password' not in request.data:
@@ -133,9 +138,11 @@ class UtilizadoresDetail(APIView):
         utilizador = self.get_object(username)
         # if not check_password(password, utilizador.password):
         #     return Response("Password is incorrect", status=status.HTTP_401_UNAUTHORIZED)
-        utilizador.delete()
-        mensagem = f"Utilizador com o username '{utilizador.username}' foi apagado com sucesso!"
-        return Response(mensagem,status=status.HTTP_204_NO_CONTENT)
+        if utilizador is not None:
+            utilizador.delete()
+            mensagem = f"Utilizador com o username '{utilizador.username}' foi apagado com sucesso!"
+            return Response(mensagem,status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 class UnidadeProducaoList(APIView):
     permission_classes = [IsFornecedorOrReadOnly]
@@ -272,9 +279,10 @@ class ConsumidoresDetail(APIView):
             raise Http404
     def get(self, request, username, format=None):
         consumidor = self.get_object(username)
-        serializar = ConsumidorSerializer(consumidor, many=False)
-        return Response(serializar.data)
-
+        if consumidor is not None:
+            serializar = ConsumidorSerializer(consumidor, many=False)
+            return Response(serializar.data)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 
@@ -287,8 +295,10 @@ class FornecedoresList(APIView):
     """
     def get(self, request, format=None):
         fornecedores = Fornecedor.objects.all()
-        serializar = FornecedorSerializer(fornecedores, many=True)
-        return Response(serializar.data)
+        if fornecedores is not None:
+            serializar = FornecedorSerializer(fornecedores, many=True)
+            return Response(serializar.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 @method_decorator(csrf_protect, name='dispatch')
 class FornecedoresDetail(APIView):
@@ -1497,6 +1507,26 @@ class ProdutoEncomendasCancelarView(APIView):
                 if tempo_decorrido_desde_encomenda < prazo_cancelamento:
                     produtos_encomenda_objetos.estado = 'Cancelado'
                     produtos_encomenda_objetos.save()
+                    ## produto já cancelado
+                    
+                    #verificar estado de todos os produtos da encomenda, e atualizar o preço da encomenda
+                    encomenda = produtos_encomenda_objetos.encomenda
+                    
+                    todosProdutosDestaEncomenda = encomenda.produtos.all()
+                    canceladas = 0
+                    novo_total=0
+                    for produto in todosProdutosDestaEncomenda:
+                        if produto.estado == 'Cancelado':
+                            canceladas+=1
+                        else:
+                            novo_total+=produto.preco
+                    if canceladas==len(todosProdutosDestaEncomenda):
+                        encomenda.estado = 'Cancelado'
+                        encomenda.valor_total = 0
+                    else:
+                        encomenda.valor_total = novo_total
+                    encomenda.save()
+
                     return Response(f"{produtoUP}' encomendado, cancelado com sucesso!",status=status.HTTP_200_OK)
                 else:
                     return Response({"details":"Erro - Periodo para cancelamento de encomenda expirado! Tempo máximo de 3h para cancelar encomendas!" }, status=status.HTTP_400_BAD_REQUEST)
@@ -1572,7 +1602,7 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
         print("ANTES DO ATOMIC!!!!!!!!!!!!!!!!!")
         with transaction.atomic():
             if produtos_carrinho is not None:
-                print("EXISTEM PRODUTOS NO CARRINHO!!!!")
+                #print("EXISTEM PRODUTOS NO CARRINHO!!!!")
                 for itemCarrinho in produtos_carrinho:
                     idProdutoUP = itemCarrinho.produto.id
                     quantidade = itemCarrinho.quantidade
@@ -1582,7 +1612,7 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
                     if stock_produtos_up < quantidade:
                         produtos_sem_stock.append((produto_up, itemCarrinho.id))
                 if produtos_sem_stock != []:
-                    print("EXISTEM PRODUTOS sem stock!!!!")
+                    #print("EXISTEM PRODUTOS sem stock!!!!")
                     stringBuilder = ''
                     for par in produtos_sem_stock:
                         stringBuilder += "ERRO: O " + str(par[0]) + " com o id no carrinho " + str(
@@ -1842,6 +1872,8 @@ class ProdutosEncomendadosVeiculosList(APIView):
                 serializar.save()
                 veiculo.estado_veiculo = 'C'
                 veiculo.save()
+                produto_encomendado.estado = 'A sair da Unidade da Producao'
+                produto_encomendado.save()
                 return Response(serializar.data, status=status.HTTP_201_CREATED)
             else:
                 return Response(serializar.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -1933,10 +1965,10 @@ class VeiculoSaida(APIView):
         uni_producao = self.get_up(idUnidadeProducao)
         veiculo = self.get_veiculo(idVeiculo, uni_producao)
         produtos_encomendados_objeto = veiculo.produtos_no_veiculo.all()
-        print(produtos_encomendados_objeto)
-        print(len(produtos_encomendados_objeto))
+        # print(produtos_encomendados_objeto)
+        # print(len(produtos_encomendados_objeto))
         if veiculo is not None and len(produtos_encomendados_objeto)!=0:
-            print("ENTREI NO 1º IF")
+            # print("ENTREI NO 1º IF")
             if veiculo.estado_veiculo == 'C':
                 with transaction.atomic():
                     veiculo.estado_veiculo = "E"
@@ -2064,24 +2096,24 @@ class FazerEntrega(APIView):
                 novos_produtosEncomendaVeiculo = self.get_object(veiculo)
                 produtoEncomendo_2 = None
                 if novos_produtosEncomendaVeiculo.exists():
-                    print("PRODUTOS CARREGADOS NO CARRO:",novos_produtosEncomendaVeiculo)
+                    #print("PRODUTOS CARREGADOS NO CARRO:",novos_produtosEncomendaVeiculo)
                     novo_primeiro_da_lista = novos_produtosEncomendaVeiculo.first()
-                    print("NOVO PRIMEIRO DA LISTA:", novo_primeiro_da_lista)
+                    #print("NOVO PRIMEIRO DA LISTA:", novo_primeiro_da_lista)
                     produtoEncomendo_2 = novo_primeiro_da_lista.produto_Encomendado
                     #novo_produto_encomendado = self.get_produto_encomendado(idProdutoEncomenda)
                     produtoEncomendo_2.estado = "A chegar"
                     produtoEncomendo_2.save()
-                    print("PRODUTO ENCOMENDADO 2:", produtoEncomendo_2)
-                    print("TIPO PRODUTO ENCOMENDADO:", type(produtoEncomendo_2))
+                    #print("PRODUTO ENCOMENDADO 2:", produtoEncomendo_2)
+                    #print("TIPO PRODUTO ENCOMENDADO:", type(produtoEncomendo_2))
                 else:
                     veiculo.estado_veiculo = 'R'
                     veiculo.save()
 
                 if produtoEncomendo is not None:
-                    print("entrei!!!!")
-                    print("produtoEncomendo", produtoEncomendo)
+                    #print("entrei!!!!")
+                    #print("produtoEncomendo", produtoEncomendo)
                     encomendaGeral = produtoEncomendo.encomenda
-                    print(encomendaGeral, type(encomendaGeral))
+                    #print(encomendaGeral, type(encomendaGeral))
                     produtos_da_encomenda_geral = self.get_produtosEncomenda_por_Encomenda(encomendaGeral)
                     quantosProdutosFinalizados = 0
                     for produto in produtos_da_encomenda_geral:
@@ -2089,10 +2121,10 @@ class FazerEntrega(APIView):
                         if produto.estado == 'Entregue':
                             quantosProdutosFinalizados+=1
                     if len(produtos_da_encomenda_geral) == quantosProdutosFinalizados:
-                        print("Encomenda antes de alterar o estado", encomendaGeral)
+                        #print("Encomenda antes de alterar o estado", encomendaGeral)
                         encomendaGeral.estado = 'Entregue'
                         encomendaGeral.save()
-                        print("Encomenda depois de alterar o estado", encomendaGeral)
+                        #print("Encomenda depois de alterar o estado", encomendaGeral)
 
                 
                 
@@ -2156,27 +2188,227 @@ class VeiculoRegressou(APIView):
 
 
 
-class RelatoiroImpactoLocalAdmin(APIView):
+class RelatorioImpactoLocalAdmin(APIView):
     def get_object(self):
         try:
             return Encomenda.objects.all()
         except Encomenda.DoesNotExist:
             raise Http404
+    def get_produtosEncomendados(self, instance):
+        try:
+            return ProdutosEncomenda.objects.filter(encomenda=instance)
+        except ProdutosEncomenda.DoesNotExist:
+            raise Http404
+    def filtrar_encomendas_por_data(self, dataInicio=None, dataFim=None):
+        if dataInicio is not None and dataFim is not None:
+            print("datas fornecidas")
+            try:
+                return ProdutosEncomenda.objects.filter(created__range=(dataInicio, dataFim))
+            except ProdutosEncomenda.DoesNotExist:
+                raise Http404
+        elif dataInicio is not None and dataFim is None:
+            print("data fim none")
+            try:
+                return ProdutosEncomenda.objects.filter(created__gte=dataInicio)
+            except ProdutosEncomenda.DoesNotExist:
+                raise Http404
+        elif dataInicio is None and dataFim is not None:
+            print("data inicio none")
+            try:
+                return ProdutosEncomenda.objects.filter(created__lte=dataFim)
+            except ProdutosEncomenda.DoesNotExist:
+                raise Http404
+        else:
+            print("duas datas none")
+            try:
+                return ProdutosEncomenda.objects.all()
+            except ProdutosEncomenda.DoesNotExist:
+                raise Http404
+    
     def get(self, request, username, format=None):
         if not request.user.is_authenticated:
             return Response({"details":"Não autenticado"}, status=status.HTTP_401_UNAUTHORIZED)
         if not request.user.is_superuser:
             return Response({"detaisl":"Não autorizado"}, status=status.HTTP_403_FORBIDDEN)
-        dinheiroGastoNoSite = 0
         encomendas = self.get_object()
+        dinheiroGastoNoSite = 0
+        quantasEncomendas = encomendas.count()
+        # print(quantasEncomendas, "quantas encomendas")
+        
+        quantosProdutosEmTodasEncomendas=0
         for encomenda in encomendas:
             dinheiroGastoNoSite+= encomenda.valor_total
-            consumidor = encomenda.consumidor.utilizador # vai buscar o utilizador que é consumidor nesta encomenda
+            produtosNaEncomenda = self.get_produtosEncomendados(encomenda)
+            quantosProdutosEmTodasEncomendas += produtosNaEncomenda.count()
+            # utilizadorConsumidor = encomenda.consumidor.utilizador # vai buscar o utilizador que é consumidor nesta encomenda
+            # freguesia = utilizadorConsumidor.freguesia
+            # cidade = utilizadorConsumidor.cidade
+            # pais = utilizadorConsumidor.pais
+        
+        
+        # print("UTILIZADOR:", utilizadorConsumidor.representacao)
+        # print("DINHEIRO GASTO NO SITE: "+str(dinheiroGastoNoSite)+"€")
+        # serializar = EncomendaSerializer(encomendas, many=True)
+        # print(len(serializar.data))
+        # return Response(serializar.data, status=status.HTTP_200_OK)
+        data = {"Dinheiro Gasto no Site": dinheiroGastoNoSite, "Quantas Encomendas Efetuadas":quantasEncomendas, "Quantos Produtos Encomendados em Todas as Encomenas": quantosProdutosEmTodasEncomendas}
+        return Response(data, status=status.HTTP_200_OK)
+    
+    
+    def put(self, request, username, format=None):
+        data2 = request.data.copy()
+        dataInicio = data2['data-inicio'] if data2.get('data-inicio') is not None else None
+        dataFim = data2['data-fim'] if data2.get('data-fim') is not None else None
+        if dataFim is not None:
+            dataFim = datetime.strptime(dataFim, '%Y-%m-%d') + timedelta(days=1)
+        if dataInicio is not None:
+            dataInicio = datetime.strptime(dataInicio, '%Y-%m-%d')
+        produtosEncomendas = self.filtrar_encomendas_por_data(dataInicio=dataInicio, dataFim=dataFim)
+        impactoLocalDicio = {"freguesiasDoConsumidor":{}, "cidadesDoConsumidor":{}, "paisesDoConsumidor":""}
+        freguesiasConsumidores = {}
+        cidadeConsumidor = {}
+        paisConsumidor = {}
+        total = 0
+        total2 = 0
+        dicionarioEncomendas = {}
+        for produto in produtosEncomendas:
+            
+            # idEncomenda = produto.encomenda.id
+            # if idEncomenda in dicionarioEncomendas.keys():
+            #     valor_atual = dicionarioEncomendas[idEncomenda]
+            #     valor_atualizado = valor_atual+produto.preco
+            #     dicionarioEncomendas[idEncomenda] = valor_atualizado
+            # else:
+            #     dicionarioEncomendas[idEncomenda] = produto.preco
+            
+            total2+=produto.preco
+            ###  cenas do utilizador
+            encomenda = produto.encomenda
+            consumidor = encomenda.consumidor
+            utilizador = consumidor.utilizador
+            freguesiaConsumidor = utilizador.freguesia.upper()
+            cidadeConsumidor = utilizador.cidade.upper()
+            #cenas UP
+            unidadeProducao = produto.unidadeProducao
+            freguesiaUP = unidadeProducao.freguesia.upper()
+            cidadeUP = unidadeProducao.cidade.upper()
+            print("PRIMEIRO PRINT PREÇO-PRODUTO:", produto.preco)
+            print("SEGUNDO PRINT FREG-CONSUMIDOR:",freguesiaConsumidor)
+            print("TERCEIRO PRINT FREG-UP:",freguesiaUP)
+
+            if freguesiaConsumidor in freguesiasConsumidores.keys():
+                freguesiaUPPorFreguesiaConsumidor = freguesiasConsumidores[freguesiaConsumidor]
+                if freguesiaUP in freguesiaUPPorFreguesiaConsumidor.keys():
+                    dinheiroGasto = freguesiaUPPorFreguesiaConsumidor[freguesiaUP]
+                    print("DINHEIRO GASTO ANTES:",dinheiroGasto)
+                    print("PREÇO-PRODUTO:", produto.preco)
+                    print("TOTAL:", dinheiroGasto+produto.preco)
+                    dinheiroGasto += produto.preco
+                    print("DINHEIRO GASTO DEPPOIS:",dinheiroGasto)
+                    freguesiaUPPorFreguesiaConsumidor[freguesiaUP] = dinheiroGasto
+                else:
+                    freguesiaUPPorFreguesiaConsumidor[freguesiaUP] = produto.preco
+                freguesiasConsumidores[freguesiaConsumidor] = freguesiaUPPorFreguesiaConsumidor
+            else:
+                freguesiasConsumidores[freguesiaConsumidor] = {}
+                #freguesiaUPPorFreguesiaConsumidor
+                freguesiasConsumidores[freguesiaConsumidor][freguesiaUP] = produto.preco
+        
+            print("QUARTO PRINT FREGS-CONSUMIDORES:",freguesiasConsumidores)
+            print("-----------------------------------------------\n\n")
+        
+        
+        print(freguesiasConsumidores)
+        for dicionario in freguesiasConsumidores:
+            for valor in freguesiasConsumidores[dicionario]:
+                print(freguesiasConsumidores[dicionario][valor])
+                total += freguesiasConsumidores[dicionario][valor]
+        print(total)
+        # print(total2)
+        # total3=0
+        # print("dicionarioEncomendas:",dicionarioEncomendas)
+        # for valor in dicionarioEncomendas.values():
+        #     total3+=valor
+        # print(total3)
+
+            
+            
+
+
+            
+            
+        return Response()
+        # dicionarioLocalizacoes = {"freguesias":{}, "cidades":{}, "paises":{}}
+        # dicionarioProdutos = {}
+        # for encomenda in encomendas:
+        #     produtosDestaEncomenda = self.get_produtosEncomendados(encomenda)
+            
+        #     #### distribuicao das encomendas geograficamente
+        #     utilizadorConsumidor = encomenda.consumidor.utilizador
+        #     freguesiaConsumidor = utilizadorConsumidor.freguesia
+        #     cidadeUtilizador = utilizadorConsumidor.cidade
+        #     paisUtilizador = utilizadorConsumidor.pais
+            
+        #     encomendadoDaFreguesia = dicionarioLocalizacoes['freguesias']
+        #     encomendadoDaCidade = dicionarioLocalizacoes['cidades']
+        #     encomendadoParaPais = dicionarioLocalizacoes['paises']
+            
+            
+        #     # freguesia do Consumidor: Lumiar está nas freguesias que já fizeram encoemdnas?
+        #     if freguesiaConsumidor not in encomendadoDaFreguesia:
+        #         encomendadoDaFreguesia[freguesiaConsumidor] = {} # cria um novo dicionário para a nova freguesia
+        #         encomendadoDaFreguesia_temp = encomendadoDaFreguesia[freguesiaConsumidor]
+        #         for produto in produtosDestaEncomenda: #para todos os produtos desta encomenda
+        #             up = produto.unidadeProducao # up do produto encomendado
+        #             freguesiaUP = up.freguesia #freguesia da up de onde o produto foi encomendado
+        #             if freguesiaUP not in encomendadoDaFreguesia[freguesiaConsumidor]: # a freguesia onde a up se 
+        #                                                                             # localiza já teve encomendas 
+        #                                                                             # da freguesia do consumidor?
+        #                 encomendadoDaFreguesia_temp[freguesiaUP] = produto.preco
+        #             else:
+        #                 encomendadoDaFreguesia_temp[freguesiaUP] += produto.preco
+        #         encomendadoDaFreguesia[freguesiaConsumidor] = encomendadoDaFreguesia_temp
+        #     else:
+        #         freguesiasOndeJaSeFezEncomendas = encomendadoDaFreguesia[freguesiaConsumidor]
+        #         for produto in produtosDestaEncomenda: #para todos os produtos desta encomenda
+        #             up = produto.unidadeProducao # up do produto encomendado
+        #             freguesiaUP = up.freguesia #freguesia da up de onde o produto foi encomendado
+        #             if freguesiaUP not in freguesiasOndeJaSeFezEncomendas[freguesiaConsumidor]: # a freguesia onde a up se 
+        #                                                                             # localiza já teve encomendas 
+        #                                                                             # da freguesia do consumidor?
+        #                 encomendadoDaFreguesia_temp[freguesiaUP] = produto.preco
+        #             else:
+        #                 encomendadoDaFreguesia_temp[freguesiaUP] += produto.preco
+        #     # if cidadeUtilizador not in encomendadoDaCidade:
+        #     #     pass
+        #     # else:
+        #     #     pass
+        #     # if paisUtilizador not in encomendadoParaPais:
+        #     #     pass
+        #     # else:
+        #     #     pass
             
         
         
-        print("UTILIZADOR:", repr(consumidor))
-        print("DINHEIRO GASTO NO SITE: "+str(dinheiroGastoNoSite)+"€")
-        serializar = EncomendaSerializer(encomendas, many=True)
-        return Response(serializar.data, status=status.HTTP_200_OK)
         
+        
+        # serializar = EncomendaSerializer(encomendas, many=True)
+        
+        # return Response(serializar.data, status=status.HTTP_200_OK)
+        
+        
+        
+class RetornarNomeEncomenda(APIView):
+    permission_classes = [IsFornecedorAndOwner2]
+    def get_object(self, id):
+        try:
+            return ProdutosEncomenda.objects.get(id=id)
+        except ProdutosEncomenda.DoesNotExist:
+            raise Http404
+    def get(self, request, username, idUnidadeProducao, idEncomenda):
+        encomenda = self.get_object(idEncomenda)
+        if encomenda is not None:
+            resposta = str(encomenda)
+            return Response({"details":resposta}, status= status.HTTP_200_OK)
+        else:
+            return Response({'details':"Not found"}, status=status.HTTP_404_NOT_FOUND)

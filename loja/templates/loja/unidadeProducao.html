@@ -81,16 +81,19 @@
                                             <th>Nome</th>
                                             <th>Tipo Veículo</th>
                                             <th>Estado</th>
-                                            <th>Ação</th>
-                                            <th>Remover</th>
                                             <th>Última Atualização</th>
                                             <th>Criado a:</th>
+                                            <th>Ação</th>
+                                            <th>Remover</th>
+
                                         </tr>
                                         {% for veiculo in veiculos %}
                                         <tr>
                                             <td>{{ veiculo.nome }}</td>
                                             <td>{{ veiculo.tipo_veiculo }}</td>
                                             <td>{{ veiculo.estado_veiculo }}</td>
+                                            <td>{{ veiculo.updated }}</td>
+                                            <td>{{ veiculo.created }}</td>
                                             {% if veiculo.estado_veiculo == 'Disponível' or veiculo.estado_veiculo == 'Indisponível/Manutenção' %}
                                             <td>
                                                 <form action="{% url 'loja-editarVeiculo' userName=request.user.username id=unidadeProducao idVeiculo=veiculo.id %}" method="get">
@@ -114,8 +117,7 @@
                                                     <form action="{% url 'loja-veiculoRegressou' username=request.user.username idUnidadeProducao=unidadeProducao idVeiculo=veiculo.id %}" method="post">
                                                         {% csrf_token %}
                                                         <button type="submit" class="btn btn-info btn-sm">
-
-                                                            Veículo regressou à unidade de produção
+                                                            Confirmar regresso do veículo à Unidade de Produção
                                                         </button>
                                                     </form>
 
@@ -134,8 +136,7 @@
                                                 <td>Só pode remover um veículo Disponivel ou em Indisponivel/Manuntenção</td>
                                             {% endif %}
 
-                                            <td>{{veiculo.updated}}</td>
-                                            <td>{{veiculo.created}}</td>
+
                                         </tr>
                                         
                                         {% endfor %}
@@ -259,6 +260,10 @@
                                             {% elif produtoEncomenda.estado == "Cancelado" %}
                                             
                                             <td style="font-weight: bold; color: red; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
+                                            {% elif produtoEncomenda.estado == 'A sair da Unidade de Producao' %}
+                                            <td style="font-weight: bold; color: rgb(84, 29, 95); text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>"
+                                            
+                                            
                                             {% endif %}
                                             <td>
                                                 <a href="{% url 'loja-detalhes-envio-fornecedor' username=request.user.username idUnidadeProducao=unidadeProducao   idEncomenda=produtoEncomenda.encomenda.id %}">Ver detalhes</a>
@@ -295,7 +300,7 @@
                                                                 <br>
                                                                 <p>Produto está a ser entregue no veículo {{estaNumVeiculoPar.1}}</p>
                                                             </td>
-                                                        {% elif produtoEncomenda.estado == 'Em processamento' %}
+                                                        {% elif produtoEncomenda.estado == 'Em processamento' or produtoEncomenda.estado == 'A sair da Unidade de Producao' %}
                                                             <td>Produto já está no veículo {{estaNumVeiculoPar.1}}</td>
                                                         {% else %}
                                                             <td>Nada para fazer aqui</td>

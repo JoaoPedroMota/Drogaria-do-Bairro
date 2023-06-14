@@ -188,7 +188,7 @@ class Utilizador(AbstractUser):
 
         # Transformar a cidade em uppercase
         self.cidade = self.cidade.upper()
-
+        self.freguesia = self.freguesia.upper()
         # Chamar o método save padrão do modelo
         super().save(*args, **kwargs)
 
@@ -336,6 +336,15 @@ class UnidadeProducao(models.Model):
         
     def __str__(self):
         return self.nome
+    def save(self, *args, **kwargs):
+        # Transformar a cidade em uppercase
+        self.cidade = self.cidade.upper()
+        self.freguesia = self.freguesia.upper()
+        # Chamar o método save padrão do modelo
+        super().save(*args, **kwargs)
+    
+    
+    
     class Meta:
         verbose_name_plural = "Unidades de Producao"
         verbose_name = "Unidade de Producao"
@@ -637,7 +646,7 @@ class Carrinho(models.Model):
 
 class ProdutosCarrinho(models.Model):
     carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='produtos_carrinho')
-    produto = models.ForeignKey(ProdutoUnidadeProducao, on_delete=models.SET_NULL, null=True, blank = True)
+    produto = models.ForeignKey(ProdutoUnidadeProducao, on_delete=models.CASCADE, null=True, blank = True)
     quantidade = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank = False, default= 1)
     preco = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     precoKilo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -671,8 +680,8 @@ class Encomenda(models.Model):
 
     STATUS_CHOICES = [
         ('Em processamento', 'Em processamento'),
-        ('Enviado', 'Enviado'),
-        ('A chegar', 'A chegar'),
+        # ('Enviado', 'Enviado'),
+        # ('A chegar', 'A chegar'),
         ('Entregue', 'Entregue'),
         ('Cancelado', 'Cancelado'),
     ]
@@ -697,12 +706,13 @@ class ProdutosEncomenda(models.Model):
     precoKilo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     STATUS_CHOICES = [
         ('Em processamento', 'Em processamento'),
+        ('A sair da Unidade de Producao', 'A sair da Unidade de Producao'),
         ('Enviado', 'Enviado'),
         ('A chegar', 'A chegar'),
         ('Entregue', 'Entregue'),
         ('Cancelado', 'Cancelado'),
     ]
-    estado = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Em processamento')
+    estado = models.CharField(max_length=30, choices=STATUS_CHOICES, default='Em processamento')
     updated = models.DateTimeField(auto_now=True, null=True, blank=False)
     created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
     def __str__(self):

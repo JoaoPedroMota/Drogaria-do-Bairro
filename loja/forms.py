@@ -46,6 +46,12 @@ class criarVeiculoFormulario(ModelForm):
         fields = ['nome', 'tipo_veiculo']
 
 class editarVeiculoFormulario(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['estado_veiculo'].choices = [
+            ('D', 'Disponível'),
+            ('I/M', 'Indisponível/Manutenção')
+        ]
     class Meta:
         model=Veiculo
         fields = ['nome', 'estado_veiculo']

@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATE_DIR = os.path.join(BASE_DIR, "loja", "templates")
@@ -65,12 +66,7 @@ PHONENUMBER_DEFAULT_REGION = 'PT'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    
-    
-    
-    
     "corsheaders.middleware.CorsMiddleware",
-
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

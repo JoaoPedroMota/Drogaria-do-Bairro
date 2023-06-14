@@ -197,7 +197,7 @@ class VeiculoSerializer(ModelSerializer):
     estado_veiculo= EstadoVeiculoField()
     class Meta:
         model = Veiculo
-        fields = ['id','nome', 'unidadeProducao', 'tipo_veiculo', 'estado_veiculo']
+        fields = ['id','nome', 'unidadeProducao', 'tipo_veiculo', 'estado_veiculo', "updated", "created"]
     def create(self, validated_data):
         if 'nome' not in validated_data:
             raise ValidationError("Nome is required")

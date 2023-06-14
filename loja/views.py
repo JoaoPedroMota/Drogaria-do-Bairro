@@ -727,9 +727,16 @@ def unidadeProducao(request, userName, id):
         num_veiculos = len(data2)
         #print("num_veiculos",num_veiculos)
         veiculos = data2
-        #print("veiculos",veiculos)
-
-        
+        print("veiculos",veiculos)
+        formatted_veiculos = []
+        for veiculo in veiculos:
+            updated = datetime.strptime(veiculo['updated'], "%Y-%m-%dT%H:%M:%S.%f%z")
+            created = datetime.strptime(veiculo['created'], "%Y-%m-%dT%H:%M:%S.%f%z")
+            formatted_veiculo = veiculo.copy()
+            formatted_veiculo['updated'] = updated.strftime("%d/%m/%y às %H:%M:%S")
+            formatted_veiculo['created'] = created.strftime("%d/%m/%y às %H:%M:%S")
+            formatted_veiculos.append(formatted_veiculo)
+        veiculos = formatted_veiculos
         unidade_producao = UnidadeProducao.objects.get(id=id)
         ######produtos
         urlProdutosUP = f'http://127.0.0.1:8000/api/{userName}/fornecedor/unidadesProducao/{id}/produtos/'
@@ -1129,6 +1136,9 @@ def carrinho(request):
                 total= Decimal(0)
                 produtos = []
                 for produto in conteudo:
+                    print("\n\n")
+                    print(produto)
+                    print("\n\n")
                     produtoUP = produto['produto']
                     idParaReceberNome = produtoUP['produto']
                     urlNomeProduto = f'http://127.0.0.1:8000/api/produtosID/{idParaReceberNome}/'
@@ -2140,7 +2150,15 @@ def colocarProdutoEmVeiculoTransporte(request, username, idUnidadeProducao, idPr
     csrf_token = get_token(request)
     headers = {'X-CSRFToken':csrf_token}
     resposta = sessao.get(url, headers=headers)
+    
+    
+    
+    url2=f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/encomendas/{idProdutoEncomenda}/emString/'
     if resposta.status_code == 200:
+        resposta2 = sessao.get(url2, headers=headers)
+        if resposta2.status_code == 200:
+            conteudo = resposta2.json()
+            respostaNomeEncomenda = conteudo['details']
         if request.method == 'POST':
             formulario = ProdutosEncomendadosVeiculosForm(request.POST, idUnidadeProducao=idUnidadeProducao)
             # dicionario_mutavel = formulario.data.copy()
@@ -2162,7 +2180,7 @@ def colocarProdutoEmVeiculoTransporte(request, username, idUnidadeProducao, idPr
                     messages.error(request, f"Algo correu mal ao colocar o produto no veículo")
                     return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
             
-        context={"formulario":formulario}
+        context={"formulario":formulario, "respostaNomeEncomenda":respostaNomeEncomenda, "idUnidadeProducao":idUnidadeProducao}
         return render(request, 'loja/colocarEncomendaEmVeiculo.html', context)
     if resposta.status_code != 200 and request.method == 'GET':
         messages.error(request, f"Não tem veículos disponíveis de momento para colocar este produto.")
