@@ -70,17 +70,25 @@
           <!-- logo -->
 
           <!-- menu start -->
+          <!-- <h1>{{request.path}}</h1>
+          <h1>{{request.path}}</h1> -->
           <nav class="main-menu">
             <ul>
-              <li class="current-list-item"><a href="/">Casa</a></li>
-              <li><a href="/about">Sobre Nós</a></li>
+              <li {% if request.path == "/" %}class="current-list-item"{% endif %}>
+                <a href="/">Casa</a>
+              </li>
+              <li {% if request.path|lower == "/about/" %}class="current-list-item"{% endif %}>
+                <a href="/about">Sobre Nós</a>
+              </li>
               
              
-              <li><a href="{% url 'loja-ver-produtos' %}">Produtos</a></li>
+              <li {% if request.path|lower == "/shop/" %}class="current-list-item"{% endif %}>
+                <a href="{% url 'loja-ver-produtos' %}">Produtos</a>
+              </li>
           
               {% if request.user.is_authenticated %}
-             
-              <li>
+              
+              <li {% if request.path|lower == "/perfil/{{request.user.username}}/" %}class="current-list-item"{% endif %}>
                 <a href="#">@{{request.user.username}}</a>
                 <ul>
                   <li class="profile-link">
@@ -99,7 +107,7 @@
                 <a href="{% url 'loja-login' %}">Entrar </a>
               </li>
               {% endif %}
-              {% if not request.user.is_authenticated or request.user.is_consumidor%}
+              {% if not request.user.is_authenticated %}
               <li>
                 <div class="header-icons">
                   <a class="shopping-cart" href="{% url 'loja-carrinho' %}"><i class="fas fa-shopping-cart"></i><span id="bolinha-vermelha">{{produtosCarrinho}}</span></a>
@@ -136,6 +144,51 @@
       </div>
     </div>
   </div>
+</div>
+
+</nav>
+
+{% elif request.user.is_consumidor %}
+<li>
+  <div class="header-icons">
+    <a class="shopping-cart" href="{% url 'loja-carrinho' %}"><i class="fas fa-shopping-cart"></i><span id="bolinha-vermelha">{{produtosCarrinho}}</span></a>
+    <a class="mobile-hide search-bar-icon" href="#"><i class="fas fa-search"></i></a>
+    <a class="notification-icon" >
+      <i class="fas fa-bell"></i>
+      <span id="bolinha-vermelha">{{produtosCarrinho}}</span>
+    </a>
+  </div>
+</li>
+</ul>
+</nav>
+<a class="mobile-show search-bar-icon" href="#"><i class="fas fa-search"></i></a>
+<div class="mobile-menu"></div>
+<!-- menu end -->
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- end header -->
+
+<!-- search area -->
+<div class="search-area">
+<div class="container">
+<div class="row">
+<div class="col-lg-12">
+<span class="close-btn"><i class="fas fa-window-close"></i></span>
+<div class="search-bar">
+<div class="search-bar-tablecell">
+<h3></h3>
+<!-- <input type="text" placeholder="Keywords">
+<button type="submit">Search <i class="fas fa-search"></i></button> -->
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 
 </nav>

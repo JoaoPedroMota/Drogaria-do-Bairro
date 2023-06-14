@@ -1608,7 +1608,10 @@ def confirmarDetalhesEnvio(request):
     context = {"produtosCarrinho":produtosCarrinho} # "produtosCarrinho":produtosCarrinho
     formulario = ConfirmarDetalhesEnvioForm(utilizador=request.user, validarNovosDetalhes=False)
     # print("123")
+    # ----------------------------------
+   
     
+   
     
     url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/detalhes_envio/'
 
@@ -1839,7 +1842,52 @@ def criarEncomenda(request, idDetalhesEnvio):
 
     resposta = sessao.post(url, data=data,headers=headers)
     if resposta.status_code == 201:
-        messages.success(request, "A sua encomenda foi criada com sucesso")
+        messages.success(request, "Encomenda realizada com sucesso")
+        mensagem=""
+        encomendas_cliente = Encomenda.objects.filter(consumidor=consumidor)
+        max_id=0
+        
+        for encomenda in encomendas_cliente:
+            encomendaI=int(encomenda.id)
+            if encomendaI > max_id:
+                max_id = encomendaI
+        
+        encomendaNova = Encomenda.objects.get(id=max_id)
+        
+        produtos_encomenda = encomendaNova.produtos.all()
+        
+        mensagem+="Voce recebeu uma encomenda de "+str(consumidor)+" "
+        fornecedores={}
+    
+        for produto_encomendado in produtos_encomenda:
+        
+            pd = str(produto_encomendado.produtos)
+            produto_parts = pd.split("da", 1)[0].strip().split(":", 1)
+            if len(produto_parts) == 2:
+                produto = produto_parts[1].strip()
+                up = produto_encomendado.unidadeProducao
+                if up in fornecedores:
+                    fornecedores[up].append(produto)
+                else:
+                    fornecedores[up] = [produto]
+
+
+        for up, produtos in fornecedores.items():
+            mensagem=""
+            fornecedor = up.fornecedor
+            notificacao = Notificacao()
+            notificacao.fornecedor = fornecedor
+            notificacao.consumidor = consumidor
+            mensagem="O(s) seguinte(s) produto(s) "
+            for produtos in produtos:
+                mensagem+=str(produtos)+", "
+            
+            mensagem+="foram encomendas da sua Unidade de Produção "+str(up)
+            notificacao.mensagem = mensagem
+            notificacao.destinatario = "Fornecedor"
+            notificacao.save()
+
+
         return redirect('loja-perfil', userName=request.user.username)
     else:
         messages.error(request, "Erro - Houve um problema a criar a sua encomenda")
