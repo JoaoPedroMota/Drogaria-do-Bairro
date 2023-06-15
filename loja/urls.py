@@ -4,6 +4,7 @@ from .views import removerUnidadeProducao, removerVeiculo, criar_produto, ver_pr
 
 urlpatterns = [
     path('api/', include('loja.api.urls')),
+    path('updateCarrinho/', views.updateCarrinho, name='loja-updateCarrinho'),
     path('', views.loja, name='loja-home'),
     path('about/', views.about, name='about'),
     #path('checkout/', views.checkout, name='loja-checkout'),

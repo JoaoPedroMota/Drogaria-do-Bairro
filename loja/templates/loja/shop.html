@@ -85,15 +85,17 @@
     font-weight: bold ;
   }
   
-  .seta {
-  cursor: pointer;
-  display: inline-block;
-  transition: transform 0.3s ease-in-out;
-}
-
-.seta.rotated {
-  transform: rotate(90deg);
-}
+    .categoria {
+    margin-left: 10px;
+  }
+    .seta {
+    display: inline-block;
+    width: 10px;
+    text-align: center;
+  }
+    .rotated {
+    transform: rotate(90deg);
+  }
 </style>
 </head>
 
@@ -114,14 +116,14 @@
     </ul>
 {% endif %}
 
-{% for categoria in categoriaProduto %}
+{% for categoria in categoria %}
     {% if categoria.categoria_pai is null %}
     <div class="categoria">
         <span class="seta">></span>
         <a href="{% url 'loja-ver-produtos' %}?q={{categoria.nome}}" >{{categoria.nome}}</a>
         <ul class ="subcategorias">
             {% for subcategoria in categoriaProduto %}
-                {% if subcategoria.categoria_pai.id == categoria.id %}
+                {% if subcategoria.categoria_pai and subcategoria.categoria_pai.id == categoria.id %}
                     <li><a href="{% url 'loja-ver-produtos' %}?q={{subcategoria.nome}}" >{{subcategoria.nome}}</a></li>
                 {% endif %}
             {% endfor %}

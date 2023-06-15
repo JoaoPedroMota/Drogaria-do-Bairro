@@ -669,11 +669,10 @@ class VeiculoDetail(APIView):
         return Response(f"veiculo '{veiculo.nome}' apagado com sucesso!",status=status.HTTP_204_NO_CONTENT)
 
 
-<<<<<<< HEAD
 class VeiculoList(APIView):
     def get(self, request, idVeiculo, idFornecedor, idUnidadeProducao, format=None):
         veiculos = Veiculo.objects.all()
-        if veiculo.count() == 1:
+        if veiculos.count() == 1:
             serializar = VeiculoSerializer(veiculos, many=False)
         elif veiculos.count() > 1:
             serializar = VeiculoSerializer(veiculos, many=True)
@@ -694,34 +693,6 @@ class VeiculoList(APIView):
         return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
         
-=======
-
-
-
-
-
-
-
-
-@api_view(['GET'])
-def getVeiculos(request, username, idUnidadeProducao, format=None):
-    utilizador_temp = Utilizador.objects.get(username=username)
-    fornecedor = Fornecedor.objects.get(utilizador=utilizador_temp)
-    unidadeProducao = fornecedor.unidades_producao.get(pk=idUnidadeProducao)
-    veiculos = unidadeProducao.veiculos.all()
-    respostaDevolver = VeiculoSerializer(veiculos, many=True)
-    return Response(respostaDevolver.data)
-
-@api_view(['GET'])
-def getVeiculo(request,username, idVeiculo, idUnidadeProducao, format=None):
-    utilizador = Utilizador.objects.get(username=username)
-    fornecedor = Fornecedor.objects.get(utilizador=utilizador)
-    unidadeProducao = fornecedor.unidades_producao.get(pk=idUnidadeProducao)
-    veiculo = unidadeProducao.veiculos.get(id=idVeiculo)
-    respostaDevolver = VeiculoSerializer(veiculo, many=False)
-    return Response(respostaDevolver.data)
-
->>>>>>> main
 ########################
 
 class CarrinhoList(APIView):
