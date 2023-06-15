@@ -1,8 +1,87 @@
 {% load static %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+ $(document).ready(function() {
+  var notificationTable = $('.notification-table');
+  notificationTable.hide();
 
+  var numeroNotificacoes = localStorage.getItem('numeroNotificacoes');
+  if (numeroNotificacoes) {
+    $('#bolinha-vermelha').text(numeroNotificacoes);
+  }
+
+  $('.notification-icon').click(function() {
+    if (notificationTable.is(':visible')) {
+      notificationTable.hide();
+    } else {
+      notificationTable.show();
+      var notificationBody = notificationTable.find('.notification-body');
+      notificationBody.empty();
+      $.ajax({
+        url: '/notificacoes/{{ request.user.username }}',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+          var notifications = data.notifications;
+          for (var i = 0; i < notifications.length; i++) {
+            var notification = notifications[i];
+            var message = notification.message;
+            var notificationRow = $('<tr class="notification-row"></tr>');
+            var notificationItem = $('<td class="notification-item"></td>').text(message);
+            notificationRow.append(notificationItem);
+            notificationBody.append(notificationRow);
+            notificationBody.append($('<td class="notification-item"><br></td>'));
+          }
+
+          var novoNumeroNotificacoes = data.numeroNotificacoes;
+          $('#bolinha-vermelha').text(novoNumeroNotificacoes);
+          localStorage.setItem('numeroNotificacoes', novoNumeroNotificacoes);
+        },
+        error: function(xhr, status, error) {
+          console.log(error);
+        }
+      });
+    }
+  });
+});
+
+
+</script>
 
 <style>
+.notification-item {
+  word-wrap: break-word;
+  padding: 10px; 
+  color: yellow;
+  border-radius: 10px;
+  
+}
+.notification-table {
+  display: none;
+}
+.notification-table.visible {
+  display: block;
+}
+.header-icons {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+
  
+
+  #bolinha-vermelha {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-color: rgb(242, 129, 35);
+    color: white;
+    border-radius: 100%;
+    margin-right: 2px;
+    position: absolute;
+    top: -2px;
+    text-align: center;
+  }
 .main-menu ul li:hover > ul {
   display: block;
 }
@@ -53,7 +132,29 @@
     width: 80px;
   }
 }
-	
+.notification-container {
+  position: relative;
+}
+
+.notification-table {
+  position: absolute;
+  top: 100%;
+  left: -190%;
+  z-index: 999; 
+  background-color: rgba(241, 241, 241, 0.103);
+  color: rgba(255, 255, 255, 0.055); 
+  width: 220px;
+  border-radius: 10px; 
+
+}
+
+.notification-table.visible {
+  display: block;
+}
+.notification-row {
+  border-radius: 10px; 
+  border-color: red;
+}
 </style>
 
 <div class="top-header-area" id="sticker">
@@ -147,14 +248,34 @@
 {% elif request.user.is_consumidor %}
 <li>
   <div class="header-icons">
+    
     <a class="shopping-cart" href="{% url 'loja-carrinho' %}"><i class="fas fa-shopping-cart"></i><span id="bolinha-vermelha">{{produtosCarrinho}}</span></a>
-    <a class="mobile-hide search-bar-icon" href="#"><i class="fas fa-search"></i></a>
-    <a class="notification-icon" >
-      <i class="fas fa-bell"></i>
-      <span id="bolinha-vermelha"></span>
+    
+    <a class="mobile-hide search-bar-icon" href="#">
+      <i class="fas fa-search"></i>
     </a>
+    <div class="notification-container">
+      <!-- quando quiser acrescentar as notificacoes ao consumidor -->
+      <!-- <a class="notification-icon" href="#">
+        <i class="fas fa-bell"></i>
+        <span id="bolinha-vermelha">{{ notificacoesCount }}</span>
+      </a> -->
+      <table class="notification-table">
+        <thead>
+          <tr>
+           
+          </tr>
+        </thead>
+        <tbody class="notification-body">
+          <!-- As notificações serão adicionadas dinamicamente aqui -->
+        </tbody>
+      </table>
+    </div>
+    
+    </div>
   </div>
 </li>
+
 </ul>
 </nav>
 <a class="mobile-show search-bar-icon" href="#"><i class="fas fa-search"></i></a>
@@ -192,10 +313,31 @@
 
 <li>
   <div class="header-icons">
- 
-    <a class="mobile-hide search-bar-icon" href="#"><i class="fas fa-search"></i></a>
+    
+    <a class="mobile-hide search-bar-icon" href="#">
+      <i class="fas fa-search"></i>
+    </a>
+    <div class="notification-container">
+      <a class="notification-icon" href="#">
+        <i class="fas fa-bell"></i>
+        <span id="bolinha-vermelha">{{ numeroNotificacoes }}</span>
+      </a>
+      <table class="notification-table">
+        <thead>
+          <tr>
+           
+          </tr>
+        </thead>
+        <tbody class="notification-body">
+         
+        </tbody>
+      </table>
+    </div>
+    
+    </div>
   </div>
 </li>
+
 </ul>
 </nav>
 <a class="mobile-show search-bar-icon" href="#"><i class="fas fa-search"></i></a>
@@ -229,4 +371,6 @@
 </div>
 
 </nav>
+
 {% endif %}
+

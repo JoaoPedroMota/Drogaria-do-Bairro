@@ -1,5 +1,6 @@
 from decimal import Decimal
 from datetime import date
+from django.http import JsonResponse
 import requests
 import json
 from django.db import IntegrityError
@@ -2353,3 +2354,23 @@ def editarAssociacaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProduc
 
     context = {'formulario': form, 'produto': response_produto, 'unidade_producao': response_up}
     return render(request, 'loja/editarAssociacaoProdutoUP.html', context)
+
+
+def obterNotificacoesF(request,username):
+
+    fornecedor=str(username)
+    numero=0
+    notifications = Notificacao.objects.filter(fornecedor__utilizador__username=fornecedor, destinatario="Fornecedor")
+    notification_data = []
+    for notification in notifications:
+        numero+=1
+        notification_data.append({
+            'message': notification.mensagem,
+        
+        
+        })
+    
+
+    return JsonResponse({'notifications': notification_data,
+                         'numeroNotificacoes':numero
+                         })
