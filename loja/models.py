@@ -665,6 +665,7 @@ class Encomenda(models.Model):
 
     consumidor = models.ForeignKey(Consumidor, on_delete=models.CASCADE, null=False, related_name="encomendas")
     detalhes_envio = models.ForeignKey('DetalhesEnvio', on_delete=models.CASCADE, null=True, related_name='encomendas')
+    idCheckoutSession = models.CharField('idCheckoutSession', max_length=200, null=True)
     valor_total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     updated = models.DateTimeField(auto_now=True, null=True, blank=False)
     created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  

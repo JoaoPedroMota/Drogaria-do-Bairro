@@ -692,7 +692,7 @@ class CarrinhoDetail(APIView):
             
 
 class ProdutosCarrinhoList(APIView):
-    permission_classes = [IsConsumidorAndOwner, IsAuthenticatedOrReadOnly]
+    # permission_classes = [IsConsumidorAndOwner, IsAuthenticatedOrReadOnly]
     def get_object(self, carrinho):
         try:
             return ProdutosCarrinho.objects.filter(carrinho=carrinho)
@@ -829,7 +829,7 @@ class ProdutosCarrinhoDetailProdutoUP(APIView):
     Args:
         APIView (_type_): _description_
     """
-    permission_classes = [IsConsumidorAndOwnerOrReadOnly]
+    # permission_classes = [IsConsumidorAndOwnerOrReadOnly]
     def get_object(self, cart, idProdutoUnidadeProducao):
         try:
             return ProdutosCarrinho.objects.get(carrinho=cart, produto=idProdutoUnidadeProducao)
@@ -1112,7 +1112,7 @@ class DetalhesEnvioDetails(APIView):
         return Response({"details":"No content! Apagado com sucesso!"},status=status.HTTP_204_NO_CONTENT)
 
 class EncomendaList(APIView):
-    permission_classes = [IsConsumidorAndOwner2]
+    # permission_classes = [IsConsumidorAndOwner2]
     #permission_classes = [IsAuthenticated]
     def get_DetalhesEnvio(self, instance, pk):
         try:
@@ -1563,6 +1563,7 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
             
     def post(self, request, username, format=None):
         data2 = request.data.copy()
+
         utilizador = self.get_utilizador(username)
         consumidor = self.get_consumidor(utilizador)
         carrinho = self.get_carrinho(consumidor)
@@ -1592,12 +1593,14 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
 
                 id_detalhes_envio = data2['detalhes_envio']
                 detalhes_envio = self.get_detalhes_envio(consumidor, id_detalhes_envio)
+                idCheckoutSession = data2['idCheckoutSession']
                 if detalhes_envio is not None:
                     print("EXISTEM DETALHES ENVIO!!!!")
                     encomenda = Encomenda.objects.create(
                         consumidor=consumidor,
                         detalhes_envio=detalhes_envio,
-                        valor_total=total
+                        valor_total=total,
+                        idCheckoutSession=idCheckoutSession
                     )
                     encomenda.save()
                     for itemCarrinho in produtos_carrinho:
