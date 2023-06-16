@@ -60,7 +60,7 @@ def quantosProdutosNoCarrinho(request):
         if request.user.is_superuser:
 
             consumidor = request.user.consumidor if hasattr(request.user, 'consumidor') else None
-            fornecedor = request.user.fornecedor if hasattr(request.user, 'fornecedor') else None
+            # fornecedor = request.user.fornecedor if hasattr(request.user, 'fornecedor') else None
             if consumidor is not None:
                 sessao = requests.Session()
                 sessao.cookies.update(request.COOKIES)
@@ -72,6 +72,7 @@ def quantosProdutosNoCarrinho(request):
                     conteudo = resposta.json() if resposta.json() else 0
                 else:
                     return 0
+                
                 return len(conteudo) if len(conteudo) != 0 else 0
 
             else:
@@ -92,7 +93,6 @@ def quantosProdutosNoCarrinho(request):
         elif request.user.is_authenticated and request.user.is_fornecedor:
             return 0
     else:
-
         carrinho = request.session.get('carrinho') 
         if carrinho is not None:
 
@@ -111,6 +111,7 @@ def loja(request):
         if request.session.get('carrinho') is not None and request.session.get('carrinho') !={}:
             request.session['carrinho'] = {}
     produtosCarrinho = quantosProdutosNoCarrinho(request)
+    print(produtosCarrinho)
     if produtosCarrinho == -1:
         context={"produtosCarrinho":"E"}
     else:
@@ -456,9 +457,9 @@ def perfil(request, userName):
     pagina = 'perfil'
     produtosCarrinho = quantosProdutosNoCarrinho(request)
     context={'pagina':pagina, 'utilizadorView': utilizadorPerfil, "produtosCarrinho":produtosCarrinho}
-    if request.user.username != userName:
-        pass
-    elif request.user.is_superuser:
+    # if request.user.username != userName:
+    #     pass
+    if request.user.is_superuser:
         consumidor = utilizadorPerfil.consumidor if hasattr(utilizadorPerfil, 'consumidor') else None
         fornecedor = utilizadorPerfil.fornecedor if hasattr(utilizadorPerfil, 'fornecedor') else None
         if consumidor is not None:
@@ -488,7 +489,8 @@ def perfil(request, userName):
                 context['encomendas'] = listaEncomendas
                 context['numero_encomendas'] = len(listaEncomendas)
             except json.decoder.JSONDecodeError:
-                pass
+                print("VIM PARA AQUI!")
+                messages.error(request,"Erro ao carregar as encomendas.")
         elif fornecedor is not None:
             fornecedor = utilizadorPerfil.fornecedor
             unidadesProducao = fornecedor.unidades_producao.all()
