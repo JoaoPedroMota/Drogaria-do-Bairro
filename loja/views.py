@@ -1,5 +1,6 @@
 from decimal import Decimal
 from datetime import date
+from django.http import JsonResponse
 import requests
 import json
 from django.db import IntegrityError
@@ -1608,7 +1609,10 @@ def confirmarDetalhesEnvio(request):
     context = {"produtosCarrinho":produtosCarrinho} # "produtosCarrinho":produtosCarrinho
     formulario = ConfirmarDetalhesEnvioForm(utilizador=request.user, validarNovosDetalhes=False)
     # print("123")
+    # ----------------------------------
+   
     
+   
     
     url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/detalhes_envio/'
 
@@ -1839,7 +1843,9 @@ def criarEncomenda(request, idDetalhesEnvio):
 
     resposta = sessao.post(url, data=data,headers=headers)
     if resposta.status_code == 201:
-        messages.success(request, "A sua encomenda foi criada com sucesso")
+        messages.success(request, "Encomenda realizada com sucesso")
+    
+
         return redirect('loja-perfil', userName=request.user.username)
     else:
         messages.error(request, "Erro - Houve um problema a criar a sua encomenda")
@@ -2348,3 +2354,23 @@ def editarAssociacaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProduc
 
     context = {'formulario': form, 'produto': response_produto, 'unidade_producao': response_up}
     return render(request, 'loja/editarAssociacaoProdutoUP.html', context)
+
+
+def obterNotificacoesF(request,username):
+
+    fornecedor=str(username)
+    numero=0
+    notifications = Notificacao.objects.filter(fornecedor__utilizador__username=fornecedor, destinatario="Fornecedor")
+    notification_data = []
+    for notification in notifications:
+        numero+=1
+        notification_data.append({
+            'message': notification.mensagem,
+        
+        
+        })
+    
+
+    return JsonResponse({'notifications': notification_data,
+                         'numeroNotificacoes':numero
+                         })

@@ -628,6 +628,30 @@ class Opcao(models.Model):
         return f"{self.nome} - {self.atributos.nome}"
 
 
+
+
+
+class Notificacao(models.Model):
+    fornecedor = models.ForeignKey(Fornecedor, on_delete=models.CASCADE)
+    consumidor = models.ForeignKey(Consumidor, on_delete=models.CASCADE,null=True,blank=False)
+    data = models.DateTimeField(auto_now_add=True)
+    lido = models.BooleanField(default=False)
+    mensagem=models.CharField(max_length=1000,null=True,blank=True)
+    DESTINATARIO_CHOICES = [
+        ('Consumidor', 'Consumidor'),
+        ('Fornecedor', 'Fornecedor'),
+    ]
+    
+    destinatario = models.CharField(max_length=20, choices=DESTINATARIO_CHOICES, default='Fornecedor')
+    def __str__(self):
+        return f"{self.mensagem}"
+    class Meta:
+        verbose_name = "Notificacao"
+        verbose_name_plural = "Notificacoes"
+        ordering = ['id']
+
+
+
 #para guardar as escolhas das opçoes para cada produto criado
 class ProdutoOpcao(models.Model):
     produto = models.ForeignKey('ProdutoUnidadeProducao', on_delete=models.CASCADE, related_name='opcoes')
