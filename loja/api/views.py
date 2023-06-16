@@ -2388,10 +2388,10 @@ class RelatorioImpactoLocalAdmin(APIView):
         # for valor in dicionarioEncomendas.values():
         #     total3+=valor
         # print(total3)
-        print(dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes)
-        print(dicionarioEncomendasMesmaCidadeFreguesiaDiferente)
-        print(dicionarioEncomendasMesmaFreguesia)
-        print(total)   
+        # print(dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes)
+        # print(dicionarioEncomendasMesmaCidadeFreguesiaDiferente)
+        # print(dicionarioEncomendasMesmaFreguesia)
+ 
             
 
         dicionarioResposta = {"Freguesias Iguais":dicionarioEncomendasMesmaFreguesia, 
@@ -2400,8 +2400,8 @@ class RelatorioImpactoLocalAdmin(APIView):
                               "Mesmo Continente":dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente,
                               "Resto do mundo":dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente,
                               "Total":{"dinheiro gasto/ganho":total, "Produtos Encomendados":totalEncomendas}}
-
-            
+        print(dicionarioResposta)
+        print(total)  
         return Response(dicionarioResposta, status=status.HTTP_200_OK)
         # dicionarioLocalizacoes = {"freguesias":{}, "cidades":{}, "paises":{}}
         # dicionarioProdutos = {}
