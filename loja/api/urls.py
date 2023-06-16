@@ -31,7 +31,10 @@ urlpatterns = [
     path('<str:username>/consumidor/encomenda/<int:idEncomenda>/produtos/<int:idProdutoEncomenda>/', views.ProdutosEncomendaDetail.as_view()),
     path('<str:username>/consumidor/encomendarCarrinho/', views.EncomendarTodosOsProdutosCarrinho.as_view()),    
     path('<str:username>/consumidor/encomenda/<int:idEncomenda>/produtos/<int:idProdutoEncomenda>/cancelar/', views.ProdutoEncomendasCancelarView.as_view()),
-
+    path('<str:username>/consumidor/relatorioImpactoLocal/', views.RelatorioImpactoLocalConsumidor.as_view()),
+    
+    
+    
     # fornecedores
     path('fornecedores/', views.FornecedoresList.as_view()), # já está no swagger
     path('<str:username>/fornecedor/', views.FornecedoresDetail.as_view()),
@@ -52,7 +55,7 @@ urlpatterns = [
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/entregar/', views.FazerEntrega.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/regressou/', views.VeiculoRegressou.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/encomendas/<int:idEncomenda>/emString/', views.RetornarNomeEncomenda.as_view()),
-    
+    path('<str:username>/fornecedor/relatorioImpactoLocal/', views.RelatorioImpactoLocalFornecedor.as_view()),
     # loja
     path('categorias/', views.CategoriaList.as_view()),
     path('categorias/<int:id>/', views.CategoriaDetail.as_view()), #preciso ver isto

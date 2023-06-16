@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'rest_framework', ### para a api
     "corsheaders", #também para a api
     # 'mptt',
+    "countries_plus",
     'django_extensions',
     'django_filters',
     'rest_framework.authtoken', #Used to enable token authentication

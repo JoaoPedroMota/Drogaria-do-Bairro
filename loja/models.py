@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator
 from django.core.validators import RegexValidator
-
+from unidecode import unidecode
 
 
 
@@ -186,6 +186,9 @@ class Utilizador(AbstractUser):
         # Combinar o first_name e last_name para formar o nome completo
         self.nome = f'{self.first_name} {self.last_name}'
 
+        self.cidade = unidecode(self.cidade)
+        self.freguesia = unidecode(self.freguesia)
+        
         # Transformar a cidade em uppercase
         self.cidade = self.cidade.upper()
         self.freguesia = self.freguesia.upper()
@@ -337,6 +340,10 @@ class UnidadeProducao(models.Model):
     def __str__(self):
         return self.nome
     def save(self, *args, **kwargs):
+        
+        self.cidade = unidecode(self.cidade)
+        self.freguesia = unidecode(self.freguesia)
+        
         # Transformar a cidade em uppercase
         self.cidade = self.cidade.upper()
         self.freguesia = self.freguesia.upper()

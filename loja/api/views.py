@@ -30,10 +30,14 @@ from decimal import Decimal
 import phonenumbers
 from datetime import timedelta, datetime
 from django.utils import timezone
+from countries_plus.models import Country as pais_plus
 
-
-
-
+def get_continente_pais(pais):
+    dicionarioContinentes = {'AS':"Asia", 'EU':"Europa", 'AF':"Africa", 'OC':"Oceania", 'NA':"America Norte", 'AN':"Antartida", 'SA':"America Sul"}
+    
+    pais = pais_plus.objects.get(iso=pais)
+    continente = pais.continent
+    return dicionarioContinentes.get(continente)
 
 
 
@@ -77,12 +81,12 @@ class UtilizadoresList(APIView):
     """
     #parser_classes = (MultiPartParser, FormParser)
     def get(self, request, format=None):
-        if request.user.is_superuser:
-            utilizadores = Utilizador.objects.all()
-            serializar = UtilizadorSerializer(utilizadores, many=True)
-            return Response(serializar.data)
-        else:
-            return Response({"details":"Não tem autorização para aceder a estes dados"}, status=status.HTTP_403_FORBIDDEN)
+        #if request.user.is_superuser:
+        utilizadores = Utilizador.objects.all()
+        serializar = UtilizadorSerializer(utilizadores, many=True)
+        return Response(serializar.data)
+        # else:
+        #     return Response({"details":"Não tem autorização para aceder a estes dados"}, status=status.HTTP_403_FORBIDDEN)
     def post(self, request, format=None):
         data2 = request.data.copy()
         data2['username'] = data2['username'].lower()
@@ -2118,8 +2122,9 @@ class FazerEntrega(APIView):
                     quantosProdutosFinalizados = 0
                     for produto in produtos_da_encomenda_geral:
                         # print("PRODUTO DA ENCOMENDA GERAK:", produto)
-                        if produto.estado == 'Entregue':
+                        if produto.estado == 'Entregue' or produto.estado== "Cancelado":
                             quantosProdutosFinalizados+=1
+
                     if len(produtos_da_encomenda_geral) == quantosProdutosFinalizados:
                         #print("Encomenda antes de alterar o estado", encomendaGeral)
                         encomendaGeral.estado = 'Entregue'
@@ -2224,7 +2229,6 @@ class RelatorioImpactoLocalAdmin(APIView):
                 return ProdutosEncomenda.objects.all()
             except ProdutosEncomenda.DoesNotExist:
                 raise Http404
-    
     def get(self, request, username, format=None):
         if not request.user.is_authenticated:
             return Response({"details":"Não autenticado"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -2255,7 +2259,11 @@ class RelatorioImpactoLocalAdmin(APIView):
         return Response(data, status=status.HTTP_200_OK)
     
     
-    def put(self, request, username, format=None):
+    
+    
+    
+    
+    def put(self, request, username, format=None):        
         data2 = request.data.copy()
         dataInicio = data2['data-inicio'] if data2.get('data-inicio') is not None else None
         dataFim = data2['data-fim'] if data2.get('data-fim') is not None else None
@@ -2264,55 +2272,106 @@ class RelatorioImpactoLocalAdmin(APIView):
         if dataInicio is not None:
             dataInicio = datetime.strptime(dataInicio, '%Y-%m-%d')
         produtosEncomendas = self.filtrar_encomendas_por_data(dataInicio=dataInicio, dataFim=dataFim)
-        impactoLocalDicio = {"freguesiasDoConsumidor":{}, "cidadesDoConsumidor":{}, "paisesDoConsumidor":""}
+        #impactoLocalDicio = {"freguesiasDoConsumidor":{}, "cidadesDoConsumidor":{}, "paisesDoConsumidor":""}
         freguesiasConsumidores = {}
         cidadeConsumidor = {}
-        paisConsumidor = {}
         total = 0
-        total2 = 0
-        dicionarioEncomendas = {}
-        for produto in produtosEncomendas:
-            
-            # idEncomenda = produto.encomenda.id
-            # if idEncomenda in dicionarioEncomendas.keys():
-            #     valor_atual = dicionarioEncomendas[idEncomenda]
-            #     valor_atualizado = valor_atual+produto.preco
-            #     dicionarioEncomendas[idEncomenda] = valor_atualizado
-            # else:
-            #     dicionarioEncomendas[idEncomenda] = produto.preco
-            
-            total2+=produto.preco
-            ###  cenas do utilizador
-            encomenda = produto.encomenda
-            consumidor = encomenda.consumidor
-            utilizador = consumidor.utilizador
-            freguesiaConsumidor = utilizador.freguesia.upper()
-            cidadeConsumidor = utilizador.cidade.upper()
-            #cenas UP
-            unidadeProducao = produto.unidadeProducao
-            freguesiaUP = unidadeProducao.freguesia.upper()
-            cidadeUP = unidadeProducao.cidade.upper()
-            # print("PRIMEIRO PRINT PREÇO-PRODUTO:", produto.preco)
-            # print("SEGUNDO PRINT FREG-CONSUMIDOR:",freguesiaConsumidor)
-            # print("TERCEIRO PRINT FREG-UP:",freguesiaUP)
+        
+        
+        dicionarioEncomendasMesmaFreguesia = {}
+        dicionarioEncomendasMesmaCidadeFreguesiaDiferente = {}
+        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes = {}
+        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente = {}
+        dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
 
-            if freguesiaConsumidor in freguesiasConsumidores.keys():
-                freguesiaUPPorFreguesiaConsumidor = freguesiasConsumidores[freguesiaConsumidor]
-                if freguesiaUP in freguesiaUPPorFreguesiaConsumidor.keys():
-                    dinheiroGasto = freguesiaUPPorFreguesiaConsumidor[freguesiaUP]
-                    # print("DINHEIRO GASTO ANTES:",dinheiroGasto)
-                    # print("PREÇO-PRODUTO:", produto.preco)
-                    # print("TOTAL:", dinheiroGasto+produto.preco)
-                    dinheiroGasto += produto.preco
-                    # print("DINHEIRO GASTO DEPPOIS:",dinheiroGasto)
-                    freguesiaUPPorFreguesiaConsumidor[freguesiaUP] = dinheiroGasto
-                else:
-                    freguesiaUPPorFreguesiaConsumidor[freguesiaUP] = produto.preco
-                freguesiasConsumidores[freguesiaConsumidor] = freguesiaUPPorFreguesiaConsumidor
-            else:
-                freguesiasConsumidores[freguesiaConsumidor] = {}
-                #freguesiaUPPorFreguesiaConsumidor
-                freguesiasConsumidores[freguesiaConsumidor][freguesiaUP] = produto.preco
+        totalEncomendas = 0
+        for produto in produtosEncomendas:
+            if produto.estado != 'Cancelado':
+                totalEncomendas += 1
+                total += produto.preco
+                encomenda = produto.encomenda
+                consumidor = encomenda.consumidor
+                utilizador = consumidor.utilizador
+                freguesiaConsumidor = utilizador.freguesia.upper()
+                cidadeConsumidor = utilizador.cidade.upper()
+                paisConsumidor = utilizador.pais
+                continenteConsumidor = get_continente_pais(paisConsumidor)
+                
+                #cenas UP
+                unidadeProducao = produto.unidadeProducao
+                freguesiaUP = unidadeProducao.freguesia.upper()
+                cidadeUP = unidadeProducao.cidade.upper()
+                paisUP = unidadeProducao.pais
+                continenteUP = get_continente_pais(paisUP)
+                
+                # print("PRIMEIRO PRINT PREÇO-PRODUTO:", produto.preco)
+                # print("SEGUNDO PRINT FREG-CONSUMIDOR:",freguesiaConsumidor)
+                # print("TERCEIRO PRINT FREG-UP:",freguesiaUP)
+                
+                
+                
+                
+                if freguesiaConsumidor == freguesiaUP:
+
+                    if freguesiaConsumidor in dicionarioEncomendasMesmaFreguesia.keys():
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor]["dinheiroGasto"] += produto.preco
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor]["numeroProdutosEncomendos"] += 1
+                    else:
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor]["dinheiroGasto"] = produto.preco
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor]["numeroProdutosEncomendos"] = 1
+                
+                
+                
+                elif freguesiaConsumidor != freguesiaUP and cidadeConsumidor == cidadeUP:
+
+                    if cidadeConsumidor in dicionarioEncomendasMesmaCidadeFreguesiaDiferente.keys():
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor]["dinheiroGasto"] += produto.preco
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor]["numeroProdutosEncomendos"] += 1
+                    else:
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor]["dinheiroGasto"] = produto.preco
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor]["numeroProdutosEncomendos"] = 1
+                
+                
+                
+                elif paisConsumidor.name == paisUP.name and cidadeConsumidor != cidadeUP and freguesiaConsumidor != freguesiaUP:
+                    if paisConsumidor.name in dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes.keys():
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name]["dinheiroGasto"]+=produto.preco
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name]["numeroProdutosEncomendos"]+=1
+                    else:
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name]["dinheiroGasto"] = produto.preco
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name]["numeroProdutosEncomendos"]=1
+                elif continenteConsumidor == continenteUP and paisConsumidor.name != paisUP.name and cidadeConsumidor != cidadeUP and freguesiaConsumidor != freguesiaUP:
+                    if continenteConsumidor in dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente.keys():
+                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor]['dinheiroGasto'] += produto.preco
+                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor]['numeroProdutosEncomendos']+=1
+                    else:
+                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["dinheiroGasto"] = produto.preco
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["numeroProdutosEncomendos"]=1
+                elif continenteConsumidor != continenteUP and paisConsumidor.name != paisUP.name and cidadeConsumidor != cidadeUP and freguesiaConsumidor != freguesiaUP:
+                    dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente['dinheiroGasto']+=produto.preco
+                    dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente['numeroProdutosEncomendos']+=1
+                
+                # if freguesiaConsumidor in freguesiasConsumidores.keys():
+                #     freguesiaUPPorFreguesiaConsumidor = freguesiasConsumidores[freguesiaConsumidor]
+                #     if freguesiaUP in freguesiaUPPorFreguesiaConsumidor.keys():
+                #         dinheiroGasto = freguesiaUPPorFreguesiaConsumidor[freguesiaUP]
+                #         # print("DINHEIRO GASTO ANTES:",dinheiroGasto)
+                #         # print("PREÇO-PRODUTO:", produto.preco)
+                #         # print("TOTAL:", dinheiroGasto+produto.preco)
+                #         dinheiroGasto += produto.preco
+                #         # print("DINHEIRO GASTO DEPPOIS:",dinheiroGasto)
+                #         freguesiaUPPorFreguesiaConsumidor[freguesiaUP] = dinheiroGasto
+                #     else:
+                #         freguesiaUPPorFreguesiaConsumidor[freguesiaUP] = produto.preco
+                #     freguesiasConsumidores[freguesiaConsumidor] = freguesiaUPPorFreguesiaConsumidor
+                # else:
+                #     freguesiasConsumidores[freguesiaConsumidor] = {}
+                #     #freguesiaUPPorFreguesiaConsumidor
+                #     freguesiasConsumidores[freguesiaConsumidor][freguesiaUP] = produto.preco
         
             # print("QUARTO PRINT FREGS-CONSUMIDORES:",freguesiasConsumidores)
             # print("-----------------------------------------------\n\n")
@@ -2324,20 +2383,26 @@ class RelatorioImpactoLocalAdmin(APIView):
         #         # print(freguesiasConsumidores[dicionario][valor])
         #         total += freguesiasConsumidores[dicionario][valor]
         # print(total)
-        # print(total2)
         # total3=0
         # print("dicionarioEncomendas:",dicionarioEncomendas)
         # for valor in dicionarioEncomendas.values():
         #     total3+=valor
         # print(total3)
+        print(dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes)
+        print(dicionarioEncomendasMesmaCidadeFreguesiaDiferente)
+        print(dicionarioEncomendasMesmaFreguesia)
+        print(total)   
+            
+
+        dicionarioResposta = {"Freguesias Iguais":dicionarioEncomendasMesmaFreguesia, 
+                              "Cidades Iguais, Freguesias diferentes": dicionarioEncomendasMesmaCidadeFreguesiaDiferente,
+                              "Mesmo país, cidades diferentes": dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes,
+                              "Mesmo Continente":dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente,
+                              "Resto do mundo":dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente,
+                              "Total":{"dinheiro gasto/ganho":total, "Produtos Encomendados":totalEncomendas}}
 
             
-            
-
-
-            
-            
-        return Response()
+        return Response(dicionarioResposta, status=status.HTTP_200_OK)
         # dicionarioLocalizacoes = {"freguesias":{}, "cidades":{}, "paises":{}}
         # dicionarioProdutos = {}
         # for encomenda in encomendas:
@@ -2398,6 +2463,412 @@ class RelatorioImpactoLocalAdmin(APIView):
         
         
         
+
+
+class RelatorioImpactoLocalConsumidor(APIView):
+    permission_classes = [IsConsumidorAndOwner3]
+    def get_object(self, instance):
+        try:
+            return Encomenda.objects.filter(consumidor__utilizador=instance)
+        except Encomenda.DoesNotExist:
+            raise Http404
+    def get_produtosEncomendados(self, instance, utilizador):
+        try:
+            return ProdutosEncomenda.objects.filter((Q(encomenda=instance) & Q(encomenda__consumidor__utilizador=utilizador) ))
+        except ProdutosEncomenda.DoesNotExist:
+            raise Http404
+    def filtrar_encomendas_por_data(self, utilizador, dataInicio=None, dataFim=None):
+        if dataInicio is not None and dataFim is not None:
+            print("1")
+            try:
+                return ProdutosEncomenda.objects.filter((Q(created__range=(timezone.make_aware(dataInicio), timezone.make_aware(dataFim))) & Q(encomenda__consumidor__utilizador=utilizador)))
+            except ProdutosEncomenda.DoesNotExist:
+                raise Http404
+        elif dataInicio is not None and dataFim is None:
+            print("2")
+            try:
+                return ProdutosEncomenda.objects.filter((Q(created__gte=timezone.make_aware(dataInicio))  & Q(encomenda__consumidor__utilizador=utilizador)))
+            except ProdutosEncomenda.DoesNotExist:
+                raise Http404
+        elif dataInicio is None and dataFim is not None:
+            print("3")
+            try:
+                return ProdutosEncomenda.objects.filter((Q(created__lte=timezone.make_aware(dataFim)) & Q(encomenda__consumidor__utilizador=utilizador)))
+            except ProdutosEncomenda.DoesNotExist:
+                raise Http404
+        else:
+            print("4")
+            try:
+                return ProdutosEncomenda.objects.filter(encomenda__consumidor__utilizador=utilizador)
+            except ProdutosEncomenda.DoesNotExist:
+                raise Http404
+    
+    def get(self, request, username, format=None):
+        if not request.user.is_authenticated:
+            return Response({"details":"Não autenticado"}, status=status.HTTP_401_UNAUTHORIZED)
+        if not request.user.is_consumidor:
+            return Response({"detaisl":"Não é um consumidor"}, status=status.HTTP_403_FORBIDDEN)
+        encomendas = self.get_object(request.user)
+        dinheiroGastoNoSite = 0
+        quantasEncomendas = encomendas.count()
+        # print(quantasEncomendas, "quantas encomendas")
+        
+        quantosProdutosEmTodasEncomendas=0
+        for encomenda in encomendas:
+            dinheiroGastoNoSite+= encomenda.valor_total
+            produtosNaEncomenda = self.get_produtosEncomendados(encomenda, request.user)
+            quantosProdutosEmTodasEncomendas += produtosNaEncomenda.count()
+
+        data = {"Dinheiro Gasto no Site": dinheiroGastoNoSite, "Quantas Encomendas Efetuadas":quantasEncomendas, "Quantos Produtos Encomendados em Todas as Encomenas": quantosProdutosEmTodasEncomendas}
+        return Response(data, status=status.HTTP_200_OK)
+    
+    
+    
+    
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    
+    def put(self, request, username, format=None):        
+        data2 = request.data.copy()
+        dataInicio = data2['data-inicio'] if data2.get('data-inicio') is not None else None
+        dataFim = data2['data-fim'] if data2.get('data-fim') is not None else None
+        if dataFim is not None:
+            dataFim = datetime.strptime(dataFim, '%Y-%m-%d') + timedelta(days=1)
+        if dataInicio is not None:
+            dataInicio = datetime.strptime(dataInicio, '%Y-%m-%d')
+        utilizadorQuery = self.get_utilizador(username)
+        produtosEncomendas = self.filtrar_encomendas_por_data(utilizadorQuery,dataInicio=dataInicio, dataFim=dataFim)
+        #impactoLocalDicio = {"freguesiasDoConsumidor":{}, "cidadesDoConsumidor":{}, "paisesDoConsumidor":""}
+        total = 0
+        
+        dicionarioEncomendasMesmaFreguesia = {}
+        dicionarioEncomendasMesmaCidadeFreguesiaDiferente = {}
+        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes = {}
+        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente = {}
+        dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
+        totalEncomendas = 0
+        print(utilizadorQuery.freguesia)
+        for produto in produtosEncomendas:
+            if produto.estado != 'Cancelado':
+                totalEncomendas += 1
+                total += produto.preco
+                utilizadorEncomendas = produto.encomenda.consumidor.utilizador
+                freguesiaConsumidor = utilizadorEncomendas.freguesia.upper()
+                cidadeConsumidor = utilizadorEncomendas.cidade.upper()
+                paisConsumidor = utilizadorEncomendas.pais
+                continenteConsumidor = get_continente_pais(paisConsumidor)
+                
+                #cenas UP
+                unidadeProducao = produto.unidadeProducao
+                freguesiaUP = unidadeProducao.freguesia.upper()
+                cidadeUP = unidadeProducao.cidade.upper()
+                paisUP = unidadeProducao.pais
+                continenteUP = get_continente_pais(paisUP)
+                
+                # print("PRIMEIRO PRINT PREÇO-PRODUTO:", produto.preco)
+                # print("SEGUNDO PRINT FREG-CONSUMIDOR:",freguesiaConsumidor)
+                # print("TERCEIRO PRINT FREG-UP:",freguesiaUP)
+                
+                
+                
+                if freguesiaConsumidor == freguesiaUP:
+
+                    if freguesiaConsumidor in dicionarioEncomendasMesmaFreguesia.keys():
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor]["dinheiroGasto"] += produto.preco
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor]["numeroProdutosEncomendos"] += 1
+                    else:
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor]["dinheiroGasto"] = produto.preco
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor]["numeroProdutosEncomendos"] = 1
+                
+                
+                
+                elif freguesiaConsumidor != freguesiaUP and cidadeConsumidor == cidadeUP:
+
+                    if cidadeConsumidor in dicionarioEncomendasMesmaCidadeFreguesiaDiferente.keys():
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor]["dinheiroGasto"] += produto.preco
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor]["numeroProdutosEncomendos"] += 1
+                    else:
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor]["dinheiroGasto"] = produto.preco
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor]["numeroProdutosEncomendos"] = 1
+                
+                
+                
+                elif paisConsumidor.name == paisUP.name and cidadeConsumidor != cidadeUP and freguesiaConsumidor != freguesiaUP:
+                    if paisConsumidor.name in dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes.keys():
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name]["dinheiroGasto"]+=produto.preco
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name]["numeroProdutosEncomendos"]+=1
+                    else:
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name]["dinheiroGasto"] = produto.preco
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name]["numeroProdutosEncomendos"]=1
+                elif continenteConsumidor == continenteUP and paisConsumidor.name != paisUP.name and cidadeConsumidor != cidadeUP and freguesiaConsumidor != freguesiaUP:
+                    if continenteConsumidor in dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente.keys():
+                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor]['dinheiroGasto'] += produto.preco
+                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor]['numeroProdutosEncomendos']+=1
+                    else:
+                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["dinheiroGasto"] = produto.preco
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["numeroProdutosEncomendos"]=1
+                elif continenteConsumidor != continenteUP and paisConsumidor.name != paisUP.name and cidadeConsumidor != cidadeUP and freguesiaConsumidor != freguesiaUP:
+                    dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente['dinheiroGasto']+=produto.preco
+                    dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente['numeroProdutosEncomendos']+=1
+                # if freguesiaConsumidor in freguesiasConsumidores.keys():
+                #     freguesiaUPPorFreguesiaConsumidor = freguesiasConsumidores[freguesiaConsumidor]
+                #     if freguesiaUP in freguesiaUPPorFreguesiaConsumidor.keys():
+                #         dinheiroGasto = freguesiaUPPorFreguesiaConsumidor[freguesiaUP]
+                #         # print("DINHEIRO GASTO ANTES:",dinheiroGasto)
+                #         # print("PREÇO-PRODUTO:", produto.preco)
+                #         # print("TOTAL:", dinheiroGasto+produto.preco)
+                #         dinheiroGasto += produto.preco
+                #         # print("DINHEIRO GASTO DEPPOIS:",dinheiroGasto)
+                #         freguesiaUPPorFreguesiaConsumidor[freguesiaUP] = dinheiroGasto
+                #     else:
+                #         freguesiaUPPorFreguesiaConsumidor[freguesiaUP] = produto.preco
+                #     freguesiasConsumidores[freguesiaConsumidor] = freguesiaUPPorFreguesiaConsumidor
+                # else:
+                #     freguesiasConsumidores[freguesiaConsumidor] = {}
+                #     #freguesiaUPPorFreguesiaConsumidor
+                #     freguesiasConsumidores[freguesiaConsumidor][freguesiaUP] = produto.preco
+        
+            # print("QUARTO PRINT FREGS-CONSUMIDORES:",freguesiasConsumidores)
+            # print("-----------------------------------------------\n\n")
+        
+        
+
+        # print(dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes)
+        # print(dicionarioEncomendasMesmaCidadeFreguesiaDiferente)
+        # print(dicionarioEncomendasMesmaFreguesia)
+        # print(total)
+        
+        dicionarioResposta = {"Freguesias Iguais":dicionarioEncomendasMesmaFreguesia, 
+                              "Cidades Iguais, Freguesias diferentes": dicionarioEncomendasMesmaCidadeFreguesiaDiferente,
+                              "Mesmo país, cidades diferentes": dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes,
+                              "Mesmo Continente":dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente,
+                              "Resto do mundo":dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente,
+                              "Total":{"dinheiro gasto/ganho":total, "Produtos Encomendados":totalEncomendas}}
+        return Response(dicionarioResposta,status=status.HTTP_200_OK)
+
+        
+        
+        
+
+
+
+class RelatorioImpactoLocalFornecedor(APIView):
+    permission_classes = [IsFornecedorAndOwner3]
+    def get_object(self, utilizador):
+        try:
+            return ProdutosEncomenda.objects.filter(unidadeProducao__fornecedor__utilizador=utilizador)
+        except Encomenda.DoesNotExist:
+            raise Http404
+    def get_produtosEncomendados(self, instance, utilizador):
+        try:
+            return ProdutosEncomenda.objects.filter((Q(encomenda=instance) & Q(unidadeProducao__fornecedor__utilizador=utilizador) ))
+        except ProdutosEncomenda.DoesNotExist:
+            raise Http404
+    def filtrar_encomendas_por_data(self, utilizador, dataInicio=None, dataFim=None):
+        if dataInicio is not None and dataFim is not None:
+            print("1")
+            try:
+                return ProdutosEncomenda.objects.filter((Q(created__range=(timezone.make_aware(dataInicio), timezone.make_aware(dataFim))) & Q(unidadeProducao__fornecedor__utilizador=utilizador)))
+            except ProdutosEncomenda.DoesNotExist:
+                raise Http404
+        elif dataInicio is not None and dataFim is None:
+            print("2")
+            try:
+                return ProdutosEncomenda.objects.filter((Q(created__gte=timezone.make_aware(dataInicio))  & Q(unidadeProducao__fornecedor__utilizador=utilizador)))
+            except ProdutosEncomenda.DoesNotExist:
+                raise Http404
+        elif dataInicio is None and dataFim is not None:
+            print("3")
+            try:
+                return ProdutosEncomenda.objects.filter((Q(created__lte=timezone.make_aware(dataFim)) & Q(unidadeProducao__fornecedor__utilizador=utilizador)))
+            except ProdutosEncomenda.DoesNotExist:
+                raise Http404
+        else:
+            print("4")
+            try:
+                return ProdutosEncomenda.objects.filter(unidadeProducao__fornecedor__utilizador=utilizador)
+            except ProdutosEncomenda.DoesNotExist:
+                raise Http404
+    
+    def get(self, request, username, format=None):
+        if not request.user.is_authenticated:
+            return Response({"details":"Não autenticado"}, status=status.HTTP_401_UNAUTHORIZED)
+        if not request.user.is_fornecedor:
+            return Response({"detaisl":"Não é um consumidor"}, status=status.HTTP_403_FORBIDDEN)
+        produtosEncomendas = self.get_object(request.user)
+        dinheiroGastoNoSite = 0
+        quantasEncomendas = produtosEncomendas.count()
+        # print(quantasEncomendas, "quantas encomendas")
+        
+
+        for produto in produtosEncomendas:
+            dinheiroGastoNoSite+= produto.preco
+
+
+        data = {"Dinheiro Gasto no Site": dinheiroGastoNoSite, "Quantas Encomendas Efetuadas":quantasEncomendas}
+        return Response(data, status=status.HTTP_200_OK)
+    
+    def get_utilizador(self, username):
+        try:
+            return Utilizador.objects.get(username=username)
+        except Utilizador.DoesNotExist:
+            raise Http404
+    
+    def put(self, request, username, format=None):        
+        data2 = request.data.copy()
+        dataInicio = data2['data-inicio'] if data2.get('data-inicio') is not None else None
+        dataFim = data2['data-fim'] if data2.get('data-fim') is not None else None
+        if dataFim is not None:
+            dataFim = datetime.strptime(dataFim, '%Y-%m-%d') + timedelta(days=1)
+        if dataInicio is not None:
+            dataInicio = datetime.strptime(dataInicio, '%Y-%m-%d')
+        
+        utilizadorParaQuery = self.get_utilizador(username)
+        produtosEncomendas = self.filtrar_encomendas_por_data(utilizadorParaQuery,dataInicio=dataInicio, dataFim=dataFim)
+        # for p in produtosEncomendas:
+        #     print("Produto Encomendado:",p)
+        #     print("Fornecedor:",p.unidadeProducao.fornecedor)
+        #     print("CIDADE UP:", p.unidadeProducao.cidade)
+        #     print("FREGUESIA UP:",p.unidadeProducao.freguesia)
+        #     print("PAÍS UP:", p.unidadeProducao.pais)
+        #     print("##################")
+        #     print("ESTADO:", p.estado)
+        #     print("##################")
+        #     print("CONSUMDIOR:",p.encomenda.consumidor)
+        #     print("CIDADE USER:", p.encomenda.consumidor.utilizador.cidade)
+        #     print("FREGUESIA USER:",p.encomenda.consumidor.utilizador.freguesia)
+        #     print("PAÍS USER:", p.encomenda.consumidor.utilizador.pais)        
+        #     print("####################################")
+        #impactoLocalDicio = {"freguesiasDoConsumidor":{}, "cidadesDoConsumidor":{}, "paisesDoConsumidor":""}
+        total = 0
+        
+        
+        dicionarioEncomendasMesmaFreguesia = {}
+        dicionarioEncomendasMesmaCidadeFreguesiaDiferente = {}
+        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes = {}
+        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente = {}
+        dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
+        totalEncomendas = 0
+        for produto in produtosEncomendas:
+            if produto.estado != 'Cancelado':
+                totalEncomendas += 1 
+                total += produto.preco
+                utilizadorEncomenda = produto.encomenda.consumidor.utilizador
+                freguesiaConsumidor = utilizadorEncomenda.freguesia.upper()
+                cidadeConsumidor = utilizadorEncomenda.cidade.upper()
+                paisConsumidor = utilizadorEncomenda.pais
+                continenteConsumidor = get_continente_pais(paisConsumidor)
+                
+                #cenas UP
+                unidadeProducao = produto.unidadeProducao
+                freguesiaUP = unidadeProducao.freguesia.upper()
+                cidadeUP = unidadeProducao.cidade.upper()
+                paisUP = unidadeProducao.pais
+                continenteUP = get_continente_pais(paisUP)
+
+
+                
+                # print("PRIMEIRO PRINT PREÇO-PRODUTO:", produto.preco)
+                # print("SEGUNDO PRINT FREG-CONSUMIDOR:",freguesiaConsumidor)
+                # print("TERCEIRO PRINT FREG-UP:",freguesiaUP)
+
+
+                if freguesiaConsumidor == freguesiaUP:
+
+                    if freguesiaConsumidor in dicionarioEncomendasMesmaFreguesia.keys():
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor]["dinheiroGasto"] += produto.preco
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor]["numeroProdutosEncomendos"] += 1
+                    else:
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor]["dinheiroGasto"] = produto.preco
+                        dicionarioEncomendasMesmaFreguesia[freguesiaConsumidor]["numeroProdutosEncomendos"] = 1
+                
+                
+
+                if cidadeConsumidor == cidadeUP and freguesiaConsumidor != freguesiaUP:
+                    if cidadeConsumidor in dicionarioEncomendasMesmaCidadeFreguesiaDiferente.keys():
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor]["dinheiroGasto"] += produto.preco
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor]["numeroProdutosEncomendos"] += 1
+                    else:
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor]["dinheiroGasto"] = produto.preco
+                        dicionarioEncomendasMesmaCidadeFreguesiaDiferente[cidadeConsumidor]["numeroProdutosEncomendos"] = 1
+                
+                # print("paisConsumidor.name==paisUP.name:",paisConsumidor.name==paisUP.name,"cidadeConsumidor != cidadeUP:", cidadeConsumidor != cidadeUP,"freguesiaConsumidor != freguesiaUP:", freguesiaConsumidor != freguesiaUP)
+                # print("-----------------------")
+                
+                if paisConsumidor.name == paisUP.name and cidadeConsumidor != cidadeUP and freguesiaConsumidor != freguesiaUP:
+                    # print("USER:",paisConsumidor,"----","UP:",paisUP)
+                    # print("USER:",cidadeConsumidor,"----","UP:",cidadeUP)
+                    # print("USER:",freguesiaConsumidor,"----","UP:",freguesiaUP)
+                    # print("////////////////////////////")
+                    if paisConsumidor.name in dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes.keys():
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name]["dinheiroGasto"]+=produto.preco
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name]["numeroProdutosEncomendos"]+=1
+                    else:
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name]["dinheiroGasto"] = produto.preco
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name]["numeroProdutosEncomendos"]=1
+                if continenteConsumidor == continenteUP and paisConsumidor.name != paisUP.name and cidadeConsumidor != cidadeUP and freguesiaConsumidor != freguesiaUP:
+                    if continenteConsumidor in dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente.keys():
+                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor]['dinheiroGasto'] += produto.preco
+                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor]['numeroProdutosEncomendos']+=1
+                    else:
+                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["dinheiroGasto"] = produto.preco
+                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["numeroProdutosEncomendos"]=1
+                if continenteConsumidor != continenteUP and paisConsumidor.name != paisUP.name and cidadeConsumidor != cidadeUP and freguesiaConsumidor != freguesiaUP:
+                    dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente['dinheiroGasto']+=produto.preco
+                    dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente['numeroProdutosEncomendos']+=1
+                
+                # if freguesiaConsumidor in freguesiasConsumidores.keys():
+                #     freguesiaUPPorFreguesiaConsumidor = freguesiasConsumidores[freguesiaConsumidor]
+                #     if freguesiaUP in freguesiaUPPorFreguesiaConsumidor.keys():
+                #         dinheiroGasto = freguesiaUPPorFreguesiaConsumidor[freguesiaUP]
+                #         # print("DINHEIRO GASTO ANTES:",dinheiroGasto)
+                #         # print("PREÇO-PRODUTO:", produto.preco)
+                #         # print("TOTAL:", dinheiroGasto+produto.preco)
+                #         dinheiroGasto += produto.preco
+                #         # print("DINHEIRO GASTO DEPPOIS:",dinheiroGasto)
+                #         freguesiaUPPorFreguesiaConsumidor[freguesiaUP] = dinheiroGasto
+                #     else:
+                #         freguesiaUPPorFreguesiaConsumidor[freguesiaUP] = produto.preco
+                #     freguesiasConsumidores[freguesiaConsumidor] = freguesiaUPPorFreguesiaConsumidor
+                # else:
+                #     freguesiasConsumidores[freguesiaConsumidor] = {}
+                #     #freguesiaUPPorFreguesiaConsumidor
+                #     freguesiasConsumidores[freguesiaConsumidor][freguesiaUP] = produto.preco
+        
+            # print("QUARTO PRINT FREGS-CONSUMIDORES:",freguesiasConsumidores)
+            # print("-----------------------------------------------\n\n")
+        
+        
+
+        # print(dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes)
+        # print(dicionarioEncomendasMesmaCidadeFreguesiaDiferente)
+        # print(dicionarioEncomendasMesmaFreguesia)
+        print(total)   
+        dicionarioResposta = {"Freguesias Iguais":dicionarioEncomendasMesmaFreguesia, 
+                              "Cidades Iguais, Freguesias diferentes": dicionarioEncomendasMesmaCidadeFreguesiaDiferente,
+                              "Mesmo país, cidades diferentes": dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes,
+                              "Mesmo Continente":dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente,
+                              "Resto do mundo":dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente,
+                              "Total":{"dinheiro gasto/ganho":total, "Produtos Encomendados":totalEncomendas}}
+
+          
+            
+        return Response(dicionarioResposta,status=status.HTTP_200_OK)
+
+
+
+
 class RetornarNomeEncomenda(APIView):
     permission_classes = [IsFornecedorAndOwner2]
     def get_object(self, id):
