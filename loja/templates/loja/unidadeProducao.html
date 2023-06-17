@@ -268,7 +268,7 @@
                                             
                                             {% endif %}
                                             <td>
-                                                <a href="{% url 'loja-detalhes-envio-fornecedor' username=request.user.username idUnidadeProducao=unidadeProducao   idEncomenda=produtoEncomenda.encomenda.id %}">Ver detalhes</a>
+                                                <a href="{% url 'loja-detalhes-envio-fornecedor' idProdutoEncomendado=produtoEncomenda.id username=request.user.username idUnidadeProducao=unidadeProducao   idEncomenda=produtoEncomenda.encomenda.id %}">Ver detalhes</a>
                                             </td>
                                             {% for idProdutoEncomendado, estaNumVeiculoPar in produtosEstaoEmVeiculos.items %}
                                                 {% if idProdutoEncomendado == produtoEncomenda.id %}
@@ -339,7 +339,7 @@
                                     <title>arrow-left</title>
                                     <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
                                     </svg>
-                                    <h6>Voltar</h6>
+                                    <h6 class="voltar">Voltar</h6>
                                 </div>
                             </a>
                         </div>

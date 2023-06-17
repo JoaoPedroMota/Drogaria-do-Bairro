@@ -458,7 +458,7 @@ def perfil(request, userName):
     produtosCarrinho = quantosProdutosNoCarrinho(request)
     context={'pagina':pagina, 'utilizadorView': utilizadorPerfil, "produtosCarrinho":produtosCarrinho}
     # if request.user.username != userName:
-    #     pass
+    #     print("entreiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
     if request.user.is_superuser:
         consumidor = utilizadorPerfil.consumidor if hasattr(utilizadorPerfil, 'consumidor') else None
         fornecedor = utilizadorPerfil.fornecedor if hasattr(utilizadorPerfil, 'fornecedor') else None
@@ -498,13 +498,13 @@ def perfil(request, userName):
             context['numero_up'] = numero_up
         else:
             pass
-    elif utilizadorPerfil.is_fornecedor:
+    elif utilizadorPerfil.is_fornecedor and utilizadorPerfil.username==request.user.username:
         fornecedor = utilizadorPerfil.fornecedor
         unidadesProducao = fornecedor.unidades_producao.all()
         numero_up = unidadesProducao.count()
         context['unidadesProducao'] = unidadesProducao
         context['numero_up'] = numero_up
-    elif utilizadorPerfil.is_consumidor:
+    elif utilizadorPerfil.is_consumidor and utilizadorPerfil.username==request.user.username:
         consumidor = utilizadorPerfil.consumidor
         
         
@@ -2097,7 +2097,10 @@ def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
     headers = {'X-CSRFToken':csrf_token}
     resposta = sessao.get(url, headers=headers)
     resposta_2 = sessao.get(url2, headers=headers)
-    context = {} 
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    
+
+    
     try:
         conteudo = resposta.json()
         nome = conteudo['nome']
@@ -2118,16 +2121,18 @@ def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
         index_encomenda = lista_invertida.index(encomenda_dicio)
         index_encomenda+=1
         print(index_encomenda)
+
         info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega}]
     except json.decoder.JSONDecodeError:
         messages.error(request,f"Não foi possível carregar/ler os detalhes de envio da encomenda {idEncomenda}")
-    context = {"infos":info_detalhes_envio, "encomenda_nr":index_encomenda}
+    context = {"infos":info_detalhes_envio, "idEncomenda":index_encomenda, "produtosCarrinho":produtosCarrinho  }
     return render(request, 'loja/infos_detalhes.html', context)
 
 
 
 @fornecedor_required
-def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao):
+def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao,idProdutoEncomendado):
+    
     if request.user.username != username:
         return redirect('loja-perfil', userName=request.user.username)
     
@@ -2137,7 +2142,9 @@ def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao):
     csrf_token = get_token(request)
     headers = {'X-CSRFToken':csrf_token}
     resposta = sessao.get(url, headers=headers)
+    
     try:
+        
         conteudo = resposta.json()
         nome = conteudo['nome']
         morada = f"{conteudo['morada']}, {conteudo['cidade']}, {conteudo['pais']}"
@@ -2145,7 +2152,7 @@ def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao):
         email = conteudo['email']
         instrucoes_entrega = conteudo['instrucoes_entrega']
         
-        info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega}]
+        info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega,"idEncomenda":idProdutoEncomendado}]
         context = {"infos":info_detalhes_envio}
         return render(request, 'loja/infos_detalhes.html', context)
     except json.decoder.JSONDecodeError:
@@ -2392,6 +2399,7 @@ def obterNotificacoesF(request,username):
     
 @login_required(login_url='loja-login')
 def relarioImpactoLocal(request, username):
+    context = {}
     if username != request.user.username:
         return redirect('loja-perfil', userName=request.user.username)
     consumidor = request.user.consumidor if hasattr(request.user, "consumidor") else None
@@ -2399,6 +2407,8 @@ def relarioImpactoLocal(request, username):
     if request.user.is_superuser:
         url = f'http://127.0.0.1:8000/api/{request.user.username}/relatorioImpactoLocal'
     elif consumidor is not None:
+        produtosCarrinho = quantosProdutosNoCarrinho(request)
+        context['produtosCarrinho']=produtosCarrinho
         url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/relatorioImpactoLocal'
     elif fornecedor is not None:
         url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/relatorioImpactoLocal'
@@ -2428,7 +2438,7 @@ def relarioImpactoLocal(request, username):
             return redirect("loja-perfil", userName=request.user.username)
         # verificar se é nessário tratar os dados consoante o tipo de utilizador. 
         # principalmente para super users e fornecedores
-        # dicionarioDadosImpactoLocal = {}
+        # context['dicionarioDadosImpactoLocal'] = conteudoModificado
         #return Response(request,'impactoLocal.html'. context=dicionarioDadosImpactoLocal)
     else:
         messages.error(request,"ERRO - Houve um erro a executar o pedido do relatório de impacto local.")
