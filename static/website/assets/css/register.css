@@ -38,6 +38,77 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
     border-spacing: 0;
   }
   
+
+  .centered-inputEstado {
+    display: block !important;
+    margin: 0 auto !important;
+    
+    
+}
+.centered-inputNome {
+    display: block;
+    margin: 0 auto; 
+    padding: 11.52px !important;
+    
+}
+
+  .centered-inputEstado {
+    display: block;
+    margin: 0 auto;
+    
+    
+  }
+  .centered-inputNome {
+    display: block;
+    margin: 0 auto; 
+    padding: 11.52px !important;
+    
+}
+  .voltar{
+    color:#ff9035 !important;
+    font-weight: bold;
+  }
+  
+  .layout__boxTitle {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  }
+  
+  .layout__boxTitle svg {
+  width: 36px;
+  height: 36px;
+  margin-right: 5px;
+  background-color: white;
+  
+  border-radius: 50%;
+  padding: 5px;
+  }
+  .layout__boxTitle svg {
+  width: 36px;
+  height: 36px;
+  margin-right: 5px;
+  background-color: white;
+  
+  border-radius: 50%;
+  padding: 5px;
+  }
+  .layout__boxTitle svg:hover {
+  width: 40px;
+  height: 40px;
+  margin-right: 5px;
+  background-color: white;
+  
+  border-radius: 50%;
+  padding: 5px;
+  }
+  
+  .layout__boxTitle h6 {
+  font-weight: bold;
+  color: black;
+  }
+
+
   /*-- start editing from here --*/
   a {
     text-decoration: none;

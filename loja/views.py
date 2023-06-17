@@ -2089,15 +2089,16 @@ def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
         return redirect('loja-perfil', userName=request.user.username)
     idDetalhes = int(idDetalhes)
     url = f'http://127.0.0.1:8000/api/{username}/consumidor/detalhes_envio/{idDetalhes}'
-    url2 = f'http://127.0.0.1:8000/api/{username}/consumidor/encomenda/'
+    # url2 = f'http://127.0.0.1:8000/api/{username}/consumidor/encomenda/'
     
     sessao = requests.Session()
     sessao.cookies.update(request.COOKIES)
     csrf_token = get_token(request)
     headers = {'X-CSRFToken':csrf_token}
     resposta = sessao.get(url, headers=headers)
-    resposta_2 = sessao.get(url2, headers=headers)
+    # resposta_2 = sessao.get(url2, headers=headers)
     context = {} 
+    
     try:
         conteudo = resposta.json()
         nome = conteudo['nome']
@@ -2106,26 +2107,27 @@ def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
         email = conteudo['email']
         instrucoes_entrega = conteudo['instrucoes_entrega']
         ####################
-        conteudo_2 = resposta_2.json()
-        encomenda_dicio = {}
-        for encomenda in conteudo_2:
-            if encomenda['id'] == idEncomenda:
-                encomenda_dicio = encomenda
-                break
-        index_encomenda = conteudo_2.index(encomenda_dicio)
-        index_encomenda+=1
+        # conteudo_2 = resposta_2.json()
+        # encomenda_dicio = {}
+        # for encomenda in conteudo_2:
+        #     if encomenda['id'] == idEncomenda:
+        #         encomenda_dicio = encomenda
+        #         break
+        # index_encomenda = conteudo_2.index(encomenda_dicio)
+        # index_encomenda+=1
         
         
         info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega}]
     except json.decoder.JSONDecodeError:
         messages.error(request,f"Não foi possível carregar/ler os detalhes de envio da encomenda {idEncomenda}")
-    context = {"infos":info_detalhes_envio, "encomenda_nr":index_encomenda}
+    context = {"infos":info_detalhes_envio, "idEncomenda":idEncomenda}
     return render(request, 'loja/infos_detalhes.html', context)
 
 
 
 @fornecedor_required
-def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao):
+def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao,idProdutoEncomendado):
+    
     if request.user.username != username:
         return redirect('loja-perfil', userName=request.user.username)
     
@@ -2135,7 +2137,9 @@ def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao):
     csrf_token = get_token(request)
     headers = {'X-CSRFToken':csrf_token}
     resposta = sessao.get(url, headers=headers)
+    
     try:
+        
         conteudo = resposta.json()
         nome = conteudo['nome']
         morada = f"{conteudo['morada']}, {conteudo['cidade']}, {conteudo['pais']}"
@@ -2143,7 +2147,7 @@ def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao):
         email = conteudo['email']
         instrucoes_entrega = conteudo['instrucoes_entrega']
         
-        info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega}]
+        info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega,"idEncomenda":idProdutoEncomendado}]
         context = {"infos":info_detalhes_envio}
         return render(request, 'loja/infos_detalhes.html', context)
     except json.decoder.JSONDecodeError:
