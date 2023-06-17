@@ -221,10 +221,10 @@ def checkout(request):
         #Caso haja produtos sem stock     
         if len(lista)!=0:
             if "Sem produtos no carrinho" in lista:
-                messages.error(request,"Erro - Ainda não tem produtos no carrinho")
+                messages.error(request,f"Erro - Ainda não tem produtos no carrinho")
             else:
                 for produto in lista:
-                    messages.error(request, 'Erro: O Item '+str(int(float(produto[0])+1))+' não tem stock suficiente para a quantidade pedida, o stock atual é '+produto[1])
+                    messages.error(request, f'Erro: O Item '+str(int(float(produto[0])+1))+' não tem stock suficiente para a quantidade pedida, o stock atual é '+produto[1])
 
             return redirect('loja-carrinho')
         
@@ -346,12 +346,12 @@ def formFornecedor(request):
             )
             return redirect('loja-home')
         else:
-            messages.error(request,'Ocorreu um erro durante o processo de registo')
+            messages.error(request,f'Ocorreu um erro durante o processo de registo')
     context = {'form':form}
     return render(request,'loja/register_fornecedor.html' ,context)
 
 @login_required(login_url='loja-login')
-def editarPerfil(request):
+def editarPerfil(request, username):
     pagina = 'editarPerfil'
     utilizador = request.user
     form = EditarPerfil(instance=utilizador)
@@ -424,7 +424,7 @@ def apagarConta(request, pk):
             utilizador.delete()
             return redirect('loja-home')
         else:
-            messages.error(request, 'Senha incorreta. A conta não foi excluída.')
+            messages.error(request, f'Senha incorreta. A conta não foi excluída.')
 
     context = {'objeto': utilizador, 'pagina': 'apagar-conta'}
     return render(request, 'loja/delete.html', context)
@@ -489,8 +489,7 @@ def perfil(request, userName):
                 context['encomendas'] = listaEncomendas
                 context['numero_encomendas'] = len(listaEncomendas)
             except json.decoder.JSONDecodeError:
-                print("VIM PARA AQUI!")
-                messages.error(request,"Erro ao carregar as encomendas.")
+                messages.error(request,f"Erro ao carregar as encomendas.")
         elif fornecedor is not None:
             fornecedor = utilizadorPerfil.fornecedor
             unidadesProducao = fornecedor.unidades_producao.all()
@@ -536,7 +535,7 @@ def perfil(request, userName):
             context['encomendas'] = listaEncomendas
             context['numero_encomendas'] = len(listaEncomendas)
         except json.decoder.JSONDecodeError:
-            pass
+            messages.error(request,f"Erro ao carregar as encomendas.")
     else:
         context['outro'] = 'Outro'
     return render(request,'loja/perfil.html',context)
@@ -566,7 +565,7 @@ def criarUP(request, userName):
                 link = reverse('loja-perfil', args=[request.user.username])
                 return redirect(link)
             else:
-                messages.error(request,'Ocorreu um erro durante o processo de adição de uma Unidade de Produção')
+                messages.error(request,f'Ocorreu um erro durante o processo de adição de uma Unidade de Produção')
     else:
         return HttpResponseForbidden()
     
@@ -816,7 +815,7 @@ def editarUnidadeProducao(request, userName, id):
                 link = reverse('loja-perfil', args=[userName])
                 return redirect(link)
             else:
-                messages.error(request,'Ocorreu um erro durante o processo de edição de uma unidade de produção')
+                messages.error(request,f'Ocorreu um erro durante o processo de edição de uma unidade de produção')
     else:
         return HttpResponseForbidden()
     
@@ -862,7 +861,7 @@ def criarVeiculo(request, userName, id):
                 link = reverse('loja-unidadeProducao', args=[userName, id])
                 return redirect(link)
             else:
-                messages.error(request,'Ocorreu um erro durante o processo de adição de uma Unidade de Produção')
+                messages.error(request,f'Ocorreu um erro durante o processo de adição de uma Unidade de Produção')
     else:
         return HttpResponseForbidden()
     
@@ -896,7 +895,7 @@ def editarVeiculo(request, userName, id, idVeiculo):
                 link = reverse('loja-unidadeProducao', args=[userName, id])
                 return redirect(link)
             else:
-                messages.error(request,'Ocorreu um erro durante o processo de edição de um veiculo')
+                messages.error(request,f'Ocorreu um erro durante o processo de edição de um veiculo')
     else:
         return HttpResponseForbidden()
     
@@ -967,15 +966,15 @@ def criar_produto(request, userName):
             
             resposta = sessao.post(urlCriarProduto, data=produto_data, headers=headers)
             if resposta.status_code == 201:
-                messages.success(request, 'Produto criado com sucesso, já pode associar o produto criado a uma unidade de produção!')
+                messages.success(request, f'Produto criado com sucesso, já pode associar o produto criado a uma unidade de produção!')
                 return redirect('loja-perfil', userName=request.user.username)
             else:
                 #print("ERRO!!!!!!!!")
-                messages.error(request, 'Erro ao criar Produto!')
+                messages.error(request, f'Erro ao criar Produto!')
         else:
             for field, errors in form.errors.items():
                 for error in errors:
-                    messages.error(request, f'{field}_error::{error}')
+                    messages.error(request, f'{field}_error:{error}')
     else:
         form = ProdutoForm()
     return render(request, 'loja/criar_produto.html', {'form': form})
@@ -1023,6 +1022,7 @@ def sP(request,produto_id):
                         'morada': infoSingleProduct['unidade_producao']['morada'],
                         'pais': infoSingleProduct['unidade_producao']['pais'],
                         'cidade': infoSingleProduct['unidade_producao']['cidade'],
+                        'freguesia': infoSingleProduct['unidade_producao']['freguesia'],
                         'dataP': infoSingleProduct['data_producao'],
                         'marca': infoSingleProduct['marca'],
                         'precoU':infoSingleProduct['preco_por_unidade'],
@@ -1171,6 +1171,7 @@ def carrinho(request):
             except json.decoder.JSONDecodeError:
                 total= Decimal(0)
                 #print("ENREI NO EXCEPT!")
+                messages.error(request, f"ERRO - HOUVE UM ERRO A CARREGAR O SEU CARRINHO!")
                 produtosCarrinho = quantosProdutosNoCarrinho(request)
                 context= {
                     'total': total,
@@ -1433,7 +1434,7 @@ def remover_do_carrinho(request, produto_id):
         # # else:
         # produto_carrinho.delete()
         if respostaDelete.status_code == 204:
-            messages.success(request, 'O produto foi removido do carrinho com sucesso.')
+            messages.success(request, f'O produto foi removido do carrinho com sucesso.')
         elif respostaDelete.status_code == 404:
             mensagem_erro = respostaDelete.json().get('detail', 'Produto não encontrado no carrinho')
             messages.error(request, mensagem_erro)
@@ -1444,7 +1445,7 @@ def remover_do_carrinho(request, produto_id):
         idProdutoStr = str(produto_id)
         if idProdutoStr in carrinho.keys():
             carrinho.pop(idProdutoStr)
-            messages.success(request, 'O produto foi removido do carrinho com sucesso.')
+            messages.success(request, f'O produto foi removido do carrinho com sucesso.')
             request.session['carrinho'] = carrinho
         else:
             mensagem_erro = respostaDelete.json().get('detail', 'Produto não encontrado no carrinho')
@@ -1473,7 +1474,7 @@ def removerAssociaoProdutoUP(request, username, idUnidadeProducao, idProdutoUnid
                 #detail = conteudo.get('detail', 'Erro desconhecido ao apagar a associação')
                 # print(conteudo)
         else:
-            messages.error("Erro ao apagar associação")
+            messages.error(request,"Erro ao apagar associação")
     return redirect('loja-unidadeProducao', userName=request.user.username, id=idUnidadeProducao)
 
 
@@ -1529,7 +1530,7 @@ def criarAssociacaoProdutoUP(request, username):
         
             resposta = sessao.post(url, headers=headers,data=produto_up_data, files={"imagem_produto":imagem})
             if resposta.status_code == 201:
-                messages.success(request, 'Produto associcado a unidade de produção com sucesso.')
+                messages.success(request, f'Produto associcado a unidade de produção com sucesso.')
                 return redirect('loja-perfil', userName=request.user.username)
             else:
                 if resposta.status_code == 400:
@@ -1717,7 +1718,7 @@ def confirmarDetalhesEnvio(request):
                         resposta = sessao.put(url, headers=headers, data=detalhes_entrega)
 
                         if resposta.status_code == 200: #correu tudo bem?
-                            messages.success(request, "Detalhes de envio guardados com sucesso")
+                            messages.success(request, f"Detalhes de envio guardados com sucesso")
                             #return redirect('loja-perfil', userName=request.user.username)  #FALTA VER
                             return redirect('loja-criarEncomenda', idDetalhesEnvio=idDetalhesEnvio)
                         else: #deu erro
@@ -1782,7 +1783,7 @@ def confirmarDetalhesEnvio(request):
                 idDetalhesEnvio= conteudo["id"]
 
                 if resposta.status_code == 201: #correu tudo bem?
-                    messages.success(request, "Detalhes de envio guardados com sucesso para esta encomenda")
+                    messages.success(request, f"Detalhes de envio guardados com sucesso para esta encomenda")
                     #return redirect('loja-criarEncomenda', userName=request.user.username)
                     return redirect('loja-criarEncomenda', idDetalhesEnvio=idDetalhesEnvio)
                 else: #deu erro
@@ -1813,7 +1814,7 @@ def confirmarDetalhesEnvio(request):
                 if resposta.status_code == 201:
                     conteudo=resposta.json()
                     idDetalhesEnvio=conteudo['id']
-                    messages.success(request, "Detalhes de envio guardados com sucesso")
+                    messages.success(request, f"Detalhes de envio guardados com sucesso")
                     #return redirect('loja-perfil', userName=request.user.username)
                     return redirect('loja-criarEncomenda', idDetalhesEnvio=idDetalhesEnvio)
                 else:
@@ -1845,7 +1846,7 @@ def criarEncomenda(request, idDetalhesEnvio):
 
     resposta = sessao.post(url, data=data,headers=headers)
     if resposta.status_code == 201:
-        messages.success(request, "Encomenda realizada com sucesso")
+        messages.success(request, f"Encomenda realizada com sucesso")
     
 
         return redirect('loja-perfil', userName=request.user.username)
@@ -1986,8 +1987,11 @@ def getProdutosEncomenda(request, username, idEncomenda):
     totalEncomenda = Decimal(0)
     try:
         listaProdutosInEncomendas = []
-        todosProdutos = resposta.json()
+        todosProdutos = resposta.json() ### todos os produtos encomendados
+        i =0
         for produto in todosProdutos:
+            if i==0:
+                print("\n\n\n\n", produto,"\n\n\n\n",produto['produtos'],"\n\n\n\n")
             produto_up = produto['produtos']
             url = f'http://127.0.0.1:8000/api/produtos_loja/{produto_up}/'
             resposta_2 = requests.get(url)
@@ -2019,7 +2023,7 @@ def getProdutosEncomenda(request, username, idEncomenda):
                 fornecedorInfo = unidadeProducaoInfo['fornecedor']
                 fornecedor_nome = fornecedorInfo['utilizador']
             except json.decoder.JSONDecodeError:
-                pass
+                messages.error(request, f"ERRO - Não foi possível ler o produto encomendado com o id {produto['id']} da encomenda {produto['encomenda']}.")
                 
                 
             encomenda_dicio = {"idEncomenda":idEncomenda, "idProdutoEncomendado":idProdutoEncomendado,"imagem_produto":imagem_produto,"nome_produto":nome_produto, "precoKilo":precoKilo, "unidade_medida":unidade_medida,"preco_a_granel":preco_a_granel ,"preco":preco, "quantidade":quantidade, "estado":estado, "updated":updated, "nome_up":nome_up, "fornecedor_nome":fornecedor_nome}
@@ -2028,7 +2032,11 @@ def getProdutosEncomenda(request, username, idEncomenda):
         context['numero_produtos'] = len(listaProdutosInEncomendas)
         context['total'] = totalEncomenda
     except json.decoder.JSONDecodeError:
-        pass
+        if resposta.status_code == 404:
+            messages.error(request, f"ERRO - Esta encomenda foi criada sem produtos. Nada foi encomendado.")
+        else:
+            messages.error(request, f"ERRO - Houve um erro a carregar os produtos encomendados desta encomenda. ID da encomenda: {produto['encomenda']}")
+        return redirect('loja-perfil', userName=request.user.username)
     return render(request, 'loja/produtos_encomendados.html', context)
 
 @consumidor_required
@@ -2059,7 +2067,7 @@ def cancelarProdutoEncomendado(request, username, idEncomenda, idProdutoEncomend
                         messages.success(request,f"O produto encomendado ({nomeProduto}), foi cancelado com sucesso")
                         return redirect('loja-perfil', userName=request.user.username)
                     else:
-                        messages.error(request,"Houve um erro a cancelar o seu produto")
+                        messages.error(request,f"Houve um erro a cancelar o seu produto")
                         return redirect('loja-produtosEncomendados', idEncomenda=idEncomenda, username=username)
                 else:
                     messages.error(request,f"Só pode cancelar encomendas até 3h depois de as realizar. Tempo decorrido desde a criação da encomenda: {tempo_decorrido_desde_encomenda}")
@@ -2110,7 +2118,7 @@ def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
         
         info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega}]
     except json.decoder.JSONDecodeError:
-        pass
+        messages.error(request,f"Não foi possível carregar/ler os detalhes de envio da encomenda {idEncomenda}")
     context = {"infos":info_detalhes_envio, "encomenda_nr":index_encomenda}
     return render(request, 'loja/infos_detalhes.html', context)
 
@@ -2139,7 +2147,7 @@ def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao):
         context = {"infos":info_detalhes_envio}
         return render(request, 'loja/infos_detalhes.html', context)
     except json.decoder.JSONDecodeError:
-        messages.error(request, "Houve um erro a obter os detaalhes de envio do utilizador")
+        messages.error(request, f"Houve um erro a obter os detaalhes de envio do utilizador")
         return redirect('loja-unidadeProducao', username=request.user.username, id=idUnidadeProducao)
 
 
@@ -2214,7 +2222,7 @@ def veiculoSairParaEntrega(request, username, idVeiculo, idUnidadeProducao):
         messages.success(request, "Veiculo saiu para entregar encomendas!")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
     elif resposta.status_code == 404:
-        messages.error(request, "Erro - O veículo não tem produtos carregados!")
+        messages.error(request, f"Erro - O veículo não tem produtos carregados!")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
     elif resposta.status_code==400:
         mensagem_erro = resposta.json()['details']
@@ -2239,7 +2247,7 @@ def entregarEncomenda(request, username, idUnidadeProducao,idVeiculo):
         messages.success(request, "Encomenda entregue e finalizada!")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
     elif resposta.status_code == 404:
-        messages.error(request, "Veiculo não tem encomendas para entregar")
+        messages.error(request, f"Veiculo não tem encomendas para entregar")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
     
     
@@ -2267,7 +2275,7 @@ def veiculoRegressou(request, username, idUnidadeProducao, idVeiculo):
         messages.error(request, f"{mensagem}")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
     else:
-        messages.error("Houve algum erro ao realizar esta ação. Ou o veículo não existe ou acedeu a esta função fora de tempo")
+        messages.error(request,f"Houve algum erro ao realizar esta ação. Ou o veículo não existe ou acedeu a esta função fora de tempo")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
 
 
@@ -2319,8 +2327,8 @@ def editarAssociacaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProduc
             
 
             if resposta.status_code == 200:
-                #messages.success(request, 'Produto criado com sucesso.')
-                return redirect('loja-perfil', userName=request.user.username)
+                messages.success(request, 'Produto atualizado com sucesso.')
+                return redirect('loja-unidadeProducao', userName=request.user.username, id=idUnidadeProducao)
             else:
                 if resposta.status_code == 400:
                     error_code = resposta.json().get('error_code')
@@ -2345,7 +2353,8 @@ def editarAssociacaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProduc
             'marca': content['marca'],                          
         }
     except json.decoder.JSONDecodeError:
-        pass
+        messages.error(request, f"Houve um erro a carregar as informações já associadas a este produto.")
+        return redirect
     
     url_up = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/'
     response_up = sessao.get(url_up, headers=headers).json()

@@ -27,6 +27,21 @@
   }
 
 </style>
+<script>
+  function bloquerarBotao() {
+    // Desabilitar o botão
+    document.getElementById("encomendar").disabled = true;
+
+    setTimeout(function() {
+      document.getElementById("meuBotao").disabled = false;
+    }, 60000); // Aguarde 60 segundos antes de reabilitar o botão
+  }
+</script>
+
+
+
+
+
 <div class="breadcrumb-section breadcrumb-bg">
   <div class="container">
       <div class="row">
@@ -38,7 +53,7 @@
               </div>
               <br>
               <br>
-                <form method="post">
+                <form method="post" onsubmit="bloquerarBotao();">
                   {% csrf_token %}
                   {% for field in formulario %}
                   <div class="form-group">
@@ -81,7 +96,7 @@
                   </div>
                   {% endfor %}
                   
-                  <input type="submit" id="login" value="ENCOMENDAR">
+                  <input type="submit" id="encomendar" value="ENCOMENDAR">
                 </form>
                 <a href="{% url 'loja-carrinho' %}" class="layout__boxTitle">
                   <div  class="container">

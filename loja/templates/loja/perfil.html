@@ -135,15 +135,13 @@ color: white;
                     {% endif %}
                     <br>
                     {% if request.user == utilizadorView %}
-                    <form action="{% url 'loja-editarPerfil' %}" method="" >
+                    <form action="{% url 'loja-editarPerfil' username=request.user.username %}" method="" >
                     {% csrf_token %}
                     <br>
                     <input type="submit" id="login" value="EDITAR PERFIL">
                     </form>
 
                     {% endif %}
-                  
-
                 </div>
                 {% if request.user.is_fornecedor and request.user.username == utilizadorView.username %}
                 <div id="Fornecedor">
@@ -156,7 +154,7 @@ color: white;
                     <div class="form-container">
                     <form action="{% url 'loja-criarProduto' userName=request.user.username %}" method="" >
                         {% csrf_token %}
-                            <input type="submit" id="login" class="segundo" value="Criar Produto">
+                            <input type="submit" id="login" class="segundo" value="Criar Produto Genérico">
                         </form>
                         <form action="{% url 'loja-associarProdutoUP' username=request.user.username %}" method="" >
                             {% csrf_token %}
@@ -257,9 +255,6 @@ color: white;
                             {% endif %}
                         </div>
                 {% endif %}                
-                    
-        
-    
                 </div>
             </div>
             </div>

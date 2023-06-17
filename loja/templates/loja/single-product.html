@@ -91,7 +91,8 @@
                             <p>Unidade de Produção: {{ produto.up }}</p>
                             <hr>
                             <p>Morada: {{ produto.morada }}, {{ produto.cidade }}, {{ produto.pais}}</p>
-                           
+                            <hr>
+                            <p>Freguesia: {{ produto.freguesia }}</p>
                             <hr>
                             {% if produto.descricao is not None and produto.descricao != '' %}
                                 <p>Descrição: {{ produto.descricao }}</p>
@@ -106,7 +107,8 @@
                             {% if produto.unidade_medida == 'un' %}
                             <p>Quantidade por Unidade: {{produto.quantidade_por_unidade}} {{produto.unidade_Medida_Por_Unidade}}</p>
                             {% else %}
-                           
+                            
+                            <p>Quantidade por Unidade: Não aplicável. Produto vendido ao {{ produto.unidade_medida }}</p>
                             {% if produto.stock < "10.00" and produto.stock > "0.00" %}
                             <p style="font-weight: bold;" >Stock atual: {{ produto.stock }}</p>
                             {% endif %}

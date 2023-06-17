@@ -51,6 +51,19 @@
                   {% csrf_token %}
                   {% for field in formulario %}
                   <div class="form-group">
+                    {% if field.name == 'preco_a_granel' %}
+                    <p><label for="{{ field.name }}">Preço a granel (caso não seja vendido à unidade) </label></p>
+                    {% elif field.name == 'unidade_Medida_Por_Unidade' %}
+                    <p><label for="{{ field.name }}">Unidade de medida da embalagem/unidade (caso o produto seja vendido à unidade) </label></p>
+                    {% elif field.name == 'quantidade_por_unidade' %}
+                    <p><label for="{{ field.name }}">Quantidade de produto por embalagem/unidade (caso seja vendido à unidade) </label></p>
+                    {% elif field.name == 'preco_por_unidade' %}
+                    <p><label for="{{ field.name }}">Preco por embalagem/unidade (caso seja vendido à unidade) </label></p>
+                    {% elif field.name == 'imagem_produto' %}
+                    <p><label for="{{ field.name }}">Imagem do produto (formatos aceites: PNG,JPG,SVG,GIF, tamanho máximo:2mb) </label></p>
+                    {% else %}
+                    <p><label for="{{ field.name }}">{{ field.label }}</label></p>
+                    {% endif %}
                     {% if field.field.widget.input_type != 'file' %}
                     <div class="input-wrapper">
                       {% if field.name == 'produto' or field.name == 'unidade_producao' or field.name == 'unidade_medida' or field.name == 'unidade_Medida_Por_Unidade' %}
@@ -80,7 +93,15 @@
                   
                   <input type="submit" id="login" value="GUARDAR">
                 </form>
-                
+                <a href="{% url 'loja-unidadeProducao' userName=request.user.username id=unidade_producao.id %}" class="layout__boxTitle">
+                  <div  class="container">
+                      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+                      <title>arrow-left</title>
+                      <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
+                      </svg>
+                      <h6>Voltar</h6>
+                  </div>
+              </a>
                   
 
                  

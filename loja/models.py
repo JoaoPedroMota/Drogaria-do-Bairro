@@ -720,7 +720,7 @@ class Encomenda(models.Model):
     class Meta:
         verbose_name = "Encomenda"
         verbose_name_plural = "Encomendas"
-        ordering=['id']
+        ordering=['-id']
 
     def __str__(self):
         return f'Encomenda de {self.consumidor} - nº {self.id} '
@@ -751,7 +751,7 @@ class ProdutosEncomenda(models.Model):
     class Meta:
         verbose_name = "Produtos Encomendados"
         verbose_name_plural = "Produtos Encomendados"
-        ordering = ['id']
+        ordering = ['-id']
 
         
         

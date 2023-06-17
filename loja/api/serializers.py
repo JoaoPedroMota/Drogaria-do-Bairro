@@ -471,7 +471,7 @@ class UnidadeProducaoSingleProdutoSerializer(ModelSerializer):
     pais = campoPaisSerializador()
     class Meta:
         model = UnidadeProducao
-        fields = ['id','fornecedor', 'nome', 'morada', 'cidade', 'pais']
+        fields = ['id','fornecedor', 'nome', 'morada', 'cidade', 'pais', 'freguesia']
         read_only_fields = ['fornecedor']
 
 

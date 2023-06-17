@@ -81,7 +81,7 @@ class UtilizadoresList(APIView):
     """
     #parser_classes = (MultiPartParser, FormParser)
     def get(self, request, format=None):
-        #if request.user.is_superuser:
+        #if request.user.is_superuser: referir ausencia desta verificação no relatório
         utilizadores = Utilizador.objects.all()
         serializar = UtilizadorSerializer(utilizadores, many=True)
         return Response(serializar.data)

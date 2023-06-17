@@ -205,8 +205,8 @@
 
                                             <td>
                                                 <form action="{% url 'loja-editarAssociacaoProdutoUP' idUnidadeProducao=unidadeProducao idProdutoUnidadeProducao=produto.id %}" method="get">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-info btn-sm" id="lo">Editar</button>
+                                                    {% csrf_token %}                
+                                                    <button type="submit" class="btn btn-info btn-sm">Editar</button>
                                                 </form>
                                             </td>
 
@@ -239,6 +239,8 @@
                                             <th>Estado</th>
                                             <th>Detalhes Entrega</th>
                                             <th>Ação</th>
+                                            <th>Última Atualização</th>
+                                            <th>Criado</th>
                                         </tr>
                                         {% for produtoEncomenda in encomenda %}
                                         <tr>
@@ -308,6 +310,11 @@
                                                     {% endif %}
                                                 {% endif %}
                                             {% endfor %}
+                                        
+                                            <td>{{ produtoEncomenda.updated}}</td>
+                                            <td>{{ produtoEncomenda.created}}</td>
+                                        
+                                        
                                         </tr>
  
 

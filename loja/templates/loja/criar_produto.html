@@ -6,6 +6,14 @@
       <div class="row">
           <div class="col-lg-8 offset-lg-2 text-center">
               <div class="breadcrumb-text">
+                {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% endif %}">
+                    <p>{{ message }}</p>
+                </div>
+                {% endfor %}
+
+
+
                 <div class="row">
                   <br>
                  
@@ -19,13 +27,7 @@
                 {% for field in form %}
 
                 <div class="form-group">
-                  {% if field.errors %}
-                  <ul class="field-error-list">
-                    {% for error in field.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                  </ul>
-                  {% endif %}
+
                   <p><label for="{{ field.name }}">{{ field.label }}</label></p>
                   {% if field.name == 'categoria' %}
                   <select name="{{ field.name }}">
@@ -36,6 +38,15 @@
                   </select>
                   {% else %}
                   <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.label }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
+                  {% endif %}
+                  <br>
+                  {% if field.errors %}
+                  <ul class="field-error-list">
+                    {% for error in field.errors %}
+                    <li><p>{{ error }}</p></li>
+                    {% endfor %}
+                  </ul>
+                  <br>
                   {% endif %}
                 </div>
                 {% endfor %}
