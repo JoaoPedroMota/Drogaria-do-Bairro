@@ -235,9 +235,8 @@ color: white;
                                         </tr>
                                         <tbody>
                                             {% for encomenda in encomendas %}
-                                                {% with i=forloop.counter0|add:1 %}
                                                 <tr>
-                                                    <td>{{i}}</td>
+                                                    <td>{{ forloop.revcounter }}</td>
                                                     <td>{{ encomenda.valor_total }}€</td>
                                                     <td>{{ encomenda.estado }}</td>
                                                     <td><a href="{% url 'loja-detalhes-por-encomenda' username=request.user.username idEncomenda=encomenda.idEncomenda idDetalhes=encomenda.detalhes_envio %}" >Ver detalhes</a></td>
@@ -245,8 +244,6 @@ color: white;
                                                     <td>{{ encomenda.updated }}</td>
                                                     <td><a href="{% url 'loja-produtosEncomendados' username=request.user.username idEncomenda=encomenda.idEncomenda %}">Mais</a></td>
                                                 </tr>
-                                                {% endwith %}
-                                            
                                             {% endfor %}
                                         </tbody>
                                     </table>

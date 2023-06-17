@@ -2107,15 +2107,17 @@ def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
         instrucoes_entrega = conteudo['instrucoes_entrega']
         ####################
         conteudo_2 = resposta_2.json()
+        print(conteudo_2)
         encomenda_dicio = {}
         for encomenda in conteudo_2:
             if encomenda['id'] == idEncomenda:
                 encomenda_dicio = encomenda
                 break
-        index_encomenda = conteudo_2.index(encomenda_dicio)
+        
+        lista_invertida = conteudo_2[::-1]
+        index_encomenda = lista_invertida.index(encomenda_dicio)
         index_encomenda+=1
-        
-        
+        print(index_encomenda)
         info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega}]
     except json.decoder.JSONDecodeError:
         messages.error(request,f"Não foi possível carregar/ler os detalhes de envio da encomenda {idEncomenda}")
@@ -2385,3 +2387,49 @@ def obterNotificacoesF(request,username):
     return JsonResponse({'notifications': notification_data,
                          'numeroNotificacoes':numero
                          })
+    
+    
+    
+@login_required(login_url='loja-login')
+def relarioImpactoLocal(request, username):
+    if username != request.user.username:
+        return redirect('loja-perfil', userName=request.user.username)
+    consumidor = request.user.consumidor if hasattr(request.user, "consumidor") else None
+    fornecedor = request.user.consumidor if hasattr(request.user, "fornecedor") else None
+    if request.user.is_superuser:
+        url = f'http://127.0.0.1:8000/api/{request.user.username}/relatorioImpactoLocal'
+    elif consumidor is not None:
+        url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/relatorioImpactoLocal'
+    elif fornecedor is not None:
+        url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/relatorioImpactoLocal'
+    
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+    
+    ####tratamento das datas de inicio e de fim
+    data_inicio = 0 ## colocar as datas no formato YYYY-mm-dd
+    data_fim = 0 ## colocar as datas no formato YYYY-mm-dd
+    
+    
+    
+    informacaoEnvio = {
+        "data-inicio":data_inicio,
+        "data-fim":data_fim
+    }
+    
+    resposta = sessao.put(url, headers=headers, data=informacaoEnvio)
+    if resposta.status_code == 200:
+        try:
+            conteudo = resposta.json()
+        except json.decoder.JSONDecodeError:
+            messages.error(request, "ERRO - Houve um erro a carregar os dados sobre as encomendas efetuadas.")
+            return redirect("loja-perfil", userName=request.user.username)
+        # verificar se é nessário tratar os dados consoante o tipo de utilizador. 
+        # principalmente para super users e fornecedores
+        # dicionarioDadosImpactoLocal = {}
+        #return Response(request,'impactoLocal.html'. context=dicionarioDadosImpactoLocal)
+    else:
+        messages.error(request,"ERRO - Houve um erro a executar o pedido do relatório de impacto local.")
+        return redirect("loja-perfil", userName=request.user.username)

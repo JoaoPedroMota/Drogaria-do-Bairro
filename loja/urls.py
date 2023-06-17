@@ -45,6 +45,7 @@ urlpatterns = [
     path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/entregarEncomenda/', views.entregarEncomenda, name='loja-entregarEncomenda'),
     path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/veiculoRegressou/', views.veiculoRegressou, name='loja-veiculoRegressou'),
     path('notificacoes/<str:username>/', views.obterNotificacoesF, name='notificacoes'),
+    path('perfil/<str:username>/relatorioImpactoLocal/', views.relarioImpactoLocal, name='loja-relatorioImpactoLocal'),
 ]
 
 

@@ -2307,7 +2307,11 @@ class RelatorioImpactoLocalAdmin(APIView):
     
     
     
-    def put(self, request, username, format=None):        
+    def put(self, request, username, format=None):     
+        if not request.user.is_authenticated:
+            return Response({"details":"Não autenticado"}, status=status.HTTP_401_UNAUTHORIZED)
+        if not request.user.is_superuser:
+            return Response({"detaisl":"Não autorizado"}, status=status.HTTP_403_FORBIDDEN)   
         data2 = request.data.copy()
         dataInicio = data2['data-inicio'] if data2.get('data-inicio') is not None else None
         dataFim = data2['data-fim'] if data2.get('data-fim') is not None else None
@@ -2444,8 +2448,8 @@ class RelatorioImpactoLocalAdmin(APIView):
                               "Mesmo Continente":dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente,
                               "Resto do mundo":dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente,
                               "Total":{"dinheiro gasto/ganho":total, "Produtos Encomendados":totalEncomendas}}
-        print(dicionarioResposta)
-        print(total)  
+        # print(dicionarioResposta)
+        # print(total)  
         return Response(dicionarioResposta, status=status.HTTP_200_OK)
         # dicionarioLocalizacoes = {"freguesias":{}, "cidades":{}, "paises":{}}
         # dicionarioProdutos = {}
