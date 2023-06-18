@@ -28,12 +28,17 @@
 
 </style>
 <script>
+  function toggleScript() {
+    var script = document.getElementById("script");
+    script.style.display = (script.style.display === "none") ? "block" : "none";
+  }
+
   function bloquerarBotao() {
     // Desabilitar o botão
     document.getElementById("encomendar").disabled = true;
 
     setTimeout(function() {
-      document.getElementById("meuBotao").disabled = false;
+      document.getElementById("encomendar").disabled = false;
     }, 60000); // Aguarde 60 segundos antes de reabilitar o botão
   }
 </script>

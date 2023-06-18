@@ -2375,7 +2375,7 @@ def obterNotificacoesF(request,username):
 
     fornecedor=str(username)
     numero=0
-    notifications = Notificacao.objects.filter(fornecedor__utilizador__username=fornecedor, destinatario="Fornecedor")
+    notifications = Notificacao.objects.filter(fornecedor__utilizador__username=fornecedor, destinatario="Fornecedor").order_by('-data')[:10]
     notification_data = []
     for notification in notifications:
         numero+=1
@@ -2385,6 +2385,8 @@ def obterNotificacoesF(request,username):
         
         })
     
+
+
 
     return JsonResponse({'notifications': notification_data,
                          'numeroNotificacoes':numero

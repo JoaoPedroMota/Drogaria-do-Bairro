@@ -1,9 +1,20 @@
 {% extends 'main.html' %}
 {% load static %}
 {% block content %}
-
+<script>
+  function toggleScript() {
+    var script = document.getElementById("script");
+    script.style.display = (script.style.display === "none") ? "block" : "none";
+  }
+</script>
 <style>
-  
+   #script {
+    display: none;
+    margin-top: 1em;
+    background-color: #f2f2f2;
+    padding: 1em;
+    border-radius: 5px;
+  }
     .input-wrapper {
     position: relative;
   }
@@ -38,6 +49,13 @@
     color: white;
   }
 
+  .form-control {
+  /* ... outros estilos ... */
+  display: flex;
+
+  
+}
+
 </style>
 <div class="breadcrumb-section breadcrumb-bg">
   <div class="container">
@@ -57,16 +75,20 @@
                     <br>
                     {% if field.name == 'usar_informacoes_utilizador' %}
                     <p><label for="{{ field.name }}">USAR AS MINHAS INFORMAÇÕES DE PERFIL</label></p>
+                    <br>
                     {% elif field.name == 'guardar_esta_morada' %}
                       <p><label for="{{ field.name }}">Guardar também a morada no meu perfil</label></p>
+                      <br>
                     {% else %}
                     <p><label for="{{ field.name }}">{{ field.label }}</label></p>
+                    <br>
                     {% endif %}
                     {% if field.field.widget.input_type == 'select' %}
                       <div class="input-wrapper">
                         <select name="{{ field.name }}" {% if field.required %}required{% endif %}>
                           {% for code, label in field.field.choices %}
                             <option value="{{ code }}" {% if label == field.value or code == field.value %}selected{% endif %}>{{ label }}</option>
+                            <br>
                           {% endfor %}
                         </select>
                         
@@ -85,7 +107,8 @@
                         
                         <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.field.label }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
                         {% if field.help_text %}
-                            <abbr title="{{ field.help_text }}" class="hint-formulario">?</abbr>
+                          <abbr title="{{ field.help_text }}" class="hint-formulario" onclick="toggleScript()">?</abbr>
+                          <div id="script">{{ field.help_text }}</div>
                         {% endif %}
                     </div>
                     {% endif %}
