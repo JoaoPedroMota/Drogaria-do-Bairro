@@ -474,8 +474,8 @@ def apagarConta(request, pk):
         return redirect('loja-perfil', userName=request.user.username)
 
     if request.method == 'POST':
-        password = request.POST.get('password')
-        if check_password(password, utilizador.password):
+        username = request.POST.get('username')
+        if username == request.user.username:
             logout(request)
             utilizador.delete()
             return redirect('loja-home')
