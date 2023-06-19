@@ -2473,6 +2473,7 @@ def obterNotificacoesF(request,username):
                          'numeroNotificacoes':numero
                          })
 
+
 def marcar_notificacao_lida(request, username):
     fornecedor = str(username)
     notifications = Notificacao.objects.filter(fornecedor__utilizador__username=fornecedor, destinatario="Fornecedor")
