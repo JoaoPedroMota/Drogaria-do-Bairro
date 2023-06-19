@@ -560,6 +560,7 @@ def criarUP(request, userName):
                     nome = request.POST.get('nome'),
                     pais = request.POST.get('pais'),
                     cidade = cidade_upper.upper(),
+                    freguesia = request.POST.get('freguesia'),
                     morada = request.POST.get('morada')
                 )
                 link = reverse('loja-perfil', args=[request.user.username])
@@ -757,35 +758,60 @@ def unidadeProducao(request, userName, id):
             lista_produtos_up = []
             nome_up = unidade_producao.nome
         
-        encomendas = ProdutosEncomenda.objects.filter(unidadeProducao=unidade_producao)
+        urlProdutosEncomendados = f'http://127.0.0.1:8000/api/{userName}/fornecedor/unidadesProducao/{id}/encomendas/'
+        csrf_token = get_token(request)
+        headers = {'X-CSRFToken':csrf_token}
+        respostaEncomendasUP = sessao.get(urlProdutosEncomendados, headers=headers)
+        
+        if respostaEncomendasUP.status_code != 404:
+            encomendas = respostaEncomendasUP.json()
+            # print(encomendas)
+            for encomenda in encomendas:
+                updated_tmp = encomenda['updated']
+                created_temp = encomenda['created']
+                
+                updated_datetime = datetime.strptime(updated_tmp, "%Y-%m-%dT%H:%M:%S.%f%z")
+                created_datetime = datetime.strptime(created_temp, "%Y-%m-%dT%H:%M:%S.%f%z")
+                
+                updated_formatted = updated_datetime.strftime("%d-%m-%Y às %H:%M")
+                created_formatted = created_datetime.strftime("%d-%m-%Y às %H:%M")
+                
+                encomenda['updated'] = updated_formatted
+                encomenda['created'] = created_formatted
+                
+        
+        # encomendas = ProdutosEncomenda.objects.filter(unidadeProducao=unidade_producao)
 
         
-        dicionarioProdutosEstaoVeiculos = {}
-        ###### produtos encomendados em veiculos de transporte
-        for produto in encomendas:
-            urlProdutosVeiculos = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{id}/produtoEncomendadoVeiculo/{produto.id}/'
-            #print(urlProdutosVeiculos)
-            sessao = requests.Session()
-            sessao.cookies.update(request.COOKIES)
-            csrf_token = get_token(request)
-            headers = {'X-CSRFToken':csrf_token}
-            resposta = sessao.get(urlProdutosVeiculos, headers=headers)
-            # print(produto.id)
-            if resposta.status_code == 404:
-                dicionarioProdutosEstaoVeiculos[produto.id] = (False, None)
-            else:
-                conteudo = resposta.json()
-                # print(conteudo)
-                id_veiculo = conteudo[0]['veiculo']
-                urlVeiculo = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{id}/veiculos/{id_veiculo}/'
-                # print(urlVeiculo)
-                resposta = sessao.get(urlVeiculo, headers=headers)
-                nome_veiculo_conteudo = resposta.json()
-                nome_mesmo = nome_veiculo_conteudo['nome']
-                id_veiculo = nome_veiculo_conteudo['id']
-                dicionarioProdutosEstaoVeiculos[produto.id] = (True, nome_mesmo, id_veiculo)
-            
-
+            dicionarioProdutosEstaoVeiculos = {}
+            ###### produtos encomendados em veiculos de transporte
+            for produto in encomendas:
+                idProduto = produto['id']
+                urlProdutosVeiculos = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{id}/produtoEncomendadoVeiculo/{idProduto}/'
+                #print(urlProdutosVeiculos)
+                sessao = requests.Session()
+                sessao.cookies.update(request.COOKIES)
+                csrf_token = get_token(request)
+                headers = {'X-CSRFToken':csrf_token}
+                resposta = sessao.get(urlProdutosVeiculos, headers=headers)
+                # print(produto.id)
+                if resposta.status_code == 404:
+                    dicionarioProdutosEstaoVeiculos[idProduto] = (False, None)
+                else:
+                    conteudo = resposta.json()
+                    # print(conteudo)
+                    id_veiculo = conteudo[0]['veiculo']
+                    urlVeiculo = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{id}/veiculos/{id_veiculo}/'
+                    # print(urlVeiculo)
+                    resposta = sessao.get(urlVeiculo, headers=headers)
+                    nome_veiculo_conteudo = resposta.json()
+                    nome_mesmo = nome_veiculo_conteudo['nome']
+                    id_veiculo = nome_veiculo_conteudo['id']
+                    dicionarioProdutosEstaoVeiculos[idProduto] = (True, nome_mesmo, id_veiculo)
+        else:
+            print("cheguei aqui!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            encomendas = {}   
+            dicionarioProdutosEstaoVeiculos= {}
         context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id, "produtosUP":lista_produtos_up, 'nome_up':nome_up,'encomenda':encomendas, "produtosEstaoEmVeiculos":dicionarioProdutosEstaoVeiculos}
         return render(request, 'loja/unidadeProducao.html', context)
 
@@ -2110,7 +2136,7 @@ def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
         instrucoes_entrega = conteudo['instrucoes_entrega']
         ####################
         conteudo_2 = resposta_2.json()
-        print(conteudo_2)
+        #print(conteudo_2)
         encomenda_dicio = {}
         for encomenda in conteudo_2:
             if encomenda['id'] == idEncomenda:
@@ -2143,6 +2169,23 @@ def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao,i
     headers = {'X-CSRFToken':csrf_token}
     resposta = sessao.get(url, headers=headers)
     
+    urlTodasEncomendasDestaUP = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/encomendas/'
+    
+    respostaTodasEncomendasDestaUP = sessao.get(urlTodasEncomendasDestaUP, headers=headers)
+    conteudo_2 = respostaTodasEncomendasDestaUP.json()
+    encomenda_dicio = {}
+    for encomenda_procura in conteudo_2:
+        if encomenda_procura['id'] == idProdutoEncomendado:
+            encomenda_dicio = encomenda_procura
+            break
+    lista_invertida = conteudo_2[::-1]
+    index_encomenda = lista_invertida.index(encomenda_dicio)
+    index_encomenda += 1
+    
+
+
+    
+    
     try:
         
         conteudo = resposta.json()
@@ -2152,8 +2195,8 @@ def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao,i
         email = conteudo['email']
         instrucoes_entrega = conteudo['instrucoes_entrega']
         
-        info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega,"idEncomenda":idProdutoEncomendado}]
-        context = {"infos":info_detalhes_envio}
+        info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega,"idEncomenda":index_encomenda}]
+        context = {"infos":info_detalhes_envio, "unidadeProducao":idUnidadeProducao }
         return render(request, 'loja/infos_detalhes.html', context)
     except json.decoder.JSONDecodeError:
         messages.error(request, f"Houve um erro a obter os detaalhes de envio do utilizador")
@@ -2175,7 +2218,18 @@ def colocarProdutoEmVeiculoTransporte(request, username, idUnidadeProducao, idPr
     csrf_token = get_token(request)
     headers = {'X-CSRFToken':csrf_token}
     resposta = sessao.get(url, headers=headers)
+    urlTodasEncomendasDestaUP = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/encomendas/'
     
+    respostaTodasEncomendasDestaUP = sessao.get(urlTodasEncomendasDestaUP, headers=headers)
+    conteudo_2 = respostaTodasEncomendasDestaUP.json()
+    encomenda_dicio = {}
+    for encomenda_procura in conteudo_2:
+        if encomenda_procura['id'] == idProdutoEncomenda:
+            encomenda_dicio = encomenda_procura
+            break
+    lista_invertida = conteudo_2[::-1]
+    index_encomenda = lista_invertida.index(encomenda_dicio)
+    index_encomenda += 1
     
     
     url2=f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/encomendas/{idProdutoEncomenda}/emString/'
@@ -2205,7 +2259,7 @@ def colocarProdutoEmVeiculoTransporte(request, username, idUnidadeProducao, idPr
                     messages.error(request, f"Algo correu mal ao colocar o produto no veículo")
                     return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
             
-        context={"formulario":formulario, "respostaNomeEncomenda":respostaNomeEncomenda, "idUnidadeProducao":idUnidadeProducao}
+        context={"formulario":formulario, "respostaNomeEncomenda":index_encomenda, "idUnidadeProducao":idUnidadeProducao}
         return render(request, 'loja/colocarEncomendaEmVeiculo.html', context)
     if resposta.status_code != 200 and request.method == 'GET':
         messages.error(request, f"Não tem veículos disponíveis de momento para colocar este produto.")

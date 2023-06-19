@@ -451,7 +451,6 @@ class ProdutoUnidadeProducaoList(APIView):
             raise Http404("O username introduzido não corresponde a um fornecedor")
 
         try:
-            
             up = UnidadeProducao.objects.get(Q(fornecedor=fornecedor) & Q(id=identifierUP))
         except UnidadeProducao.DoesNotExist:
             raise Http404(f"O fornecedor introduzido não tem nenhuma Unidade de Produção com o id {identifierUP}")
@@ -843,7 +842,7 @@ class ProdutosCarrinhoDetailProdutoUP(APIView):
     Args:
         APIView (_type_): _description_
     """
-    permission_classes = [IsConsumidorAndOwnerOrReadOnly]
+    permission_classes = [IsConsumidorAndOwner]
     def get_object(self, cart, idProdutoUnidadeProducao):
         try:
             return ProdutosCarrinho.objects.get(carrinho=cart, produto=idProdutoUnidadeProducao)
@@ -1165,9 +1164,12 @@ class EncomendaList(APIView):
             raise Http404
           
     def get(self, request, username, format=None):
+        
         utilizador = self.get_utilizador(username)
         consumidor = self.get_consumidor(utilizador)
+        print(consumidor)
         encomenda_objetos = self.get_object(consumidor)
+        print(encomenda_objetos)
         if encomenda_objetos is not None:
             serializar = EncomendaSerializer(encomenda_objetos, many=True)
         else:
@@ -1175,32 +1177,32 @@ class EncomendaList(APIView):
         return Response(serializar.data,status=status.HTTP_200_OK)
 
 
-    def post(self, request, username, format=None):
-        utilizador = self.get_utilizador(username)
-        data2 = request.data.copy()
+    # def post(self, request, username, format=None):
+    #     utilizador = self.get_utilizador(username)
+    #     data2 = request.data.copy()
 
             
-        utilizador = self.get_utilizador(username)
-        consumidor = self.get_consumidor(utilizador)
+    #     utilizador = self.get_utilizador(username)
+    #     consumidor = self.get_consumidor(utilizador)
 
-        carrinho=self.getCarrinho(consumidor)
-        produtosCarrinho=self.getProdutosCarrinho(carrinho)
+    #     carrinho=self.getCarrinho(consumidor)
+    #     produtosCarrinho=self.getProdutosCarrinho(carrinho)
 
-        total=0
-        for produto in produtosCarrinho:
-            total+=produto.preco
+    #     total=0
+    #     for produto in produtosCarrinho:
+    #         total+=produto.preco
 
-        data2["consumidor"]=consumidor.id
-        data2["valor_total"]=total
+    #     data2["consumidor"]=consumidor.id
+    #     data2["valor_total"]=total
 
-        deserializer = EncomendaSerializer(data=data2)
+    #     deserializer = EncomendaSerializer(data=data2)
 
-        if deserializer.is_valid():
+    #     if deserializer.is_valid():
            
-            deserializer.save()
-            return Response(deserializer.data, status=status.HTTP_201_CREATED)
-        # print(deserializer.errors)
-        return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #         deserializer.save()
+    #         return Response(deserializer.data, status=status.HTTP_201_CREATED)
+    #     # print(deserializer.errors)
+    #     return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 class EncomendaDetail(APIView):
@@ -1259,6 +1261,7 @@ class EncomendaDetail(APIView):
         encomenda_objetos = self.get_object(consumidor,idEncomenda)
 
         if encomenda_objetos is not None:
+            data2["valor_total"]=encomenda_objetos.valor_total
             data2["consumidor"]=consumidor.id
             deserializer=EncomendaSerializer(encomenda_objetos, data=data2)
             if deserializer.is_valid():
@@ -1272,7 +1275,7 @@ class EncomendaDetail(APIView):
         consumidor = self.get_consumidor(utilizador)
         encomenda_objetos = self.get_object(consumidor,idEncomenda)
 
-        if encomenda_objetos.exists():
+        if encomenda_objetos is not None:
             encomenda_objetos.delete()
             return Response(f"Encomenda do consumidor '{consumidor}' apagada com sucesso!",status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -1282,7 +1285,7 @@ class EncomendaDetail(APIView):
 
 
 class ProdutosEncomendaList(APIView):
-    #permission_classes = [IsConsumidorAndOwner2]
+    permission_classes = [IsConsumidorAndOwner2]
 
     def get_object(self, instance):
         try:
@@ -1341,7 +1344,7 @@ class ProdutosEncomendaList(APIView):
             unidadeProducao=produto.unidade_producao
             precoKilo=produto.preco_a_granel if produto.preco_a_granel is not None else produto.preco_por_unidade
             quantidade=data2["quantidade"]
-            preco=precoKilo*quantidade
+            preco=precoKilo*Decimal(quantidade)
             data2["unidadeProducao"]=unidadeProducao.id
             data2["precoKilo"]=precoKilo
             data2["preco"]=preco
@@ -1404,12 +1407,25 @@ class ProdutosEncomendaDetail(APIView):
             raise Http404
         
     def put(self, request, username, idEncomenda,idProdutoEncomenda, format=None):
-
+        if "produtos" in request.data:
+            return Response({"details":"Não pode alterar o produto já encomendado. Só a quantidade"}, status=status.HTTP_400_BAD_REQUEST)
         produts_encomenda_objetos = self.get_object(idProdutoEncomenda)
 
-        if produts_encomenda_objetos.exists():
-
-            deserializer=EncomendaSerializer(produts_encomenda_objetos, data=request.data)
+        if produts_encomenda_objetos is not None:
+            data2 = request.data.copy()
+            data2['encomenda'] = produts_encomenda_objetos.encomenda.id
+            quantidade = data2['quantidade']
+            precoKilo = produts_encomenda_objetos.produtos.preco_a_granel if produts_encomenda_objetos.produtos.preco_a_granel is not None else produts_encomenda_objetos.preco_por_unidade
+            novoPreco = Decimal(quantidade) * precoKilo
+            data2['precoKilo'] = precoKilo
+            data2['preco'] = novoPreco
+            data2['produtos'] = produts_encomenda_objetos.produtos.id
+            
+            
+            deserializer= ProdutosEncomendaSerializer(produts_encomenda_objetos, data=data2)
+            
+            
+            
             if deserializer.is_valid():
                 deserializer.save()
                 return Response(deserializer.data, status=status.HTTP_200_OK)
@@ -1419,12 +1435,12 @@ class ProdutosEncomendaDetail(APIView):
     def delete(self, request, username,idEncomenda,idProdutoEncomenda, format=None):
 
         produts_encomenda_objetos = self.get_object(idProdutoEncomenda)
-
-        if produts_encomenda_objetos.exists():
-            idProdutoUP=produts_encomenda_objetos.id
+        print(produts_encomenda_objetos is None)
+        if produts_encomenda_objetos is not None:
+            idProdutoUP=produts_encomenda_objetos.unidadeProducao.id
             produtoUP=self.getProdutoUP(idProdutoUP)
             produts_encomenda_objetos.delete()
-            return Response(f"{produtoUP}' encomendado, cancelado com sucesso!",status=status.HTTP_204_NO_CONTENT)
+            return Response(f"{produtoUP}' encomendado, eliminado com sucesso!",status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
@@ -1510,6 +1526,13 @@ class ProdutoEncomendasCancelarView(APIView):
                 tempo_decorrido_desde_encomenda = timezone.now() - produtos_encomenda_objetos.created
                 if tempo_decorrido_desde_encomenda < prazo_cancelamento:
                     produtos_encomenda_objetos.estado = 'Cancelado'
+                    
+                    quantidade_encomendada = produtos_encomenda_objetos.quantidade
+                    produto_encomendado_up = produtos_encomenda_objetos.produtos
+                    
+                    produto_encomendado_up.stock+= Decimal(quantidade_encomendada)
+                    produto_encomendado_up.save()
+                    
                     produtos_encomenda_objetos.save()
                     ## produto já cancelado
                     
@@ -1533,7 +1556,7 @@ class ProdutoEncomendasCancelarView(APIView):
 
                     return Response(f"{produtoUP}' encomendado, cancelado com sucesso!",status=status.HTTP_200_OK)
                 else:
-                    return Response({"details":"Erro - Periodo para cancelamento de encomenda expirado! Tempo máximo de 3h para cancelar encomendas!" }, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"details":"Erro - Periodo para cancelamento de encomenda excedido! Tempo máximo de 3h para cancelar encomendas!" }, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({"details":"Erro- Já não pode cancelar a encomenda. Já não está no estado 'Em processamento'"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -1601,11 +1624,12 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
         consumidor = self.get_consumidor(utilizador)
         carrinho = self.get_carrinho(consumidor)
         produtos_carrinho = self.get_produtos_carrinho(carrinho)
+        print(produtos_carrinho)
         total = 0
         produtos_sem_stock = []
         #print("ANTES DO ATOMIC!!!!!!!!!!!!!!!!!")
         with transaction.atomic():
-            if produtos_carrinho is not None:
+            if produtos_carrinho.exists():
                 #print("EXISTEM PRODUTOS NO CARRINHO!!!!")
                 for itemCarrinho in produtos_carrinho:
                     idProdutoUP = itemCarrinho.produto.id
@@ -1634,7 +1658,7 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
                         valor_total=total
                     )
                     encomenda.save()
-
+                    print(encomenda, "1\n\n\n")
                     for itemCarrinho in produtos_carrinho:
                         idProdutoUP = itemCarrinho.produto.id
                         quantidade_temp = itemCarrinho.quantidade
@@ -1658,9 +1682,9 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
                     mensagem=""
                     encomendas_cliente = Encomenda.objects.filter(consumidor=consumidor)
                     max_id=0
-                    
-                    for encomenda in encomendas_cliente:
-                        encomendaI=int(encomenda.id)
+                    print(encomenda, "2 \n\n\n")
+                    for encomenda_A in encomendas_cliente:
+                        encomendaI=int(encomenda_A.id)
                         if encomendaI > max_id:
                             max_id = encomendaI
                     
@@ -1698,6 +1722,8 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
                         notificacao.mensagem = mensagem
                         notificacao.destinatario = "Fornecedor"
                         notificacao.save()
+                    
+                    print(encomenda, "3\n\n\n")
                     serializar = EncomendaSerializer(encomenda, many=False)
 
                     return Response(serializar.data, status=status.HTTP_201_CREATED)
@@ -1707,7 +1733,7 @@ class EncomendarTodosOsProdutosCarrinho(APIView):
                                     status=status.HTTP_400_BAD_REQUEST)
             else:
                 # print("SEGUNDO ELSEEEE!!!")
-                return Response({'details': "Não tem produtos no carrinho"})
+                return Response({'details': "Não tem produtos no carrinho"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"details": "Ocorreu um erro ao processar a encomenda. Todas as alterações foram revertidas."},status=status.HTTP_400_BAD_REQUEST)
     
     
@@ -1723,7 +1749,7 @@ class EncomendasPorUPList(APIView):
     permission_classes = [IsFornecedorAndOwner2]
     def get_object(self, instance):
         try:
-            return ProdutosEncomenda.objects.filter(unidadeProducao =instance)
+            return ProdutosEncomenda.objects.filter(unidadeProducao = instance)
         except ProdutosEncomenda.DoesNotExist:
             raise Http404
         
@@ -1920,7 +1946,7 @@ class ProdutosEncomendadosVeiculosList(APIView):
                 serializar.save()
                 veiculo.estado_veiculo = 'C'
                 veiculo.save()
-                produto_encomendado.estado = 'A sair da Unidade da Producao'
+                produto_encomendado.estado = 'A sair da Unidade de Producao'
                 produto_encomendado.save()
                 return Response(serializar.data, status=status.HTTP_201_CREATED)
             else:

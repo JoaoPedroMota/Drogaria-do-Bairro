@@ -57,7 +57,7 @@
                                     <td class="product-remove"><a href="{% url 'loja-remover-do-carrinho' produto.idNoCarrinho %}"><i class="far fa-window-close"></i></a></td>
                                     <td class="numeroCarrinhoSoTabela">{{i}}</td>
                                     <td class="product-image">
-                                        <img src="{% static produto.produto.imagem_produto %}" alt="produto.nomeProduto">
+                                        <img src="{% static produto.produto.imagem_produto %}" alt="{{produto.nomeProduto}}">
                                     </td>
                                     <td class="product-name">{{ produto.nomeProduto }}</td>
                                     <td class="product-quantity">{{produto.precoKilo}}€/{{produto.produto.unidade_medida}}</td>    

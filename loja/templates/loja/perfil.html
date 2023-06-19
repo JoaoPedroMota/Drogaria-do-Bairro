@@ -231,7 +231,7 @@ color: white;
                                             <th>Informações de entrega</th>
                                             <th>Criada</th>
                                             <th>Última Atualização</th>
-                                            <th id="semBorda">Detalhes</th>
+                                            <th id="semBorda">Produtos Encomendados</th>
                                         </tr>
                                         <tbody>
                                             {% for encomenda in encomendas %}
@@ -239,10 +239,10 @@ color: white;
                                                     <td>{{ forloop.revcounter }}</td>
                                                     <td>{{ encomenda.valor_total }}€</td>
                                                     <td>{{ encomenda.estado }}</td>
-                                                    <td><a href="{% url 'loja-detalhes-por-encomenda' username=request.user.username idEncomenda=encomenda.idEncomenda idDetalhes=encomenda.detalhes_envio %}" >Ver detalhes</a></td>
+                                                    <td><a href="{% url 'loja-detalhes-por-encomenda' username=request.user.username idEncomenda=encomenda.idEncomenda idDetalhes=encomenda.detalhes_envio %}" >Ver detalhes de envio</a></td>
                                                     <td>{{ encomenda.created }}</td>
                                                     <td>{{ encomenda.updated }}</td>
-                                                    <td><a href="{% url 'loja-produtosEncomendados' username=request.user.username idEncomenda=encomenda.idEncomenda %}">Mais</a></td>
+                                                    <td><a href="{% url 'loja-produtosEncomendados' username=request.user.username idEncomenda=encomenda.idEncomenda %}">Ver protudos da encomenda</a></td>
                                                 </tr>
                                             {% endfor %}
                                         </tbody>

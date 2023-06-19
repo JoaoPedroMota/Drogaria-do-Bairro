@@ -342,6 +342,8 @@ class UnidadeProducao(models.Model):
     def save(self, *args, **kwargs):
         
         self.cidade = unidecode(self.cidade)
+        print(self.cidade)
+        print(self.freguesia)
         self.freguesia = unidecode(self.freguesia)
         
         # Transformar a cidade em uppercase
