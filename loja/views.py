@@ -1404,77 +1404,104 @@ def updateCarrinho(request):
     
     #quantidade = Decimal(request.GET.get('quantidade'))
     
-    for a, key, valor in request.POST.items():
-        print("TEEEEEEEEEEEEESTEEEEEEEEEEEEEEEEEEE")
-        if key.startswith('preco_'):
-            preco = request.POST.get('preco')
-            print("preco",preco)
-        elif key.startswith('produto_'):
-            print(a)
-            print(key)
-            print(valor)
-            quantidade = valor
-            print("quantidade",quantidade)
-            produto_id = key.split('_')[1]
-            print("produto_id",produto_id)
-            preco_atualizado = preco * quantidade
-           
-        carrinho = request.session.get('carrinho', {})
-        if request.user.is_authenticated and request.user.is_consumidor:
-            # data = request.GET.get('preco')
-            # split_values = data.split('?')
-            # valor = Decimal(split_values[0])
-            #quantidade = Decimal(split_values[1].split('=')[1])
-            #preco_atualizado = Decimal(str(valor * quantidade))
-            # preco = Decimal(request.GET.get('preco'))
-            # quantidade = Decimal(request.GET.get('quantidade'))
-            # preco_atualizado = Decimal(preco * quantidade)
-            
-            
-            url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/produtoUP/{produto_id}/'
+    # for key, valor in request.POST.items():
+    #     print("TEEEEEEEEEEEEESTEEEEEEEEEEEEEEEEEEE",key)
+    #     print(valor)
+    #     if key.startswith('preco_'):
+    #         print("PRIMEIROIIIIIIIIIIIIIIIIIIF")
+    #         preco = key.split('_')[1]
+    #         print("preco",preco)
+    #     elif key.startswith('quantidade_'):
+    #         print("PRIMEIROIIIIIIIIIIIIIIIIIIFASWEDAWD")
+    #         print(key)
+    #         print(valor)
+    #         quantidade = valor
+    #         print("quantidade",quantidade)
+    #         produto_id = key.split('_')[1]
+    #         print("produto_id",produto_id)
+    #         preco_atualizado = preco * quantidade
+    
+    carrinho = request.session.get('carrinho', {})
+    if request.user.is_authenticated and request.user.is_consumidor:
+        # data = request.GET.get('preco')
+        # split_values = data.split('?')
+        # valor = Decimal(split_values[0])
+        #quantidade = Decimal(split_values[1].split('=')[1])
+        #preco_atualizado = Decimal(str(valor * quantidade))
+        # preco = Decimal(request.GET.get('preco'))
+        # quantidade = Decimal(request.GET.get('quantidade'))
+        # preco_atualizado = Decimal(preco * quantidade)
         
+        
+        url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/produtoUP/{produto_id}/'
+    
+        sessao = requests.Session()
+        sessao.cookies.update(request.COOKIES)
+
+        csrf_token = get_token(request)
+        headers = {'X-CSRFToken':csrf_token}
+
+        resposta = sessao.get(url, headers=headers)
+        if resposta.status_code == 200: #ja existe o produto no carrinho, logo é um put
+            content = resposta.json()
+            idProdutoNoCarrinho = content.get('id')
+            # idCarrinho = content.get('carrinho')
+            produtoUnidadeProducao = content.get('produto')
+            idProdutoUnidadeProducao = produtoUnidadeProducao.get('id')
+            quantidadeTotal = quantidade
+            if quantidadeTotal <= 999:
+                quantidade_updated = quantidade
+                atualizar_carrinho_dict_info = {
+                    'produto': idProdutoUnidadeProducao,
+                    'quantidade' : quantidade_updated
+                }
+                # # print(atualizar_carrinho_dict_info)
+                
+                urlAtualizar = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/{idProdutoNoCarrinho}/'
+                respostaUpdate = sessao.put(urlAtualizar, headers=headers, data = atualizar_carrinho_dict_info)
+            else:
+                mensagem_erro = "Erro: Quantidade máxima antigida. Máximo permitido é 999."
+                messages.error(request, mensagem_erro)
+            # print("VALORES ATUALIZADOS:", respostaUpdate.json())
+        
+    elif request.user.is_authenticated and request.user.is_fornecedor: #é um fornecedor. não devia estar aqui. sai fora
+        return redirect('loja-home')
+    
+    else: #utilizador não autenticado
+        #data = request.GET.get('preco')
+        #split_values = data.split('?')
+        # valor = float(split_values[0])
+        # quantidade = float(split_values[1].split('=')[1])
+        # preco = Decimal(request.GET.get('preco'))
+        # quantidade = Decimal(request.GET.get('quantidade'))
+        # preco_atualizado = Decimal(preco * quantidade)
+        
+        for produto in carrinho:         
+            # print("PRODUTO:   ",produto)
+            # preco = request.POST.get("preco")
+            # 
+            produto_id_nao_autent = str(produto)
+
+            #consumidor = utilizadorPerfil.consumidor
+            url = f'http://127.0.0.1:8000/api/produtos_loja/{produto}/'
+
             sessao = requests.Session()
             sessao.cookies.update(request.COOKIES)
-
             csrf_token = get_token(request)
             headers = {'X-CSRFToken':csrf_token}
-
             resposta = sessao.get(url, headers=headers)
-            if resposta.status_code == 200: #ja existe o produto no carrinho, logo é um put
-                content = resposta.json()
-                idProdutoNoCarrinho = content.get('id')
-                # idCarrinho = content.get('carrinho')
-                produtoUnidadeProducao = content.get('produto')
-                idProdutoUnidadeProducao = produtoUnidadeProducao.get('id')
-                quantidadeTotal = quantidade
-                if quantidadeTotal <= 999:
-                    quantidade_updated = quantidade
-                    atualizar_carrinho_dict_info = {
-                        'produto': idProdutoUnidadeProducao,
-                        'quantidade' : quantidade_updated
-                    }
-                    # # print(atualizar_carrinho_dict_info)
-                    
-                    urlAtualizar = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/{idProdutoNoCarrinho}/'
-                    respostaUpdate = sessao.put(urlAtualizar, headers=headers, data = atualizar_carrinho_dict_info)
-                else:
-                    mensagem_erro = "Erro: Quantidade máxima antigida. Máximo permitido é 999."
-                    messages.error(request, mensagem_erro)
-                # print("VALORES ATUALIZADOS:", respostaUpdate.json())
+
+            conteudo = resposta.json()
+
+            if conteudo['unidade_medida'] != 'un':
+                preco_Kg = Decimal(conteudo['preco_a_granel'])
+            else:
+                preco_Kg = Decimal(conteudo['quantidade_por_unidade'])
             
-        elif request.user.is_authenticated and request.user.is_fornecedor: #é um fornecedor. não devia estar aqui. sai fora
-            return redirect('loja-home')
-        else: #utilizador não autenticado
-            # data = request.GET.get('preco')
-            # split_values = data.split('?')
-            # valor = float(split_values[0])
-            # quantidade = float(split_values[1].split('=')[1])
-            #preco = Decimal(request.GET.get('preco'))
-            #quantidade = Decimal(request.GET.get('quantidade'))
-            # preco_atualizado = Decimal(preco * quantidade)
-            
-            preco_atualizado = preco * quantidade
-            produto_id_nao_autent = str(produto_id)
+            quantidadePorId = 'quantidade_'+produto_id_nao_autent
+            quantidade = Decimal(request.POST.get(quantidadePorId))
+            print("QUANTIDADE TESTE ",quantidade)
+            preco_atualizado = preco_Kg * quantidade
 
             if produto_id_nao_autent in carrinho.keys():
                 totalQuantidade = float(quantidade)
@@ -1485,14 +1512,8 @@ def updateCarrinho(request):
                     mensagem_erro = "Erro: Quantidade máxima antigida. Máximo permitido é 999."
                     messages.error(request, mensagem_erro)
                     
-            else:
-                carrinho[produto_id_nao_autent] = { 
-                        'quantidade': float(quantidade),
-                        'precoQuantidade' : float(preco_atualizado)
-                }
-            
             request.session['carrinho'] = carrinho
-    return redirect('loja-ver-produtos')
+    return redirect('loja-carrinho')
     
 
 def remover_do_carrinho(request, produto_id):
