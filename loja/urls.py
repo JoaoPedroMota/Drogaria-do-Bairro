@@ -47,6 +47,9 @@ urlpatterns = [
     path('notificacoes/<str:username>/', views.obterNotificacoesF, name='notificacoes'),
     path('delete-notifications/<str:username>', views.marcar_notificacao_lida, name='marcar-lido'),
     
+    path('checkoutSession/<int:idDetalhesEnvio>/', views.createCheckoutSession, name ='loja-checkoutSession'),
+    path('paymentSuccess/<int:idDetalhesEnvio>/', views.payment_success, name='loja-paymentSuccess'),
+    path('paymentFailure/', views.payment_failure, name='loja-paymentFailure'),
 ]
 
 

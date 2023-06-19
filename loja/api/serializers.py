@@ -531,7 +531,7 @@ class DetalhesEnvioSerializerResponse(ModelSerializer):
 class EncomendaSerializer(ModelSerializer):
     class Meta:
         model = Encomenda
-        fields = ["id","consumidor", "detalhes_envio","valor_total","updated","created","estado"]
+        fields = ["id","consumidor", "detalhes_envio", "idCheckoutSession", "valor_total","updated","created","estado"]
 
 class ProdutosEncomendaSerializer(ModelSerializer):
     class Meta:
