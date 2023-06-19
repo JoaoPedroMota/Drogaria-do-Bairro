@@ -1,55 +1,122 @@
+
 {% load static %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
- $(document).ready(function() {
-  var notificationTable = $('.notification-table');
-  notificationTable.hide();
-
-  var numeroNotificacoes = localStorage.getItem('numeroNotificacoes');
-  if (numeroNotificacoes) {
-    $('#bolinha-vermelha').text(numeroNotificacoes);
+  
+function som() {
+    var audio = new Audio("{% static 'website/assets/mp3/som.mp3' %}");
+    audio.play();
   }
 
-  $('.notification-icon').click(function() {
-    if (notificationTable.is(':visible')) {
-      notificationTable.hide();
-    } else {
-      notificationTable.show();
-      var notificationBody = notificationTable.find('.notification-body');
-      notificationBody.empty();
-      $.ajax({
-        url: '/notificacoes/{{ request.user.username }}',
-        type: 'GET',
-        dataType: 'json',
-        success: function(data) {
-          var notifications = data.notifications;
-          for (var i = 0; i < notifications.length; i++) {
-            var notification = notifications[i];
-            var message = notification.message;
-            var notificationRow = $('<tr class="notification-row"></tr>');
-            var notificationItem = $('<td class="notification-item"></td>').text(message);
-            notificationRow.append(notificationItem);
-            notificationBody.append(notificationRow);
-            
+
+
+
+$(document).ready(function() {
+
+    var csrftoken = getCookie('csrftoken');
+
+ 
+    function getCookie(name) {
+      var cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+          var cookie = cookies[i].trim();
+       
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
           }
-
-          var novoNumeroNotificacoes = data.numeroNotificacoes;
-          $('#bolinha-vermelha').text(novoNumeroNotificacoes);
-          localStorage.setItem('numeroNotificacoes', novoNumeroNotificacoes);
-        },
-        error: function(xhr, status, error) {
-          console.log(error);
         }
-      });
+      }
+      return cookieValue;
     }
-  });
-});
 
+    var notificationTable = $('.notification-table');
+    notificationTable.hide();
+
+    var numeroNotificacoes = localStorage.getItem('numeroNotificacoes');
+    if (numeroNotificacoes) {
+      $('#bolinha-vermelha').text(numeroNotificacoes);
+    }
+
+    $('.notification-icon').click(function() {
+      if (notificationTable.is(':visible')) {
+        notificationTable.hide();
+      } else {
+        notificationTable.show();
+        var notificationBody = notificationTable.find('.notification-body');
+        notificationBody.empty();
+        $.ajax({
+          url: '/notificacoes/{{ request.user.username }}',
+          type: 'GET',
+          dataType: 'json',
+          beforeSend: function(xhr) {
+    
+            xhr.setRequestHeader('X-CSRFToken', csrftoken);
+          },
+          success: function(data) {
+            var notifications = data.notifications;
+            if (notifications.length==0){
+              var notificationRow = $('<tr class="notification-row"></tr>');
+              var notificationItem = $('<td class="notification-item">Com nenhuma notificação de momento</td>').text(message);
+              notificationRow.append(notificationItem);
+              notificationBody.append(notificationRow);
+            }else{
+            for (var i = 0; i < notifications.length; i++) {
+              som();
+              var notification = notifications[i];
+              var message = notification.message;
+              var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
+              var notificationItem = $('<td class="notification-item"></td>').text(message);
+              notificationRow.append(notificationItem);
+              notificationBody.append(notificationRow);
+              
+            }
+          
+            var dele = $('<button class="delete-notifications">Delete All</button>');
+            notificationBody.append(dele);
+          }
+            var notificationItem = $('<td class="notification-item"></td>');
+            var novoNumeroNotificacoes = data.numeroNotificacoes;
+            $('#bolinha-vermelha').text(novoNumeroNotificacoes);
+            localStorage.setItem('numeroNotificacoes', novoNumeroNotificacoes);
+
+            
+            $('.delete-notifications').click(function() {
+              $.ajax({
+                url: '/delete-notifications/{{ request.user.username }}',
+                type: 'POST',
+                dataType: 'json',
+                beforeSend: function(xhr) {
+                 
+                  xhr.setRequestHeader('X-CSRFToken', csrftoken);
+                },
+                success: function(response) {
+                  e
+                  notificationBody.find('.notification-row').remove();
+                 
+                  $('#bolinha-vermelha').text(0);
+                  localStorage.setItem('numeroNotificacoes', 0);
+                },
+                error: function(xhr, status, error) {
+                  console.log(error);
+                }
+              });
+            });
+          },
+          
+          error: function(xhr, status, error) {
+            console.log(error);
+          }
+        });
+        
+      }
+    });
+  });
 
 </script>
-
 <style>
-
 .notification-item {
   word-wrap: break-word;
   padding: 10px; 
@@ -61,9 +128,6 @@
 .notification-item:hover{
   background-color: antiquewhite;
 }
-
-
-
 
 .notification-table {
   display: none;
@@ -82,8 +146,6 @@
     align-items: center;
     position: relative;
   }
-
- 
 
 #bolinha-vermelha-produtos-carrinho {
     display: inline-block;
@@ -142,7 +204,9 @@
     width: 179px !important;
     background-color: orange;
   }
-
+  .check-icon {
+  cursor: pointer;
+}
 
 @media only screen and (max-width: 992px)  { 
   .imagem_logo{
@@ -180,7 +244,7 @@
     <div class="row">
       <div class="col-lg-12 col-sm-12 text-center">
         <div class="main-menu-wrap">
-          <!-- logo -->
+          
           <div class="site-logo">
             <a href="/" class="imagem_logo1">
               <img src="{%static 'website/assets/img/logo_123.png' %}" alt="logotipo do website" class="imagem_logo" >
@@ -316,9 +380,6 @@
 <span class="close-btn"><i class="fas fa-window-close"></i></span>
 <div class="search-bar">
 <div class="search-bar-tablecell">
-<h3></h3>
-<!-- <input type="text" placeholder="Keywords">
-<button type="submit">Search <i class="fas fa-search"></i></button> -->
 </div>
 </div>
 </div>
@@ -340,17 +401,26 @@
         <i class="fas fa-bell"></i>
         <span id="bolinha-vermelha">{{ numeroNotificacoes }}</span>
       </a>
+      
       <table class="notification-table">
-       
+        <thead>
+          <tr>
+           
+          </tr>
+        </thead>
         <tbody class="notification-body">
-         
+          <tr class="notification-row"></tr>
+          
         </tbody>
       </table>
     </div>
-    
     </div>
   </div>
 </li>
+
+
+
+
 
 </ul>
 </nav>
@@ -375,8 +445,7 @@
 <div class="search-bar">
 <div class="search-bar-tablecell">
 <h3></h3>
-<!-- <input type="text" placeholder="Keywords">
-<button type="submit">Search <i class="fas fa-search"></i></button> -->
+
 </div>
 </div>
 </div>

@@ -2375,19 +2375,32 @@ def obterNotificacoesF(request,username):
 
     fornecedor=str(username)
     numero=0
-    notifications = Notificacao.objects.filter(fornecedor__utilizador__username=fornecedor, destinatario="Fornecedor").order_by('-data')[:10]
+    caminho=request.path
+    
+    notifications = Notificacao.objects.filter(fornecedor__utilizador__username=fornecedor, destinatario="Fornecedor").order_by('-data')[:7]
     notification_data = []
     for notification in notifications:
-        numero+=1
-        notification_data.append({
-            'message': notification.mensagem,
-        
-        
-        })
-    
-
-
-
+        if notification.lido==False:
+            numero+=1
+            notification_data.append({
+                'message': notification.mensagem,
+                'id':notification.id,
+                'caminho':caminho,
+            
+            })
+        else:
+            notification_data.append({
+                'message': "",
+                'id':"",
+            
+            })
     return JsonResponse({'notifications': notification_data,
                          'numeroNotificacoes':numero
                          })
+
+def marcar_notificacao_lida(request, username):
+    fornecedor = str(username)
+    notifications = Notificacao.objects.filter(fornecedor__utilizador__username=fornecedor, destinatario="Fornecedor")
+    notifications.delete()
+    
+    return JsonResponse({'success': True})

@@ -45,7 +45,7 @@ urlpatterns = [
     path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/entregarEncomenda/', views.entregarEncomenda, name='loja-entregarEncomenda'),
     path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/veiculoRegressou/', views.veiculoRegressou, name='loja-veiculoRegressou'),
     path('notificacoes/<str:username>/', views.obterNotificacoesF, name='notificacoes'),
-
+    path('delete-notifications/<str:username>', views.marcar_notificacao_lida, name='marcar-lido'),
     
 ]
 
