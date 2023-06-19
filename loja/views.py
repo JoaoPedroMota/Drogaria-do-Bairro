@@ -12,7 +12,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from .forms import *
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from .forms import ConfirmacaoForm
 import requests
 from django.db.models import QuerySet
@@ -32,6 +32,65 @@ from django.conf import settings
 from django.urls import reverse
 from urllib.parse import quote_plus, urlencode
 from loja.api.serializers import UtilizadorSerializer
+
+import stripe
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def createCheckoutSession(request, idDetalhesEnvio):
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+
+    url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/'
+    response = sessao.get(url, headers=headers).json()
+
+    line_items = []
+    for produto in response:
+        idProduto = produto['produto']['produto']
+
+        url = f'http://127.0.0.1:8000/api/produtosID/{idProduto}/'
+        response2 = sessao.get(url, headers=headers).json()
+
+        produtoNome = response2['nome']
+        encomendaPreco = int(float(produto['preco'])*100)
+
+        item = {
+            'price_data': {
+                'currency' : 'eur',
+                'unit_amount' : encomendaPreco  ,
+                'product_data' : {
+                    'name' : produtoNome,
+                },
+            },
+            'quantity' : 1
+        }
+
+        line_items.append(item)
+
+    checkout_session = stripe.checkout.Session.create(
+        payment_method_types = ['card'],
+        line_items = line_items,
+        mode = 'payment',
+        success_url=f'http://127.0.0.1:8000/paymentSuccess/{idDetalhesEnvio}/',
+        cancel_url = 'http://127.0.0.1:8000/paymentFailure/',
+    )
+
+    request.session['checkout_session_id'] = checkout_session.id
+
+    return redirect(checkout_session.url, code=303)
+
+
+def payment_success(request, idDetalhesEnvio):
+    messages.success(request, "O pagamento foi efetuado com sucesso")
+    return redirect('loja-criarEncomenda', idDetalhesEnvio=idDetalhesEnvio)
+
+def payment_failure(request):
+    messages.error(request, "Erro - Houve um problema ao efetuar o pagamento")
+    return redirect('loja-carrinho')
 
 oauth = OAuth()
 
@@ -254,7 +313,7 @@ def checkout(request):
 
 def loginUtilizador(request):
     return oauth.auth0.authorize_redirect(
-        request, request.build_absolute_uri('https://drogariadobairro.pt/callback')
+        request, request.build_absolute_uri(reverse("loja-callback"))
     )
 
 
@@ -270,10 +329,9 @@ def callback(request):
     login(request, user)
 
     if created:
-        return redirect('https://drogariadobairro.pt/completarPerfil')
+        return redirect('loja-completarPerfil')
     else:
-        #return redirect(request.build_absolute_uri(reverse("loja-home")))
-        return redirect('https://drogariadobairro.pt')
+        return redirect(request.build_absolute_uri(reverse("loja-home")))
 
     # username = token['userinfo']['nickname']
 
@@ -299,7 +357,7 @@ def logout(request):
         f"https://{settings.AUTH0_DOMAIN}/v2/logout?"
         + urlencode(
             {
-                "returnTo": request.build_absolute_uri('https://drogariadobairro.pt'),
+                "returnTo": request.build_absolute_uri(reverse("loja-home")),
                 "client_id": settings.AUTH0_CLIENT_ID,
             },
             quote_via=quote_plus,
@@ -418,8 +476,8 @@ def apagarConta(request, pk):
         return redirect('loja-perfil', userName=request.user.username)
 
     if request.method == 'POST':
-        password = request.POST.get('password')
-        if check_password(password, utilizador.password):
+        username = request.POST.get('username')
+        if username == request.user.username:
             logout(request)
             utilizador.delete()
             return redirect('loja-home')
@@ -1720,7 +1778,7 @@ def confirmarDetalhesEnvio(request):
                         if resposta.status_code == 200: #correu tudo bem?
                             messages.success(request, f"Detalhes de envio guardados com sucesso")
                             #return redirect('loja-perfil', userName=request.user.username)  #FALTA VER
-                            return redirect('loja-criarEncomenda', idDetalhesEnvio=idDetalhesEnvio)
+                            return redirect('loja-checkoutSession', idDetalhesEnvio=idDetalhesEnvio)
                         else: #deu erro
                             formulario.add_error('nome',f'Erro: {resposta}')
                     # else:
@@ -1785,7 +1843,7 @@ def confirmarDetalhesEnvio(request):
                 if resposta.status_code == 201: #correu tudo bem?
                     messages.success(request, f"Detalhes de envio guardados com sucesso para esta encomenda")
                     #return redirect('loja-criarEncomenda', userName=request.user.username)
-                    return redirect('loja-criarEncomenda', idDetalhesEnvio=idDetalhesEnvio)
+                    return redirect('loja-checkoutSession', idDetalhesEnvio=idDetalhesEnvio)
                 else: #deu erro
                     formulario.add_error('nome',f'Erro: {resposta}')
 
@@ -1816,7 +1874,7 @@ def confirmarDetalhesEnvio(request):
                     idDetalhesEnvio=conteudo['id']
                     messages.success(request, f"Detalhes de envio guardados com sucesso")
                     #return redirect('loja-perfil', userName=request.user.username)
-                    return redirect('loja-criarEncomenda', idDetalhesEnvio=idDetalhesEnvio)
+                    return redirect('loja-checkoutSession', idDetalhesEnvio=idDetalhesEnvio)
                 else:
                     #("FORMULARIO ERRORS", formulario.errors)
                     formulario.add_error('nome', f'Erro:{resposta}')
@@ -1842,7 +1900,9 @@ def criarEncomenda(request, idDetalhesEnvio):
     csrf_token = get_token(request)
     headers = {'X-CSRFToken':csrf_token}
 
-    data={'detalhes_envio': idDetalhesEnvio}
+    idCheckoutSession = request.session.get('checkout_session_id')
+
+    data={'detalhes_envio': idDetalhesEnvio, 'idCheckoutSession' : idCheckoutSession}
 
     resposta = sessao.post(url, data=data,headers=headers)
     if resposta.status_code == 201:
@@ -2063,8 +2123,23 @@ def cancelarProdutoEncomendado(request, username, idEncomenda, idProdutoEncomend
                 #print(tempo_decorrido_desde_encomenda, "tempo_decorrido_desde_encomenda")
                 if tempo_decorrido_desde_encomenda < prazo_cancelamento:
                     resposta = sessao.put(url, headers=headers)
+
                     if resposta.status_code == 200:
-                        messages.success(request,f"O produto encomendado ({nomeProduto}), foi cancelado com sucesso")
+                        url2 = f'http://127.0.0.1:8000/api/{username}/consumidor/encomenda/'
+                        encomendas = sessao.get(url2, headers=headers).json()
+
+                        for encomenda in encomendas:
+                            if encomenda['id'] == idEncomenda:
+                                idCheckoutSession = encomenda['idCheckoutSession']
+
+                        checkout_session = stripe.checkout.Session.retrieve(idCheckoutSession)
+                        payment_intent = checkout_session['payment_intent']
+
+                        stripe.Refund.create(
+                            payment_intent=payment_intent,
+                            amount=int(float(conteudo['preco']))*100,
+                        )
+                        messages.success(request,f"O produto encomendado ({nomeProduto}), foi cancelado com sucesso e o reembolso foi efetuado")
                         return redirect('loja-perfil', userName=request.user.username)
                     else:
                         messages.error(request,f"Houve um erro a cancelar o seu produto")
