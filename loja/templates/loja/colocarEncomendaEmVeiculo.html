@@ -26,8 +26,11 @@
                     </ul>
                   {% endif %}
                   <p><label for="{{ field.name }}">{{ field.label }}</label></p>
+                  <br>
                   {% if field.name == 'veiculo' %}
+
                     <select name="{{ field.name }}">
+                     
                         <option value="" {% if not field.value %}selected{% endif %}>Veículo</option>
                             {% for choice_value, choice_label in field.field.choices %}
                                 <option value="{{ choice_value }}" {% if field.value == choice_value %}selected{% endif %}>{{ choice_label }}</option>

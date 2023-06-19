@@ -45,7 +45,15 @@ urlpatterns = [
     path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/entregarEncomenda/', views.entregarEncomenda, name='loja-entregarEncomenda'),
     path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/veiculoRegressou/', views.veiculoRegressou, name='loja-veiculoRegressou'),
     path('notificacoes/<str:username>/', views.obterNotificacoesF, name='notificacoes'),
+
     path('perfil/<str:username>/relatorioImpactoLocal/', views.relarioImpactoLocal, name='loja-relatorioImpactoLocal'),
+
+
+    path('delete-notifications/<str:username>', views.marcar_notificacao_lida, name='marcar-lido'),
+    
+    path('checkoutSession/<int:idDetalhesEnvio>/', views.createCheckoutSession, name ='loja-checkoutSession'),
+    path('paymentSuccess/<int:idDetalhesEnvio>/', views.payment_success, name='loja-paymentSuccess'),
+    path('paymentFailure/', views.payment_failure, name='loja-paymentFailure'),
 
 ]
 
