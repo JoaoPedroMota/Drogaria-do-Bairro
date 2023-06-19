@@ -35,88 +35,73 @@
 
     var a = parseInt(localStorage.getItem('a')) || 0;
 
-    $('.notification-icon').click(function() {
-      if (notificationTable.is(':visible')) {
-        notificationTable.hide();
-      } else {
-        notificationTable.show();
-        var notificationBody = notificationTable.find('.notification-body');
-        notificationBody.empty();
-        $.ajax({
-          url: '/notificacoes/{{ request.user.username }}',
-          type: 'GET',
-          dataType: 'json',
-          beforeSend: function(xhr) {
-            xhr.setRequestHeader('X-CSRFToken', csrftoken);
-          },
-          success: function(data) {
-            console.log(a);
-            
-            var notifications = data.notifications;
-            if (notifications.length == 0) {
-              var notificationRow = $('<tr class="notification-row">Sem notificacoes</tr>');
-              var notificationItem = $('<td class="notification-item">Nenhuma notificação de momento</td>').text(message);
-              notificationRow.append(notificationItem);
-              notificationBody.append(notificationRow);
-            } else {
-              for (var i = 0; i < notifications.length; i++) {
-                console.log(notifications.length);
-                if (notifications.length > a) {
+    function loadNotifications() {
+      var notificationBody = notificationTable.find('.notification-body');
+      notificationBody.empty();
+
+      $.ajax({
+        url: '/notificacoes/{{ request.user.username }}',
+        type: 'GET',
+        dataType: 'json',
+        beforeSend: function(xhr) {
+          xhr.setRequestHeader('X-CSRFToken', csrftoken);
+        },
+        success: function(data) {
+          console.log(a);
+
+          var notifications = data.notifications;
+          if (notifications.length === 0) {
+            var notificationRow = $('<tr class="notification-row">Sem notificacoes</tr>');
+            var notificationItem = $('<td class="notification-item">Nenhuma notificação de momento</td>').text(message);
+            notificationRow.append(notificationItem);
+            notificationBody.append(notificationRow);
+          } else {
+            for (var i = 0; i < notifications.length; i++) {
+              if (notifications.length > a) {
+                a = notifications.length;
+                var notification = notifications[i];
+                var message = notification.message;
+                var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
+                var notificationItem = $('<td class="notification-item"></td>').text(message);
+                var new2 = $('<td class="notification-novas">Novas Encomendas feitas:</td>');
+                  
+                notificationRow.append(notificationItem);
+                notificationBody.append(new2);
+                notificationBody.append(notificationRow);
+                  
+                som();
+              } else {
+                if (a > 1) {
                   a = notifications.length;
                   var notification = notifications[i];
                   var message = notification.message;
                   var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
                   var notificationItem = $('<td class="notification-item"></td>').text(message);
-                  var new2 = $('<td class="notification-novas">Novas Encomendas feitas:</td>');
                   
+                  notificationRow.append(notificationItem);
+                  notificationBody.append(notificationRow);
+                } else {
+                  a = notifications.length;
+                  var notification = notifications[i];
+                  var message = notification.message;
+                  var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
+                  var notificationItem = $('<td class="notification-item"></td>').text(message);
+                  var new2 = $('<td class="notification-novas">A sua primeira compra Parabes:</td>');
+
                   notificationRow.append(notificationItem);
                   notificationBody.append(new2);
                   notificationBody.append(notificationRow);
-                  
-                  som();
-                  
-                } else {
-                  if (a > 1) {
-                    a = notifications.length;
-                    var notification = notifications[i];
-                    var message = notification.message;
-                    var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
-                    var notificationItem = $('<td class="notification-item"></td>').text(message);
-                    
-                    notificationRow.append(notificationItem);
-                    notificationBody.append(notificationRow);
-                  }else{
-                    a = notifications.length;
-                    var notification = notifications[i];
-                    var message = notification.message;
-                    var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
-                    var notificationItem = $('<td class="notification-item"></td>').text(message);
-                    var new2 = $('<td class="notification-novas">O seu primeiro pedido Parabens:</td>');
-
-
-                    notificationRow.append(notificationItem);
-                    notificationBody.append(new2);
-                    notificationBody.append(notificationRow);
-                   
-                    
-                  }
                 }
               }
-              var br=$('<br>');
-             
-              notificationBody.append(br);
-              var dele = $('<button class="delete-notifications btn btn-danger btn-sm">Delete All</button>');
-              notificationBody.append(dele);
-             
-              
             }
-            var notificationItem = $('<td class="notification-item"></td>');
-            var novoNumeroNotificacoes = data.numeroNotificacoes;
-            $('#bolinha-vermelha').text(novoNumeroNotificacoes);
-            localStorage.setItem('numeroNotificacoes', novoNumeroNotificacoes);
-            localStorage.setItem('a', a);
 
-            $('.delete-notifications').click(function() {
+            var br=$('<br>');
+            notificationBody.append(br);
+
+            var dele = $('<button class="delete-notifications btn btn-danger btn-sm">Delete All</button>');
+            notificationBody.append(dele);
+
+            dele.click(function() {
               $.ajax({
                 url: '/delete-notifications/{{ request.user.username }}',
                 type: 'POST',
@@ -133,7 +118,6 @@
                   localStorage.setItem('numeroNotificacoes', 0);
                   localStorage.setItem('a', 0);
                   
-                
                   loadNotifications();
                 },
                 error: function(xhr, status, error) {
@@ -141,15 +125,37 @@
                 }
               });
             });
-          },
-          error: function(xhr, status, error) {
-            console.log(error);
           }
-        });
+
+          var notificationItem = $('<td class="notification-item"></td>');
+          var novoNumeroNotificacoes = data.numeroNotificacoes;
+          $('#bolinha-vermelha').text(novoNumeroNotificacoes);
+          localStorage.setItem('numeroNotificacoes', novoNumeroNotificacoes);
+          localStorage.setItem('a', a);
+        },
+        error: function(xhr, status, error) {
+          console.log(error);
+        },
+        complete: function() {
+          
+          setTimeout(loadNotifications, 10000);
+        }
+      });
+    }
+
+    $('.notification-icon').click(function() {
+      if (notificationTable.is(':visible')) {
+        notificationTable.hide();
+      } else {
+        notificationTable.show();
+        loadNotifications();
       }
     });
   });
 </script>
+
+
+
 
 
 <style>
