@@ -14,6 +14,24 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+
+AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN")
+AUTH0_CLIENT_ID = os.environ.get("AUTH0_CLIENT_ID")
+AUTH0_CLIENT_SECRET = os.environ.get("AUTH0_CLIENT_SECRET")
+
+STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY")
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
+
+DB_IP = os.environ.get("DB_IP")
+DB_USER = os.environ.get("DB_USER")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get("DJANGO_TJTS")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,13 +40,11 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, "loja", "templates")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-tjts^qxve#o%%t3)w6pa%g82om42ay(&9@7ic6ce+yo6@p27lc'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["0.0.0.0", "127.0.0.1", "localhost", "34.0.207.66", "drogariadobairro.pt"]
+ALLOWED_HOSTS = ["0.0.0.0", "127.0.0.1", "localhost", "34.175.119.60", "drogariadobairro.pt"]
 
 
 CSRF_TRUSTED_ORIGINS = ['https://drogariadobairro.pt', 'http://drogariadobairro.pt', "http://127.0.0.1:8000"]
@@ -44,25 +60,21 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'loja.apps.LojaConfig',
-    ### coisas adicionais
+
+    # coisas adicionais
     'django_countries',
     'phonenumber_field',
-    'rest_framework', ### para a api
-    "corsheaders", #também para a api
+    'rest_framework',  # para a api
+    "corsheaders",  # também para a api
     # 'mptt',
     "countries_plus",
     'django_extensions',
     'django_filters',
-    'rest_framework.authtoken', #Used to enable token authentication
+    'rest_framework.authtoken',  # Used to enable token authentication
 ]
-
 
 AUTH_USER_MODEL = 'loja.Utilizador'
 PHONENUMBER_DEFAULT_REGION = 'PT'
-
-
-
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -113,13 +125,13 @@ DATABASES = {
     # }
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'HOST': '34.0.198.90',
+        'HOST': DB_IP,
         'PORT': '5432',
         'NAME': 'drogaria_db',
-        'USER': 'user1',
-        'PASSWORD': '12345',
-        'OPTIONS':{
-            "options":"-c search_path=public"
+        'USER': DB_USER,
+        'PASSWORD': DB_PASSWORD,
+        'OPTIONS': {
+            "options": "-c search_path=public"
         }
     }
 }
@@ -172,41 +184,15 @@ STATICFILES_DIRS = [
 
 MEDIA_ROOT = BASE_DIR / 'static/website/assets/img/' #imagens e fotos perfil
 
-
-
-
-
-
-
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-
 CORS_ALLOW_ALL_ORIGINS = True # cuidado!!!! verificar quando estiver no sercvidor. ESTA LINHA DEFINE QUEM PODE FAZER PEDIDOS À API
-
-
-
-
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
-
-
-
-
-
-
-
-
-
-
-
-
 
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'rest_framework_json_api.exceptions.exception_handler',
@@ -245,15 +231,3 @@ REST_FRAMEWORK = {
     ),
 }
 
-ENV_FILE = find_dotenv()
-if ENV_FILE:
-    load_dotenv(ENV_FILE)
-
-AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN")
-AUTH0_CLIENT_ID = os.environ.get("AUTH0_CLIENT_ID")
-AUTH0_CLIENT_SECRET = os.environ.get("AUTH0_CLIENT_SECRET")
-
-
-STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY")
-STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
-STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
