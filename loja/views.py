@@ -170,7 +170,7 @@ def loja(request):
         if request.session.get('carrinho') is not None and request.session.get('carrinho') !={}:
             request.session['carrinho'] = {}
     produtosCarrinho = quantosProdutosNoCarrinho(request)
-    print(produtosCarrinho)
+    #(produtosCarrinho)
     if produtosCarrinho == -1:
         context={"produtosCarrinho":"E"}
     else:
@@ -867,7 +867,7 @@ def unidadeProducao(request, userName, id):
                     id_veiculo = nome_veiculo_conteudo['id']
                     dicionarioProdutosEstaoVeiculos[idProduto] = (True, nome_mesmo, id_veiculo)
         else:
-            print("cheguei aqui!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            # print("cheguei aqui!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             encomendas = {}   
             dicionarioProdutosEstaoVeiculos= {}
         context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id, "produtosUP":lista_produtos_up, 'nome_up':nome_up,'encomenda':encomendas, "produtosEstaoEmVeiculos":dicionarioProdutosEstaoVeiculos}
@@ -1126,10 +1126,11 @@ def sP(request,produto_id):
 
 def ver_produtos(request):
     q = request.GET.get('q', '')
+    print(q)
     url1 = 'http://127.0.0.1:8000/api/produtos/'
     url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
     response1 = requests.get(url1).json()
-    response2 = requests.get(url2).json()
+    response2 = requests.get(url2, data={"q":q}).json()
 
     response2_dict = {product['produto']: product for product in response2}
 
@@ -2076,8 +2077,8 @@ def getProdutosEncomenda(request, username, idEncomenda):
         todosProdutos = resposta.json() ### todos os produtos encomendados
         i =0
         for produto in todosProdutos:
-            if i==0:
-                print("\n\n\n\n", produto,"\n\n\n\n",produto['produtos'],"\n\n\n\n")
+            # if i==0:
+                # print("\n\n\n\n", produto,"\n\n\n\n",produto['produtos'],"\n\n\n\n")
             produto_up = produto['produtos']
             url = f'http://127.0.0.1:8000/api/produtos_loja/{produto_up}/'
             resposta_2 = requests.get(url)
@@ -2221,7 +2222,7 @@ def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
         lista_invertida = conteudo_2[::-1]
         index_encomenda = lista_invertida.index(encomenda_dicio)
         index_encomenda+=1
-        print(index_encomenda)
+        # print(index_encomenda)
 
         info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega}]
     except json.decoder.JSONDecodeError:

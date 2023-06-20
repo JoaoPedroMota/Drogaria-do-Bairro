@@ -238,7 +238,15 @@ color: white;
                                                 <tr>
                                                     <td>{{ forloop.revcounter }}</td>
                                                     <td>{{ encomenda.valor_total }}€</td>
-                                                    <td>{{ encomenda.estado }}</td>
+                                                    {% if encomenda.estado == 'Cancelado' %}
+                                                    <td style="font-weight: bold; color: red;">{{ encomenda.estado}}</td>
+                                                    {% elif encomenda.estado == 'Entregue' %}
+                                                    <td style="font-weight: bold; color: green;">{{ encomenda.estado}}</td>
+                                                    {% elif encomenda.estado == 'Em processamento' %}
+                                                    <td style="font-weight: bold; color: rgb(0, 88, 103) ;">{{ encomenda.estado}}</td>
+                                                    {% else %}
+                                                    <td style="font-weight: bold; color: rgb(0, 0, 0);">{{ encomenda.estado}}</td>
+                                                    {% endif %}
                                                     <td><a href="{% url 'loja-detalhes-por-encomenda' username=request.user.username idEncomenda=encomenda.idEncomenda idDetalhes=encomenda.detalhes_envio %}" >Ver detalhes de envio</a></td>
                                                     <td>{{ encomenda.created }}</td>
                                                     <td>{{ encomenda.updated }}</td>

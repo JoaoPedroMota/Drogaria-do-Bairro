@@ -23,7 +23,7 @@ urlpatterns = [
     path('<str:username>/consumidor/carrinho/produtoUP/<int:idProdutoUnidadeProducao>/', views.ProdutosCarrinhoDetailProdutoUP.as_view()), #já está no swagger
     path('<str:username>/consumidor/detalhes_envio/', views.DetalhesEnvioList.as_view()), #já está no swagger
     path('<str:username>/consumidor/detalhes_envio/<int:id>/', views.DetalhesEnvioDetails.as_view()),  #já está no swagger  
-    path('<str:username>/consumidor/encomenda/', views.EncomendaList.as_view()), #FIXME TODO já está no swagger +- falta post, mas o post está comentado 
+    path('<str:username>/consumidor/encomenda/', views.EncomendaList.as_view()), # já está no swagger
     path('<str:username>/consumidor/encomenda/<int:idEncomenda>/', views.EncomendaDetail.as_view()), #já está no swagger
     path('<str:username>/consumidor/encomenda/<int:idEncomenda>/produtos/', views.ProdutosEncomendaList.as_view()), # já está no swagger
     path('<str:username>/consumidor/encomenda/<int:idEncomenda>/produtos/<int:idProdutoEncomenda>/', views.ProdutosEncomendaDetail.as_view()), # já está no swagger
@@ -59,18 +59,18 @@ urlpatterns = [
     
     
     # loja
-    path('categorias/', views.CategoriaList.as_view()),
-    path('categorias/<int:id>/', views.CategoriaDetail.as_view()), #preciso ver isto
-    path('categoriaNome/<str:nome>/', views.CategoriaDetailNome.as_view()),
-    path('produtos/', views.ProdutoList.as_view()),
-    path('produtos/<str:nome>/', views.ProdutoDetail.as_view()), #preciso ver isto
-    path('produtosID/<str:id>/', views.ProdutoDetailID.as_view()),
-    path('produtos_loja/',views.ProdutoUnidadeProducaoAll.as_view()),
-    path('produtos_loja/em_stock/', views.ProdutoUnidadeProducaoEmStock.as_view()),
-    path('produtos_loja/<int:idProduto>/', views.SingleProductDetails.as_view()),
+    path('categorias/', views.CategoriaList.as_view()), # já está no swagger
+    path('categorias/<int:id>/', views.CategoriaDetail.as_view()), # já está no swagger
+    path('categoriaNome/<str:nome>/', views.CategoriaDetailNome.as_view()), # já está no swagger
+    path('produtos/', views.ProdutoList.as_view()), #já está no swagger
+    path('produtos/<str:nome>/', views.ProdutoDetail.as_view()),  # já está no swagger
+    path('produtosID/<str:id>/', views.ProdutoDetailID.as_view()), 
+    path('produtos_loja/',views.ProdutoUnidadeProducaoAll.as_view()), #já está no swagger
+    path('produtos_loja/em_stock/', views.ProdutoUnidadeProducaoEmStock.as_view()),  #já está no swagger
+    path('produtos_loja/<int:idProduto>/', views.SingleProductDetails.as_view()), #já está no swagger
     
     #admin
-    path('<str:username>/relatorioImpactoLocal/', views.RelatorioImpactoLocalAdmin.as_view()),
+    path('<str:username>/relatorioImpactoLocal/', views.RelatorioImpactoLocalAdmin.as_view()), #já está no swagger
 ]   
 
 

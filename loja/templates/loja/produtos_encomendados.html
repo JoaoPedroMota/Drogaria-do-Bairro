@@ -98,7 +98,28 @@
                                                     <td>{{ produto.precoKilo }}€/{% if produto.preco_a_granel == True %} {{produto.unidade_medida}} {% else %} un {% endif %}</td>
                                                     <td>{% if produto.preco_a_granel == True %}{{ produto.quantidade|floatformat:2 }} {{produto.unidade_medida}} {% else %} {{ produto.quantidade }} un {% endif %}</td>
                                                     <td>{{ produto.preco }}€</td>
-                                                    <td>{{ produto.estado}}</td>
+                                                    {% if produto.estado == "Em processamento" %}
+                                                        <!-- text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black; -->
+                                                        <td style="font-weight: bold; color: rgb(0, 88, 103) ;">{{ produto.estado}}</td>
+                                                        {% elif produto.estado == "Enviado" %}
+                                                        <!-- text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black; -->
+                                                        <td style="font-weight: bold; color: rgb(0, 4, 248);">{{ produto.estado}}</td>
+                                                        {% elif produto.estado == 'A chegar' %}
+                                                        <!-- text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black; -->
+                                                        <td style="font-weight: bold; color: rgb(255, 140, 0);">{{ produto.estado}}</td>
+                                                        {% elif produto.estado == "Entregue" %}
+                                                        <!-- text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black; -->
+                                                        <td style="font-weight: bold; color: green;">{{ produto.estado}}</td>
+                                                        {% elif produto.estado == "Cancelado" %}
+                                                        <!-- text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black; -->
+                                                        <td style="font-weight: bold; color: red;">{{ produto.estado}}</td>
+                                                        {% elif produto.estado == 'A sair da Unidade de Producao' %} 
+                                                        <!-- text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black; -->
+                                                        <td style="font-weight: bold; color: rgb(84, 29, 95); ">{{ produto.estado}}</td>"
+                                                        {% else %}      
+                                                        <!--text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;-->
+                                                        <td style="font-weight: bold; color: rgb(0, 0, 0);">{{ produto.estado}}</td>                                            
+                                                    {% endif %}
                                                     <td>{{produto.updated}}</td>
                                                     {% if produto.estado == 'Em processamento' %}
                                                     <td>
