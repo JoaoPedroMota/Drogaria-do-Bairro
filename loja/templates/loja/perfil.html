@@ -140,6 +140,12 @@ color: white;
                     <br>
                     <input type="submit" id="login" value="EDITAR PERFIL">
                     </form>
+                    
+                    <form action="{% url 'loja-relatorioImpactoLocal' username=request.user.username %}" method="" >
+                        {% csrf_token %}
+                        <br>
+                        <input type="submit" id="login" value="O MEU RELATÓRIO DE IMPACTO LOCAL">
+                    </form>
 
                     {% endif %}
                 </div>
@@ -231,22 +237,27 @@ color: white;
                                             <th>Informações de entrega</th>
                                             <th>Criada</th>
                                             <th>Última Atualização</th>
-                                            <th id="semBorda">Detalhes</th>
+                                            <th id="semBorda">Produtos Encomendados</th>
                                         </tr>
                                         <tbody>
                                             {% for encomenda in encomendas %}
-                                                {% with i=forloop.counter0|add:1 %}
                                                 <tr>
-                                                    <td>{{i}}</td>
+                                                    <td>{{ forloop.revcounter }}</td>
                                                     <td>{{ encomenda.valor_total }}€</td>
-                                                    <td>{{ encomenda.estado }}</td>
-                                                    <td><a href="{% url 'loja-detalhes-por-encomenda' username=request.user.username idEncomenda=encomenda.idEncomenda idDetalhes=encomenda.detalhes_envio %}" >Ver detalhes</a></td>
+                                                    {% if encomenda.estado == 'Cancelado' %}
+                                                    <td style="font-weight: bold; color: red;">{{ encomenda.estado}}</td>
+                                                    {% elif encomenda.estado == 'Entregue' %}
+                                                    <td style="font-weight: bold; color: green;">{{ encomenda.estado}}</td>
+                                                    {% elif encomenda.estado == 'Em processamento' %}
+                                                    <td style="font-weight: bold; color: rgb(0, 88, 103) ;">{{ encomenda.estado}}</td>
+                                                    {% else %}
+                                                    <td style="font-weight: bold; color: rgb(0, 0, 0);">{{ encomenda.estado}}</td>
+                                                    {% endif %}
+                                                    <td><a href="{% url 'loja-detalhes-por-encomenda' username=request.user.username idEncomenda=encomenda.idEncomenda idDetalhes=encomenda.detalhes_envio %}" >Ver detalhes de envio</a></td>
                                                     <td>{{ encomenda.created }}</td>
                                                     <td>{{ encomenda.updated }}</td>
-                                                    <td><a href="{% url 'loja-produtosEncomendados' username=request.user.username idEncomenda=encomenda.idEncomenda %}">Mais</a></td>
+                                                    <td><a href="{% url 'loja-produtosEncomendados' username=request.user.username idEncomenda=encomenda.idEncomenda %}">Ver protudos da encomenda</a></td>
                                                 </tr>
-                                                {% endwith %}
-                                            
                                             {% endfor %}
                                         </tbody>
                                     </table>

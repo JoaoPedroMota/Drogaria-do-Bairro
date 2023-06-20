@@ -432,7 +432,9 @@ class ProdutosCarrinhoRequestSerializer(ModelSerializer):
     def validate(self, data):
         quantidade = data.get('quantidade')
         produtoUP = data.get('produto')
-        if quantidade < 0:
+        if quantidade is None:
+            raise serializers.ValidationError('A quantidade tem de ser enviada')
+        elif quantidade < 0:
             raise serializers.ValidationError('A quantidade de um produto num carrinho tem de ser superior a 0')
         if produtoUP.unidade_medida=='un':
             parte_inteira = int(quantidade)

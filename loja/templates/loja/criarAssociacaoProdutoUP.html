@@ -67,23 +67,32 @@
                   <div class="form-group">
                     {% if field.name == 'preco_a_granel' %}
                     <p><label for="{{ field.name }}">Preço a granel </label></p>
-                    <p class="pequeno"> (caso não seja vendido à unidade) </p>
+                    <br>
+                    <p class="pequeno"> (caso seja vendido ao peso/volume) </p>
                     <br>
                     {% elif field.name == 'unidade_Medida_Por_Unidade' %}
+                   
                     <p><label for="{{ field.name }}">Unidade de medida da embalagem/unidade </label></p>
+                    <br>
                     <p class="pequeno"> (caso o produto seja vendido à unidade) </p>
                     <br>
                     {% elif field.name == 'quantidade_por_unidade' %}
+                    <br>
                     <p><label for="{{ field.name }}">Quantidade de produto por embalagem/unidade  </label></p>
+                    <br>
                     <p class="pequeno"> (caso seja vendido à unidade) </p>
                     <br>
                     {% elif field.name == 'preco_por_unidade' %}
+                    <br>
                     <p><label for="{{ field.name }}">Preco por embalagem/unidade </label></p>
+                    <br>
                     <p class="pequeno"> (caso seja vendido à unidade) </p>
                     <br>
                     {% elif field.name == 'imagem_produto' %}
                     <p><label for="{{ field.name }}">Imagem do produto  </label></p>
+                    <br>
                     <p class="pequeno"> (formatos aceites: PNG,JPG,SVG,GIF, tamanho máximo:2mb) 
+                    <br>
                     <br>
                     <br>
                     {% else %}

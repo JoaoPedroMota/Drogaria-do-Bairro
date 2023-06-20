@@ -2,10 +2,10 @@ argcomplete==2.0.0
 asgiref==3.6.0
 Authlib==1.2.0
 Beaker==1.12.1
-# beautifulsoup4==4.12.2
-# blivet==3.7.1
-# blivet-gui==2.4.1
 Brlapi==0.8.4
+beautifulsoup4==4.12.2
+blivet==3.7.1
+blivet-gui==2.4.1
 certifi==2023.5.7
 cffi==1.15.1
 chardet==5.1.0
