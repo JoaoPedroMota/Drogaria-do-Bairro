@@ -74,6 +74,7 @@ def createCheckoutSession(request, idDetalhesEnvio):
         payment_method_types = ['card'],
         line_items = line_items,
         mode = 'payment',
+        customer_email = request.user.email,
         success_url=f'http://127.0.0.1:8000/paymentSuccess/{idDetalhesEnvio}/',
         cancel_url = 'http://127.0.0.1:8000/paymentFailure/',
     )
