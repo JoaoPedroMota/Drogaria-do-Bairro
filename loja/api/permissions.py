@@ -108,6 +108,23 @@ class IsConsumidorAndOwner(permissions.BasePermission):
                     return False
         raise PermissionDenied(detail='Não pode ver ou editar os produtos que estão no carrinho de outro consumidor. Não é o consumidor dono deste carrinho')
 
+class IsFornecedorAndOwner3(permissions.BasePermission):
+    def has_permission(self,request, view):
+        if request.user.is_authenticated:
+            fornecedor = request.user.fornecedor if hasattr(request.user, 'fornecedor') else None
+            if fornecedor is not None:
+                username = view.kwargs.get('username')
+                if request.user.username == username:
+                    return True
+                else:
+                    raise PermissionDenied(detail='Está a aceder a informações de outro utilizador. Não tem autorização para tal')
+            raise PermissionDenied(detail='Não é um fornecedor. Não tem autorização para aceder a esta informação')
+        raise PermissionDenied("Não está autenticado")
+        
+
+
+
+
 class IsConsumidorAndOwner2(permissions.BasePermission):
     def has_permission(self,request, view):
         if request.user.is_authenticated:
@@ -126,6 +143,19 @@ class IsConsumidorAndOwner2(permissions.BasePermission):
                 return int(userLogadoConsumidor.id) == int(userConsumidorRequestURL.id)
         raise PermissionDenied(detail='Não pode aceder/criar/editar esta informações. Não lhe pertence/tem autorização. Autentique-se com a conta do seu consumidor!')
                 
+class IsConsumidorAndOwner3(permissions.BasePermission):
+    def has_permission(self,request, view):
+        if not request.user.is_authenticated:
+            raise PermissionDenied(detail='Pedido não autenticado')
+        consumidor = request.user.consumidor if hasattr(request.user, 'consumidor') else None
+        if consumidor is not None:
+            username = view.kwargs.get('username')
+            if request.user.username == username:
+                return True
+            else:
+                raise PermissionDenied(detail='Está a aceder a informações de outro utilizador. Não tem autorização para tal')
+        raise PermissionDenied(detail='Não é um consumidor. Não tem autorização para aceder a estas informações')
+        
 
 
 

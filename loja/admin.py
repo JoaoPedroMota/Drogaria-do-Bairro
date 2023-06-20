@@ -33,7 +33,7 @@ admin.site.register(CategoriaAtributo, MyModel)
 admin.site.register(Atributo, MyModel)
 admin.site.register(Imagem, MyModel)
 admin.site.register(ProdutoUnidadeProducao, MyModel)
-
+admin.site.register(Notificacao, MyModel)
 admin.site.register(Carrinho, MyModel)
 admin.site.register(ProdutosCarrinho, MyModel)
 

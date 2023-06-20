@@ -21,7 +21,7 @@ class FornecedorFormulario(ModelForm):
 class EditarPerfil(ModelForm):
     class Meta:
         model = Utilizador
-        fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','morada','telemovel','imagem_perfil',]
+        fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','freguesia','morada','telemovel','imagem_perfil',]
 
 class CompletarPerfil(ModelForm):
     telemovel = PhoneNumberField(required=True)
@@ -59,7 +59,7 @@ class editarVeiculoFormulario(ModelForm):
 class editarUnidadeProducaoFormulario(ModelForm):
     class Meta:
         model=UnidadeProducao
-        fields = ['nome', 'pais','cidade','morada', 'tipo_unidade']
+        fields = ['nome', 'pais','cidade','morada','freguesia' ,'tipo_unidade']
 
 class ConfirmacaoForm(forms.Form):
     nome_veiculo = forms.CharField()

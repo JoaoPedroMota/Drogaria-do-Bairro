@@ -1,5 +1,6 @@
 from decimal import Decimal
 from datetime import date
+from django.http import JsonResponse
 import requests
 import json
 from django.db import IntegrityError
@@ -11,7 +12,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from .forms import *
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from .forms import ConfirmacaoForm
 import requests
 from django.db.models import QuerySet
@@ -31,6 +32,65 @@ from django.conf import settings
 from django.urls import reverse
 from urllib.parse import quote_plus, urlencode
 from loja.api.serializers import UtilizadorSerializer
+
+import stripe
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def createCheckoutSession(request, idDetalhesEnvio):
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+
+    url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/'
+    response = sessao.get(url, headers=headers).json()
+
+    line_items = []
+    for produto in response:
+        idProduto = produto['produto']['produto']
+
+        url = f'http://127.0.0.1:8000/api/produtosID/{idProduto}/'
+        response2 = sessao.get(url, headers=headers).json()
+
+        produtoNome = response2['nome']
+        encomendaPreco = int(float(produto['preco'])*100)
+
+        item = {
+            'price_data': {
+                'currency' : 'eur',
+                'unit_amount' : encomendaPreco  ,
+                'product_data' : {
+                    'name' : produtoNome,
+                },
+            },
+            'quantity' : 1
+        }
+
+        line_items.append(item)
+
+    checkout_session = stripe.checkout.Session.create(
+        payment_method_types = ['card'],
+        line_items = line_items,
+        mode = 'payment',
+        success_url=f'http://127.0.0.1:8000/paymentSuccess/{idDetalhesEnvio}/',
+        cancel_url = 'http://127.0.0.1:8000/paymentFailure/',
+    )
+
+    request.session['checkout_session_id'] = checkout_session.id
+
+    return redirect(checkout_session.url, code=303)
+
+
+def payment_success(request, idDetalhesEnvio):
+    messages.success(request, "O pagamento foi efetuado com sucesso")
+    return redirect('loja-criarEncomenda', idDetalhesEnvio=idDetalhesEnvio)
+
+def payment_failure(request):
+    messages.error(request, "Erro - Houve um problema ao efetuar o pagamento")
+    return redirect('loja-carrinho')
 
 oauth = OAuth()
 
@@ -59,7 +119,7 @@ def quantosProdutosNoCarrinho(request):
         if request.user.is_superuser:
 
             consumidor = request.user.consumidor if hasattr(request.user, 'consumidor') else None
-            fornecedor = request.user.fornecedor if hasattr(request.user, 'fornecedor') else None
+            # fornecedor = request.user.fornecedor if hasattr(request.user, 'fornecedor') else None
             if consumidor is not None:
                 sessao = requests.Session()
                 sessao.cookies.update(request.COOKIES)
@@ -71,6 +131,7 @@ def quantosProdutosNoCarrinho(request):
                     conteudo = resposta.json() if resposta.json() else 0
                 else:
                     return 0
+                
                 return len(conteudo) if len(conteudo) != 0 else 0
 
             else:
@@ -91,7 +152,6 @@ def quantosProdutosNoCarrinho(request):
         elif request.user.is_authenticated and request.user.is_fornecedor:
             return 0
     else:
-
         carrinho = request.session.get('carrinho') 
         if carrinho is not None:
 
@@ -110,6 +170,7 @@ def loja(request):
         if request.session.get('carrinho') is not None and request.session.get('carrinho') !={}:
             request.session['carrinho'] = {}
     produtosCarrinho = quantosProdutosNoCarrinho(request)
+    #(produtosCarrinho)
     if produtosCarrinho == -1:
         context={"produtosCarrinho":"E"}
     else:
@@ -219,10 +280,10 @@ def checkout(request):
         #Caso haja produtos sem stock     
         if len(lista)!=0:
             if "Sem produtos no carrinho" in lista:
-                messages.error(request,"Erro - Ainda não tem produtos no carrinho")
+                messages.error(request,f"Erro - Ainda não tem produtos no carrinho")
             else:
                 for produto in lista:
-                    messages.error(request, 'Erro: O Item '+str(int(float(produto[0])+1))+' não tem stock suficiente para a quantidade pedida, o stock atual é '+produto[1])
+                    messages.error(request, f'Erro: O Item '+str(int(float(produto[0])+1))+' não tem stock suficiente para a quantidade pedida, o stock atual é '+produto[1])
 
             return redirect('loja-carrinho')
         
@@ -252,7 +313,7 @@ def checkout(request):
 
 def loginUtilizador(request):
     return oauth.auth0.authorize_redirect(
-        request, request.build_absolute_uri('https://drogariadobairro.pt/callback')
+        request, request.build_absolute_uri(reverse("loja-callback"))
     )
 
 
@@ -268,10 +329,9 @@ def callback(request):
     login(request, user)
 
     if created:
-        return redirect('https://drogariadobairro.pt/completarPerfil')
+        return redirect('loja-completarPerfil')
     else:
-        #return redirect(request.build_absolute_uri(reverse("loja-home")))
-        return redirect('https://drogariadobairro.pt')
+        return redirect(request.build_absolute_uri(reverse("loja-home")))
 
     # username = token['userinfo']['nickname']
 
@@ -297,7 +357,7 @@ def logout(request):
         f"https://{settings.AUTH0_DOMAIN}/v2/logout?"
         + urlencode(
             {
-                "returnTo": request.build_absolute_uri('https://drogariadobairro.pt'),
+                "returnTo": request.build_absolute_uri(reverse("loja-home")),
                 "client_id": settings.AUTH0_CLIENT_ID,
             },
             quote_via=quote_plus,
@@ -344,12 +404,12 @@ def formFornecedor(request):
             )
             return redirect('loja-home')
         else:
-            messages.error(request,'Ocorreu um erro durante o processo de registo')
+            messages.error(request,f'Ocorreu um erro durante o processo de registo')
     context = {'form':form}
     return render(request,'loja/register_fornecedor.html' ,context)
 
 @login_required(login_url='loja-login')
-def editarPerfil(request):
+def editarPerfil(request, username):
     pagina = 'editarPerfil'
     utilizador = request.user
     form = EditarPerfil(instance=utilizador)
@@ -416,13 +476,13 @@ def apagarConta(request, pk):
         return redirect('loja-perfil', userName=request.user.username)
 
     if request.method == 'POST':
-        password = request.POST.get('password')
-        if check_password(password, utilizador.password):
+        username = request.POST.get('username')
+        if username == request.user.username:
             logout(request)
             utilizador.delete()
             return redirect('loja-home')
         else:
-            messages.error(request, 'Senha incorreta. A conta não foi excluída.')
+            messages.error(request, f'Senha incorreta. A conta não foi excluída.')
 
     context = {'objeto': utilizador, 'pagina': 'apagar-conta'}
     return render(request, 'loja/delete.html', context)
@@ -455,9 +515,9 @@ def perfil(request, userName):
     pagina = 'perfil'
     produtosCarrinho = quantosProdutosNoCarrinho(request)
     context={'pagina':pagina, 'utilizadorView': utilizadorPerfil, "produtosCarrinho":produtosCarrinho}
-    if request.user.username != userName:
-        pass
-    elif request.user.is_superuser:
+    # if request.user.username != userName:
+    #     print("entreiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
+    if request.user.is_superuser:
         consumidor = utilizadorPerfil.consumidor if hasattr(utilizadorPerfil, 'consumidor') else None
         fornecedor = utilizadorPerfil.fornecedor if hasattr(utilizadorPerfil, 'fornecedor') else None
         if consumidor is not None:
@@ -487,7 +547,7 @@ def perfil(request, userName):
                 context['encomendas'] = listaEncomendas
                 context['numero_encomendas'] = len(listaEncomendas)
             except json.decoder.JSONDecodeError:
-                pass
+                messages.error(request,f"Erro ao carregar as encomendas.")
         elif fornecedor is not None:
             fornecedor = utilizadorPerfil.fornecedor
             unidadesProducao = fornecedor.unidades_producao.all()
@@ -496,13 +556,13 @@ def perfil(request, userName):
             context['numero_up'] = numero_up
         else:
             pass
-    elif utilizadorPerfil.is_fornecedor:
+    elif utilizadorPerfil.is_fornecedor and utilizadorPerfil.username==request.user.username:
         fornecedor = utilizadorPerfil.fornecedor
         unidadesProducao = fornecedor.unidades_producao.all()
         numero_up = unidadesProducao.count()
         context['unidadesProducao'] = unidadesProducao
         context['numero_up'] = numero_up
-    elif utilizadorPerfil.is_consumidor:
+    elif utilizadorPerfil.is_consumidor and utilizadorPerfil.username==request.user.username:
         consumidor = utilizadorPerfil.consumidor
         
         
@@ -533,7 +593,7 @@ def perfil(request, userName):
             context['encomendas'] = listaEncomendas
             context['numero_encomendas'] = len(listaEncomendas)
         except json.decoder.JSONDecodeError:
-            pass
+            messages.error(request,f"Erro ao carregar as encomendas.")
     else:
         context['outro'] = 'Outro'
     return render(request,'loja/perfil.html',context)
@@ -558,12 +618,13 @@ def criarUP(request, userName):
                     nome = request.POST.get('nome'),
                     pais = request.POST.get('pais'),
                     cidade = cidade_upper.upper(),
+                    freguesia = request.POST.get('freguesia'),
                     morada = request.POST.get('morada')
                 )
                 link = reverse('loja-perfil', args=[request.user.username])
                 return redirect(link)
             else:
-                messages.error(request,'Ocorreu um erro durante o processo de adição de uma Unidade de Produção')
+                messages.error(request,f'Ocorreu um erro durante o processo de adição de uma Unidade de Produção')
     else:
         return HttpResponseForbidden()
     
@@ -755,35 +816,60 @@ def unidadeProducao(request, userName, id):
             lista_produtos_up = []
             nome_up = unidade_producao.nome
         
-        encomendas = ProdutosEncomenda.objects.filter(unidadeProducao=unidade_producao)
+        urlProdutosEncomendados = f'http://127.0.0.1:8000/api/{userName}/fornecedor/unidadesProducao/{id}/encomendas/'
+        csrf_token = get_token(request)
+        headers = {'X-CSRFToken':csrf_token}
+        respostaEncomendasUP = sessao.get(urlProdutosEncomendados, headers=headers)
+        
+        if respostaEncomendasUP.status_code != 404:
+            encomendas = respostaEncomendasUP.json()
+            # print(encomendas)
+            for encomenda in encomendas:
+                updated_tmp = encomenda['updated']
+                created_temp = encomenda['created']
+                
+                updated_datetime = datetime.strptime(updated_tmp, "%Y-%m-%dT%H:%M:%S.%f%z")
+                created_datetime = datetime.strptime(created_temp, "%Y-%m-%dT%H:%M:%S.%f%z")
+                
+                updated_formatted = updated_datetime.strftime("%d-%m-%Y às %H:%M")
+                created_formatted = created_datetime.strftime("%d-%m-%Y às %H:%M")
+                
+                encomenda['updated'] = updated_formatted
+                encomenda['created'] = created_formatted
+                
+        
+        # encomendas = ProdutosEncomenda.objects.filter(unidadeProducao=unidade_producao)
 
         
-        dicionarioProdutosEstaoVeiculos = {}
-        ###### produtos encomendados em veiculos de transporte
-        for produto in encomendas:
-            urlProdutosVeiculos = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{id}/produtoEncomendadoVeiculo/{produto.id}/'
-            #print(urlProdutosVeiculos)
-            sessao = requests.Session()
-            sessao.cookies.update(request.COOKIES)
-            csrf_token = get_token(request)
-            headers = {'X-CSRFToken':csrf_token}
-            resposta = sessao.get(urlProdutosVeiculos, headers=headers)
-            # print(produto.id)
-            if resposta.status_code == 404:
-                dicionarioProdutosEstaoVeiculos[produto.id] = (False, None)
-            else:
-                conteudo = resposta.json()
-                # print(conteudo)
-                id_veiculo = conteudo[0]['veiculo']
-                urlVeiculo = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{id}/veiculos/{id_veiculo}/'
-                # print(urlVeiculo)
-                resposta = sessao.get(urlVeiculo, headers=headers)
-                nome_veiculo_conteudo = resposta.json()
-                nome_mesmo = nome_veiculo_conteudo['nome']
-                id_veiculo = nome_veiculo_conteudo['id']
-                dicionarioProdutosEstaoVeiculos[produto.id] = (True, nome_mesmo, id_veiculo)
-            
-
+            dicionarioProdutosEstaoVeiculos = {}
+            ###### produtos encomendados em veiculos de transporte
+            for produto in encomendas:
+                idProduto = produto['id']
+                urlProdutosVeiculos = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{id}/produtoEncomendadoVeiculo/{idProduto}/'
+                #print(urlProdutosVeiculos)
+                sessao = requests.Session()
+                sessao.cookies.update(request.COOKIES)
+                csrf_token = get_token(request)
+                headers = {'X-CSRFToken':csrf_token}
+                resposta = sessao.get(urlProdutosVeiculos, headers=headers)
+                # print(produto.id)
+                if resposta.status_code == 404:
+                    dicionarioProdutosEstaoVeiculos[idProduto] = (False, None)
+                else:
+                    conteudo = resposta.json()
+                    # print(conteudo)
+                    id_veiculo = conteudo[0]['veiculo']
+                    urlVeiculo = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{id}/veiculos/{id_veiculo}/'
+                    # print(urlVeiculo)
+                    resposta = sessao.get(urlVeiculo, headers=headers)
+                    nome_veiculo_conteudo = resposta.json()
+                    nome_mesmo = nome_veiculo_conteudo['nome']
+                    id_veiculo = nome_veiculo_conteudo['id']
+                    dicionarioProdutosEstaoVeiculos[idProduto] = (True, nome_mesmo, id_veiculo)
+        else:
+            # print("cheguei aqui!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            encomendas = {}   
+            dicionarioProdutosEstaoVeiculos= {}
         context={'veiculos':veiculos, 'num_veiculos':num_veiculos, 'unidadeProducao':id, "produtosUP":lista_produtos_up, 'nome_up':nome_up,'encomenda':encomendas, "produtosEstaoEmVeiculos":dicionarioProdutosEstaoVeiculos}
         return render(request, 'loja/unidadeProducao.html', context)
 
@@ -813,7 +899,7 @@ def editarUnidadeProducao(request, userName, id):
                 link = reverse('loja-perfil', args=[userName])
                 return redirect(link)
             else:
-                messages.error(request,'Ocorreu um erro durante o processo de edição de uma unidade de produção')
+                messages.error(request,f'Ocorreu um erro durante o processo de edição de uma unidade de produção')
     else:
         return HttpResponseForbidden()
     
@@ -859,7 +945,7 @@ def criarVeiculo(request, userName, id):
                 link = reverse('loja-unidadeProducao', args=[userName, id])
                 return redirect(link)
             else:
-                messages.error(request,'Ocorreu um erro durante o processo de adição de uma Unidade de Produção')
+                messages.error(request,f'Ocorreu um erro durante o processo de adição de uma Unidade de Produção')
     else:
         return HttpResponseForbidden()
     
@@ -893,7 +979,7 @@ def editarVeiculo(request, userName, id, idVeiculo):
                 link = reverse('loja-unidadeProducao', args=[userName, id])
                 return redirect(link)
             else:
-                messages.error(request,'Ocorreu um erro durante o processo de edição de um veiculo')
+                messages.error(request,f'Ocorreu um erro durante o processo de edição de um veiculo')
     else:
         return HttpResponseForbidden()
     
@@ -964,15 +1050,15 @@ def criar_produto(request, userName):
             
             resposta = sessao.post(urlCriarProduto, data=produto_data, headers=headers)
             if resposta.status_code == 201:
-                messages.success(request, 'Produto criado com sucesso, já pode associar o produto criado a uma unidade de produção!')
+                messages.success(request, f'Produto criado com sucesso, já pode associar o produto criado a uma unidade de produção!')
                 return redirect('loja-perfil', userName=request.user.username)
             else:
                 #print("ERRO!!!!!!!!")
-                messages.error(request, 'Erro ao criar Produto!')
+                messages.error(request, f'Erro ao criar Produto!')
         else:
             for field, errors in form.errors.items():
                 for error in errors:
-                    messages.error(request, f'{field}_error::{error}')
+                    messages.error(request, f'{field}_error:{error}')
     else:
         form = ProdutoForm()
     return render(request, 'loja/criar_produto.html', {'form': form})
@@ -1020,6 +1106,7 @@ def sP(request,produto_id):
                         'morada': infoSingleProduct['unidade_producao']['morada'],
                         'pais': infoSingleProduct['unidade_producao']['pais'],
                         'cidade': infoSingleProduct['unidade_producao']['cidade'],
+                        'freguesia': infoSingleProduct['unidade_producao']['freguesia'],
                         'dataP': infoSingleProduct['data_producao'],
                         'marca': infoSingleProduct['marca'],
                         'precoU':infoSingleProduct['preco_por_unidade'],
@@ -1039,12 +1126,15 @@ def sP(request,produto_id):
 
 def ver_produtos(request):
     q = request.GET.get('q', '')
+    print(q)
     url1 = 'http://127.0.0.1:8000/api/produtos/'
     url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
     url3 = 'http://127.0.0.1:8000/api/categorias/'
     response1 = requests.get(url1).json()
-    response2 = requests.get(url2).json()
+
+    response2 = requests.get(url2, data={"q":q}).json()
     response3 = requests.get(url3).json()
+
 
     response2_dict = {product['produto']: product for product in response2}
    
@@ -1170,6 +1260,7 @@ def carrinho(request):
             except json.decoder.JSONDecodeError:
                 total= Decimal(0)
                 #print("ENREI NO EXCEPT!")
+                messages.error(request, f"ERRO - HOUVE UM ERRO A CARREGAR O SEU CARRINHO!")
                 produtosCarrinho = quantosProdutosNoCarrinho(request)
                 context= {
                     'total': total,
@@ -1566,7 +1657,7 @@ def remover_do_carrinho(request, produto_id):
         # # else:
         # produto_carrinho.delete()
         if respostaDelete.status_code == 204:
-            messages.success(request, 'O produto foi removido do carrinho com sucesso.')
+            messages.success(request, f'O produto foi removido do carrinho com sucesso.')
         elif respostaDelete.status_code == 404:
             mensagem_erro = respostaDelete.json().get('detail', 'Produto não encontrado no carrinho')
             messages.error(request, mensagem_erro)
@@ -1577,7 +1668,7 @@ def remover_do_carrinho(request, produto_id):
         idProdutoStr = str(produto_id)
         if idProdutoStr in carrinho.keys():
             carrinho.pop(idProdutoStr)
-            messages.success(request, 'O produto foi removido do carrinho com sucesso.')
+            messages.success(request, f'O produto foi removido do carrinho com sucesso.')
             request.session['carrinho'] = carrinho
         else:
             mensagem_erro = respostaDelete.json().get('detail', 'Produto não encontrado no carrinho')
@@ -1606,7 +1697,7 @@ def removerAssociaoProdutoUP(request, username, idUnidadeProducao, idProdutoUnid
                 #detail = conteudo.get('detail', 'Erro desconhecido ao apagar a associação')
                 # print(conteudo)
         else:
-            messages.error("Erro ao apagar associação")
+            messages.error(request,"Erro ao apagar associação")
     return redirect('loja-unidadeProducao', userName=request.user.username, id=idUnidadeProducao)
 
 
@@ -1662,7 +1753,7 @@ def criarAssociacaoProdutoUP(request, username):
         
             resposta = sessao.post(url, headers=headers,data=produto_up_data, files={"imagem_produto":imagem})
             if resposta.status_code == 201:
-                messages.success(request, 'Produto associcado a unidade de produção com sucesso.')
+                messages.success(request, f'Produto associcado a unidade de produção com sucesso.')
                 return redirect('loja-perfil', userName=request.user.username)
             else:
                 if resposta.status_code == 400:
@@ -1744,7 +1835,10 @@ def confirmarDetalhesEnvio(request):
     context = {"produtosCarrinho":produtosCarrinho} # "produtosCarrinho":produtosCarrinho
     formulario = ConfirmarDetalhesEnvioForm(utilizador=request.user, validarNovosDetalhes=False)
     # print("123")
+    # ----------------------------------
+   
     
+   
     
     url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/detalhes_envio/'
 
@@ -1847,9 +1941,9 @@ def confirmarDetalhesEnvio(request):
                         resposta = sessao.put(url, headers=headers, data=detalhes_entrega)
 
                         if resposta.status_code == 200: #correu tudo bem?
-                            messages.success(request, "Detalhes de envio guardados com sucesso")
+                            messages.success(request, f"Detalhes de envio guardados com sucesso")
                             #return redirect('loja-perfil', userName=request.user.username)  #FALTA VER
-                            return redirect('loja-criarEncomenda', idDetalhesEnvio=idDetalhesEnvio)
+                            return redirect('loja-checkoutSession', idDetalhesEnvio=idDetalhesEnvio)
                         else: #deu erro
                             formulario.add_error('nome',f'Erro: {resposta}')
                     # else:
@@ -1912,9 +2006,9 @@ def confirmarDetalhesEnvio(request):
                 idDetalhesEnvio= conteudo["id"]
 
                 if resposta.status_code == 201: #correu tudo bem?
-                    messages.success(request, "Detalhes de envio guardados com sucesso para esta encomenda")
+                    messages.success(request, f"Detalhes de envio guardados com sucesso para esta encomenda")
                     #return redirect('loja-criarEncomenda', userName=request.user.username)
-                    return redirect('loja-criarEncomenda', idDetalhesEnvio=idDetalhesEnvio)
+                    return redirect('loja-checkoutSession', idDetalhesEnvio=idDetalhesEnvio)
                 else: #deu erro
                     formulario.add_error('nome',f'Erro: {resposta}')
 
@@ -1943,9 +2037,9 @@ def confirmarDetalhesEnvio(request):
                 if resposta.status_code == 201:
                     conteudo=resposta.json()
                     idDetalhesEnvio=conteudo['id']
-                    messages.success(request, "Detalhes de envio guardados com sucesso")
+                    messages.success(request, f"Detalhes de envio guardados com sucesso")
                     #return redirect('loja-perfil', userName=request.user.username)
-                    return redirect('loja-criarEncomenda', idDetalhesEnvio=idDetalhesEnvio)
+                    return redirect('loja-checkoutSession', idDetalhesEnvio=idDetalhesEnvio)
                 else:
                     #("FORMULARIO ERRORS", formulario.errors)
                     formulario.add_error('nome', f'Erro:{resposta}')
@@ -1971,11 +2065,15 @@ def criarEncomenda(request, idDetalhesEnvio):
     csrf_token = get_token(request)
     headers = {'X-CSRFToken':csrf_token}
 
-    data={'detalhes_envio': idDetalhesEnvio}
+    idCheckoutSession = request.session.get('checkout_session_id')
+
+    data={'detalhes_envio': idDetalhesEnvio, 'idCheckoutSession' : idCheckoutSession}
 
     resposta = sessao.post(url, data=data,headers=headers)
     if resposta.status_code == 201:
-        messages.success(request, "A sua encomenda foi criada com sucesso")
+        messages.success(request, f"Encomenda realizada com sucesso")
+    
+
         return redirect('loja-perfil', userName=request.user.username)
     else:
         messages.error(request, "Erro - Houve um problema a criar a sua encomenda")
@@ -2114,8 +2212,11 @@ def getProdutosEncomenda(request, username, idEncomenda):
     totalEncomenda = Decimal(0)
     try:
         listaProdutosInEncomendas = []
-        todosProdutos = resposta.json()
+        todosProdutos = resposta.json() ### todos os produtos encomendados
+        i =0
         for produto in todosProdutos:
+            # if i==0:
+                # print("\n\n\n\n", produto,"\n\n\n\n",produto['produtos'],"\n\n\n\n")
             produto_up = produto['produtos']
             url = f'http://127.0.0.1:8000/api/produtos_loja/{produto_up}/'
             resposta_2 = requests.get(url)
@@ -2147,7 +2248,7 @@ def getProdutosEncomenda(request, username, idEncomenda):
                 fornecedorInfo = unidadeProducaoInfo['fornecedor']
                 fornecedor_nome = fornecedorInfo['utilizador']
             except json.decoder.JSONDecodeError:
-                pass
+                messages.error(request, f"ERRO - Não foi possível ler o produto encomendado com o id {produto['id']} da encomenda {produto['encomenda']}.")
                 
                 
             encomenda_dicio = {"idEncomenda":idEncomenda, "idProdutoEncomendado":idProdutoEncomendado,"imagem_produto":imagem_produto,"nome_produto":nome_produto, "precoKilo":precoKilo, "unidade_medida":unidade_medida,"preco_a_granel":preco_a_granel ,"preco":preco, "quantidade":quantidade, "estado":estado, "updated":updated, "nome_up":nome_up, "fornecedor_nome":fornecedor_nome}
@@ -2156,7 +2257,11 @@ def getProdutosEncomenda(request, username, idEncomenda):
         context['numero_produtos'] = len(listaProdutosInEncomendas)
         context['total'] = totalEncomenda
     except json.decoder.JSONDecodeError:
-        pass
+        if resposta.status_code == 404:
+            messages.error(request, f"ERRO - Esta encomenda foi criada sem produtos. Nada foi encomendado.")
+        else:
+            messages.error(request, f"ERRO - Houve um erro a carregar os produtos encomendados desta encomenda. ID da encomenda: {produto['encomenda']}")
+        return redirect('loja-perfil', userName=request.user.username)
     return render(request, 'loja/produtos_encomendados.html', context)
 
 @consumidor_required
@@ -2183,11 +2288,26 @@ def cancelarProdutoEncomendado(request, username, idEncomenda, idProdutoEncomend
                 #print(tempo_decorrido_desde_encomenda, "tempo_decorrido_desde_encomenda")
                 if tempo_decorrido_desde_encomenda < prazo_cancelamento:
                     resposta = sessao.put(url, headers=headers)
+
                     if resposta.status_code == 200:
-                        messages.success(request,f"O produto encomendado ({nomeProduto}), foi cancelado com sucesso")
+                        url2 = f'http://127.0.0.1:8000/api/{username}/consumidor/encomenda/'
+                        encomendas = sessao.get(url2, headers=headers).json()
+
+                        for encomenda in encomendas:
+                            if encomenda['id'] == idEncomenda:
+                                idCheckoutSession = encomenda['idCheckoutSession']
+
+                        checkout_session = stripe.checkout.Session.retrieve(idCheckoutSession)
+                        payment_intent = checkout_session['payment_intent']
+
+                        stripe.Refund.create(
+                            payment_intent=payment_intent,
+                            amount=int(float(conteudo['preco']))*100,
+                        )
+                        messages.success(request,f"O produto encomendado ({nomeProduto}), foi cancelado com sucesso e o reembolso foi efetuado")
                         return redirect('loja-perfil', userName=request.user.username)
                     else:
-                        messages.error(request,"Houve um erro a cancelar o seu produto")
+                        messages.error(request,f"Houve um erro a cancelar o seu produto")
                         return redirect('loja-produtosEncomendados', idEncomenda=idEncomenda, username=username)
                 else:
                     messages.error(request,f"Só pode cancelar encomendas até 3h depois de as realizar. Tempo decorrido desde a criação da encomenda: {tempo_decorrido_desde_encomenda}")
@@ -2217,7 +2337,10 @@ def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
     headers = {'X-CSRFToken':csrf_token}
     resposta = sessao.get(url, headers=headers)
     resposta_2 = sessao.get(url2, headers=headers)
-    context = {} 
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
+    
+
+    
     try:
         conteudo = resposta.json()
         nome = conteudo['nome']
@@ -2227,25 +2350,29 @@ def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
         instrucoes_entrega = conteudo['instrucoes_entrega']
         ####################
         conteudo_2 = resposta_2.json()
+        #print(conteudo_2)
         encomenda_dicio = {}
         for encomenda in conteudo_2:
             if encomenda['id'] == idEncomenda:
                 encomenda_dicio = encomenda
                 break
-        index_encomenda = conteudo_2.index(encomenda_dicio)
+        
+        lista_invertida = conteudo_2[::-1]
+        index_encomenda = lista_invertida.index(encomenda_dicio)
         index_encomenda+=1
-        
-        
+        # print(index_encomenda)
+
         info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega}]
     except json.decoder.JSONDecodeError:
-        pass
-    context = {"infos":info_detalhes_envio, "encomenda_nr":index_encomenda}
+        messages.error(request,f"Não foi possível carregar/ler os detalhes de envio da encomenda {idEncomenda}")
+    context = {"infos":info_detalhes_envio, "idEncomenda":index_encomenda, "produtosCarrinho":produtosCarrinho  }
     return render(request, 'loja/infos_detalhes.html', context)
 
 
 
 @fornecedor_required
-def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao):
+def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao,idProdutoEncomendado):
+    
     if request.user.username != username:
         return redirect('loja-perfil', userName=request.user.username)
     
@@ -2255,7 +2382,26 @@ def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao):
     csrf_token = get_token(request)
     headers = {'X-CSRFToken':csrf_token}
     resposta = sessao.get(url, headers=headers)
+    
+    urlTodasEncomendasDestaUP = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/encomendas/'
+    
+    respostaTodasEncomendasDestaUP = sessao.get(urlTodasEncomendasDestaUP, headers=headers)
+    conteudo_2 = respostaTodasEncomendasDestaUP.json()
+    encomenda_dicio = {}
+    for encomenda_procura in conteudo_2:
+        if encomenda_procura['id'] == idProdutoEncomendado:
+            encomenda_dicio = encomenda_procura
+            break
+    lista_invertida = conteudo_2[::-1]
+    index_encomenda = lista_invertida.index(encomenda_dicio)
+    index_encomenda += 1
+    
+
+
+    
+    
     try:
+        
         conteudo = resposta.json()
         nome = conteudo['nome']
         morada = f"{conteudo['morada']}, {conteudo['cidade']}, {conteudo['pais']}"
@@ -2263,11 +2409,11 @@ def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao):
         email = conteudo['email']
         instrucoes_entrega = conteudo['instrucoes_entrega']
         
-        info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega}]
-        context = {"infos":info_detalhes_envio}
+        info_detalhes_envio = [{"nome":nome, "morada":morada, "telemovel":telemovel, "email":email, "instrucoes_entrega":instrucoes_entrega,"idEncomenda":index_encomenda}]
+        context = {"infos":info_detalhes_envio, "unidadeProducao":idUnidadeProducao }
         return render(request, 'loja/infos_detalhes.html', context)
     except json.decoder.JSONDecodeError:
-        messages.error(request, "Houve um erro a obter os detaalhes de envio do utilizador")
+        messages.error(request, f"Houve um erro a obter os detaalhes de envio do utilizador")
         return redirect('loja-unidadeProducao', username=request.user.username, id=idUnidadeProducao)
 
 
@@ -2286,7 +2432,18 @@ def colocarProdutoEmVeiculoTransporte(request, username, idUnidadeProducao, idPr
     csrf_token = get_token(request)
     headers = {'X-CSRFToken':csrf_token}
     resposta = sessao.get(url, headers=headers)
+    urlTodasEncomendasDestaUP = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/encomendas/'
     
+    respostaTodasEncomendasDestaUP = sessao.get(urlTodasEncomendasDestaUP, headers=headers)
+    conteudo_2 = respostaTodasEncomendasDestaUP.json()
+    encomenda_dicio = {}
+    for encomenda_procura in conteudo_2:
+        if encomenda_procura['id'] == idProdutoEncomenda:
+            encomenda_dicio = encomenda_procura
+            break
+    lista_invertida = conteudo_2[::-1]
+    index_encomenda = lista_invertida.index(encomenda_dicio)
+    index_encomenda += 1
     
     
     url2=f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/encomendas/{idProdutoEncomenda}/emString/'
@@ -2316,7 +2473,7 @@ def colocarProdutoEmVeiculoTransporte(request, username, idUnidadeProducao, idPr
                     messages.error(request, f"Algo correu mal ao colocar o produto no veículo")
                     return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
             
-        context={"formulario":formulario, "respostaNomeEncomenda":respostaNomeEncomenda, "idUnidadeProducao":idUnidadeProducao}
+        context={"formulario":formulario, "respostaNomeEncomenda":index_encomenda, "idUnidadeProducao":idUnidadeProducao}
         return render(request, 'loja/colocarEncomendaEmVeiculo.html', context)
     if resposta.status_code != 200 and request.method == 'GET':
         messages.error(request, f"Não tem veículos disponíveis de momento para colocar este produto.")
@@ -2342,7 +2499,7 @@ def veiculoSairParaEntrega(request, username, idVeiculo, idUnidadeProducao):
         messages.success(request, "Veiculo saiu para entregar encomendas!")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
     elif resposta.status_code == 404:
-        messages.error(request, "Erro - O veículo não tem produtos carregados!")
+        messages.error(request, f"Erro - O veículo não tem produtos carregados!")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
     elif resposta.status_code==400:
         mensagem_erro = resposta.json()['details']
@@ -2367,7 +2524,7 @@ def entregarEncomenda(request, username, idUnidadeProducao,idVeiculo):
         messages.success(request, "Encomenda entregue e finalizada!")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
     elif resposta.status_code == 404:
-        messages.error(request, "Veiculo não tem encomendas para entregar")
+        messages.error(request, f"Veiculo não tem encomendas para entregar")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
     
     
@@ -2395,7 +2552,7 @@ def veiculoRegressou(request, username, idUnidadeProducao, idVeiculo):
         messages.error(request, f"{mensagem}")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
     else:
-        messages.error("Houve algum erro ao realizar esta ação. Ou o veículo não existe ou acedeu a esta função fora de tempo")
+        messages.error(request,f"Houve algum erro ao realizar esta ação. Ou o veículo não existe ou acedeu a esta função fora de tempo")
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
 
 
@@ -2447,8 +2604,8 @@ def editarAssociacaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProduc
             
 
             if resposta.status_code == 200:
-                #messages.success(request, 'Produto criado com sucesso.')
-                return redirect('loja-perfil', userName=request.user.username)
+                messages.success(request, 'Produto atualizado com sucesso.')
+                return redirect('loja-unidadeProducao', userName=request.user.username, id=idUnidadeProducao)
             else:
                 if resposta.status_code == 400:
                     error_code = resposta.json().get('error_code')
@@ -2473,7 +2630,8 @@ def editarAssociacaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProduc
             'marca': content['marca'],                          
         }
     except json.decoder.JSONDecodeError:
-        pass
+        messages.error(request, f"Houve um erro a carregar as informações já associadas a este produto.")
+        return redirect
     
     url_up = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/'
     response_up = sessao.get(url_up, headers=headers).json()
@@ -2484,3 +2642,86 @@ def editarAssociacaoProdutoUP(request, idUnidadeProducao, idProdutoUnidadeProduc
 
     context = {'formulario': form, 'produto': response_produto, 'unidade_producao': response_up}
     return render(request, 'loja/editarAssociacaoProdutoUP.html', context)
+
+
+def obterNotificacoesF(request,username):
+
+    fornecedor=str(username)
+    numero=0
+    caminho=request.path
+    
+    notifications = Notificacao.objects.filter(fornecedor__utilizador__username=fornecedor, destinatario="Fornecedor").order_by('-data')[:7]
+    notification_data = []
+    for notification in notifications:
+        if notification.lido==False:
+            numero+=1
+            notification_data.append({
+                'message': notification.mensagem,
+                'id':notification.id,
+                'caminho':caminho,
+            
+            })
+        else:
+            notification_data.append({
+                'message': "",
+                'id':"",
+            
+            })
+    return JsonResponse({'notifications': notification_data,
+                         'numeroNotificacoes':numero
+                         })
+
+@login_required(login_url='loja-login')
+def relarioImpactoLocal(request, username):
+    context = {}
+    if username != request.user.username:
+        return redirect('loja-perfil', userName=request.user.username)
+    consumidor = request.user.consumidor if hasattr(request.user, "consumidor") else None
+    fornecedor = request.user.consumidor if hasattr(request.user, "fornecedor") else None
+    if request.user.is_superuser:
+        url = f'http://127.0.0.1:8000/api/{request.user.username}/relatorioImpactoLocal'
+    elif consumidor is not None:
+        produtosCarrinho = quantosProdutosNoCarrinho(request)
+        context['produtosCarrinho']=produtosCarrinho
+        url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/relatorioImpactoLocal'
+    elif fornecedor is not None:
+        url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/relatorioImpactoLocal'
+    
+    sessao = requests.Session()
+    sessao.cookies.update(request.COOKIES)
+    csrf_token = get_token(request)
+    headers = {'X-CSRFToken':csrf_token}
+    
+    ####tratamento das datas de inicio e de fim
+    data_inicio = 0 ## colocar as datas no formato YYYY-mm-dd
+    data_fim = 0 ## colocar as datas no formato YYYY-mm-dd
+    
+    
+    
+    informacaoEnvio = {
+        "data-inicio":data_inicio,
+        "data-fim":data_fim
+    }
+    
+    resposta = sessao.put(url, headers=headers, data=informacaoEnvio)
+    if resposta.status_code == 200:
+        try:
+            conteudo = resposta.json()
+        except json.decoder.JSONDecodeError:
+            messages.error(request, "ERRO - Houve um erro a carregar os dados sobre as encomendas efetuadas.")
+            return redirect("loja-perfil", userName=request.user.username)
+        # verificar se é nessário tratar os dados consoante o tipo de utilizador. 
+        # principalmente para super users e fornecedores
+        # context['dicionarioDadosImpactoLocal'] = conteudoModificado
+        #return Response(request,'impactoLocal.html'. context=dicionarioDadosImpactoLocal)
+    else:
+        messages.error(request,"ERRO - Houve um erro a executar o pedido do relatório de impacto local.")
+        return redirect("loja-perfil", userName=request.user.username)
+
+def marcar_notificacao_lida(request, username):
+    fornecedor = str(username)
+    notifications = Notificacao.objects.filter(fornecedor__utilizador__username=fornecedor, destinatario="Fornecedor")
+    notifications.delete()
+    
+    return JsonResponse({'success': True})
+

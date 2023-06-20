@@ -1,8 +1,230 @@
-{% load static %}
 
+{% load static %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script>
+  function som() {
+    var audio = new Audio("{% static 'website/assets/mp3/som.mp3' %}");
+    audio.play();
+  }
+
+  $(document).ready(function() {
+    var csrftoken = getCookie('csrftoken');
+
+    function getCookie(name) {
+      var cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+          var cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + '=') {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    var notificationTable = $('.notification-table');
+    notificationTable.hide();
+
+    var numeroNotificacoes = localStorage.getItem('numeroNotificacoes');
+    if (numeroNotificacoes) {
+      $('#bolinha-vermelha').text(numeroNotificacoes);
+    }
+
+    var a = parseInt(localStorage.getItem('a')) || 0;
+
+    function loadNotifications() {
+      var notificationBody = notificationTable.find('.notification-body');
+      notificationBody.empty();
+
+      $.ajax({
+        url: '/notificacoes/{{ request.user.username }}',
+        type: 'GET',
+        dataType: 'json',
+        beforeSend: function(xhr) {
+          xhr.setRequestHeader('X-CSRFToken', csrftoken);
+        },
+        success: function(data) {
+          console.log(a);
+
+          var notifications = data.notifications;
+          if (notifications.length === 0) {
+            var notificationRow = $('<tr class="notification-row">Sem notificacoes</tr>');
+            var notificationItem = $('<td class="notification-item">Nenhuma notificação de momento</td>').text(message);
+            notificationRow.append(notificationItem);
+            notificationBody.append(notificationRow);
+          } else {
+            for (var i = 0; i < notifications.length; i++) {
+              if (notifications.length > a) {
+                a = notifications.length;
+                var notification = notifications[i];
+                var message = notification.message;
+                var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
+                var notificationItem = $('<td class="notification-item"></td>').text(message);
+                var new2 = $('<td class="notification-novas">Novas Encomendas feitas:</td>');
+                  
+                notificationRow.append(notificationItem);
+                notificationBody.append(new2);
+                notificationBody.append(notificationRow);
+                  
+                som();
+              } else {
+                if (a > 1) {
+                  a = notifications.length;
+                  var notification = notifications[i];
+                  var message = notification.message;
+                  var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
+                  var notificationItem = $('<td class="notification-item"></td>').text(message);
+                  
+                  notificationRow.append(notificationItem);
+                  notificationBody.append(notificationRow);
+                } else {
+                  a = notifications.length;
+                  var notification = notifications[i];
+                  var message = notification.message;
+                  var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
+                  var notificationItem = $('<td class="notification-item"></td>').text(message);
+                  var new2 = $('<td class="notification-novas">A sua primeira compra Parabes:</td>');
+
+                  notificationRow.append(notificationItem);
+                  notificationBody.append(new2);
+                  notificationBody.append(notificationRow);
+                }
+              }
+            }
+
+            var br=$('<br>');
+            notificationBody.append(br);
+
+            var dele = $('<button class="delete-notifications btn btn-danger btn-sm">Delete All</button>');
+            notificationBody.append(dele);
+
+            dele.click(function() {
+              $.ajax({
+                url: '/delete-notifications/{{ request.user.username }}',
+                type: 'POST',
+                dataType: 'json',
+                beforeSend: function(xhr) {
+                  xhr.setRequestHeader('X-CSRFToken', csrftoken);
+                },
+                success: function(response) {
+                  notificationBody.find('.notification-row').remove();
+                  notificationBody.find('.notification-novas').remove();
+                  notificationBody.find('.delete-notifications').remove();
+
+                  $('#bolinha-vermelha').text(0);
+                  localStorage.setItem('numeroNotificacoes', 0);
+                  localStorage.setItem('a', 0);
+                  
+                  loadNotifications();
+                },
+                error: function(xhr, status, error) {
+                  console.log(error);
+                }
+              });
+            });
+          }
+
+          var notificationItem = $('<td class="notification-item"></td>');
+          var novoNumeroNotificacoes = data.numeroNotificacoes;
+          $('#bolinha-vermelha').text(novoNumeroNotificacoes);
+          localStorage.setItem('numeroNotificacoes', novoNumeroNotificacoes);
+          localStorage.setItem('a', a);
+        },
+        error: function(xhr, status, error) {
+          console.log(error);
+        },
+        complete: function() {
+          
+          setTimeout(loadNotifications, 10000);
+        }
+      });
+    }
+
+    $('.notification-icon').click(function() {
+      if (notificationTable.is(':visible')) {
+        notificationTable.hide();
+      } else {
+        notificationTable.show();
+        loadNotifications();
+      }
+    });
+  });
+</script>
 
 <style>
- 
+.notification-item {
+  word-wrap: break-word;
+  padding: 10px; 
+  color: 051922;
+  border-radius: 10px;
+  border: 1px solid black;
+  
+}
+
+
+
+.notification-novas {
+  word-wrap: break-word;
+  font-style: italic;
+  color: green;
+  padding: 10px; 
+  color: 051922;
+  border-radius: 10px;
+  border: 1px solid black;
+  
+}
+
+.notification-item:hover{
+  background-color: antiquewhite;
+}
+
+.notification-table {
+  display: none;
+  
+}
+.notification-table.visible {
+  display: block;
+}
+
+.notification-item.no-hover:hover {
+  background-color: transparent;
+  cursor: default;
+}
+.header-icons {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+
+#bolinha-vermelha-produtos-carrinho {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-color: rgb(242, 129, 35);
+    color: white;
+
+    border-radius: 100%;
+    margin-right: 2px;
+    position: absolute;
+    top: -2px;
+    text-align: center;
+}
+#bolinha-vermelha {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-color: rgb(242, 129, 35);
+  color: white;
+  border-radius: 100%;
+  margin-right: 2px;
+  position: absolute;
+  top: -2px;
+  text-align: center;
+}
 .main-menu ul li:hover > ul {
   display: block;
 }
@@ -35,25 +257,39 @@
     width: 179px !important;
     background-color: orange;
   }
-
-#bolinha-vermelha {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  background-color: rgb(242, 129, 35);
-  color: white;
-  border-radius: 100%;
-  margin-right: 2px;
-  position: absolute;
-  top: -2px;
-  text-align: center;
+  .check-icon {
+  cursor: pointer;
 }
+
 @media only screen and (max-width: 992px)  { 
   .imagem_logo{
     width: 80px;
   }
 }
-	
+.notification-container {
+  position: relative;
+}
+
+.notification-table {
+  position: absolute;
+  top: 100%;
+  left: -190%;
+  z-index: 999; 
+  background-color: white;
+  
+
+  width: 220px;
+  border-radius: 10px; 
+
+}
+
+.notification-table.visible {
+  display: block;
+}
+.notification-row {
+  border-radius: 10px; 
+  border-color: red;
+}
 </style>
 
 <div class="top-header-area" id="sticker">
@@ -61,26 +297,30 @@
     <div class="row">
       <div class="col-lg-12 col-sm-12 text-center">
         <div class="main-menu-wrap">
-          <!-- logo -->
+          
           <div class="site-logo">
             <a href="/" class="imagem_logo1">
               <img src="{%static 'website/assets/img/logo_123.png' %}" alt="logotipo do website" class="imagem_logo" >
             </a>
           </div>
-          <!-- logo -->
-
-          <!-- menu start -->
+          
           <nav class="main-menu">
             <ul>
-              <li class="current-list-item"><a href="/">Casa</a></li>
-              <li><a href="/about">Sobre Nós</a></li>
+              <li {% if request.path == "/" %}class="current-list-item"{% endif %}>
+                <a href="/">Casa</a>
+              </li>
+              <li {% if request.path|lower == "/about/" %}class="current-list-item"{% endif %}>
+                <a href="/about">Sobre Nós</a>
+              </li>
               
              
-              <li><a href="{% url 'loja-ver-produtos' %}">Produtos</a></li>
+              <li {% if "/shop" in request.path|lower %}class="current-list-item"{% endif %}>
+                <a href="{% url 'loja-ver-produtos' %}">Produtos</a>
+              </li>
           
               {% if request.user.is_authenticated %}
-             
-              <li>
+              
+              <li {% if "/perfil" in request.path|lower %}class="current-list-item"{% endif %}>
                 <a href="#">@{{request.user.username}}</a>
                 <ul>
                   <li class="profile-link">
@@ -99,10 +339,10 @@
                 <a href="{% url 'loja-login' %}">Entrar </a>
               </li>
               {% endif %}
-              {% if not request.user.is_authenticated or request.user.is_consumidor%}
+              {% if not request.user.is_authenticated %}
               <li>
                 <div class="header-icons">
-                  <a class="shopping-cart" href="{% url 'loja-carrinho' %}"><i class="fas fa-shopping-cart"></i><span id="bolinha-vermelha">{{produtosCarrinho}}</span></a>
+                  <a class="shopping-cart" href="{% url 'loja-carrinho' %}"><i class="fas fa-shopping-cart"></i><span id="bolinha-vermelha-produtos-carrinho"> {{ produtosCarrinho }} </span></a>
                   <a class="mobile-hide search-bar-icon" href="#"><i class="fas fa-search"></i></a>
                 </div>
               </li>
@@ -139,14 +379,102 @@
 </div>
 
 </nav>
+
+{% elif request.user.is_consumidor %}
+<li>
+  <div class="header-icons">
+    
+    <a class="shopping-cart" href="{% url 'loja-carrinho' %}"><i class="fas fa-shopping-cart"></i><span id="bolinha-vermelha-produtos-carrinho">{{produtosCarrinho}}</span></a>
+    
+    <a class="mobile-hide search-bar-icon" href="#">
+      <i class="fas fa-search"></i>
+    </a>
+    <div class="notification-container">
+      <!-- quando quiser acrescentar as notificacoes ao consumidor -->
+      <!-- <a class="notification-icon" href="#">
+        <i class="fas fa-bell"></i>
+        <span id="bolinha-vermelha">{{ notificacoesCount }}</span>
+      </a> -->
+      <table class="notification-table">
+        <thead>
+          <tr>
+           
+          </tr>
+        </thead>
+        <tbody class="notification-body">
+          <!-- As notificações serão adicionadas dinamicamente aqui -->
+        </tbody>
+      </table>
+    </div>
+    
+    </div>
+  </div>
+</li>
+
+</ul>
+</nav>
+<a class="mobile-show search-bar-icon" href="#"><i class="fas fa-search"></i></a>
+<div class="mobile-menu"></div>
+<!-- menu end -->
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- end header -->
+
+<!-- search area -->
+<div class="search-area">
+<div class="container">
+<div class="row">
+<div class="col-lg-12">
+<span class="close-btn"><i class="fas fa-window-close"></i></span>
+<div class="search-bar">
+<div class="search-bar-tablecell">
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</nav>
 {% else %}
 
 <li>
   <div class="header-icons">
- 
-    <a class="mobile-hide search-bar-icon" href="#"><i class="fas fa-search"></i></a>
+    
+    <a class="mobile-hide search-bar-icon" href="#">
+      <i class="fas fa-search"></i>
+    </a>
+    <div class="notification-container">
+      <a class="notification-icon" href="#">
+        <i class="fas fa-bell"></i>
+        <span id="bolinha-vermelha">{{ numeroNotificacoes }}</span>
+      </a>
+      
+      <table class="notification-table">
+        <thead>
+          <tr>
+           
+          </tr>
+        </thead>
+        <tbody class="notification-body">
+          <tr class="notification-row"></tr>
+          
+        </tbody>
+      </table>
+    </div>
+    </div>
   </div>
 </li>
+
+
+
+
+
 </ul>
 </nav>
 <a class="mobile-show search-bar-icon" href="#"><i class="fas fa-search"></i></a>
@@ -170,8 +498,7 @@
 <div class="search-bar">
 <div class="search-bar-tablecell">
 <h3></h3>
-<!-- <input type="text" placeholder="Keywords">
-<button type="submit">Search <i class="fas fa-search"></i></button> -->
+
 </div>
 </div>
 </div>
@@ -180,4 +507,6 @@
 </div>
 
 </nav>
+
 {% endif %}
+

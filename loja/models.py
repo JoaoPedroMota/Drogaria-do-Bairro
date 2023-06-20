@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator
 from django.core.validators import RegexValidator
-
+from unidecode import unidecode
 
 
 
@@ -185,10 +185,13 @@ class Utilizador(AbstractUser):
 
         # Combinar o first_name e last_name para formar o nome completo
         self.nome = f'{self.first_name} {self.last_name}'
-
-        # Transformar a cidade em uppercase
-        self.cidade = self.cidade.upper()
-        self.freguesia = self.freguesia.upper()
+        if self.cidade is not None and self.freguesia is not None:
+            self.cidade = unidecode(self.cidade)
+            self.freguesia = unidecode(self.freguesia)
+            
+            # Transformar a cidade em uppercase
+            self.cidade = self.cidade.upper()
+            self.freguesia = self.freguesia.upper()
         # Chamar o método save padrão do modelo
         super().save(*args, **kwargs)
 
@@ -337,6 +340,12 @@ class UnidadeProducao(models.Model):
     def __str__(self):
         return self.nome
     def save(self, *args, **kwargs):
+        
+        self.cidade = unidecode(self.cidade)
+        print(self.cidade)
+        print(self.freguesia)
+        self.freguesia = unidecode(self.freguesia)
+        
         # Transformar a cidade em uppercase
         self.cidade = self.cidade.upper()
         self.freguesia = self.freguesia.upper()
@@ -621,6 +630,30 @@ class Opcao(models.Model):
         return f"{self.nome} - {self.atributos.nome}"
 
 
+
+
+
+class Notificacao(models.Model):
+    fornecedor = models.ForeignKey(Fornecedor, on_delete=models.CASCADE)
+    consumidor = models.ForeignKey(Consumidor, on_delete=models.CASCADE,null=True,blank=False)
+    data = models.DateTimeField(auto_now_add=True)
+    lido = models.BooleanField(default=False)
+    mensagem=models.CharField(max_length=1000,null=True,blank=True)
+    DESTINATARIO_CHOICES = [
+        ('Consumidor', 'Consumidor'),
+        ('Fornecedor', 'Fornecedor'),
+    ]
+    
+    destinatario = models.CharField(max_length=20, choices=DESTINATARIO_CHOICES, default='Fornecedor')
+    def __str__(self):
+        return f"{self.mensagem}"
+    class Meta:
+        verbose_name = "Notificacao"
+        verbose_name_plural = "Notificacoes"
+        ordering = ['id']
+
+
+
 #para guardar as escolhas das opçoes para cada produto criado
 class ProdutoOpcao(models.Model):
     produto = models.ForeignKey('ProdutoUnidadeProducao', on_delete=models.CASCADE, related_name='opcoes')
@@ -674,6 +707,7 @@ class Encomenda(models.Model):
 
     consumidor = models.ForeignKey(Consumidor, on_delete=models.CASCADE, null=False, related_name="encomendas")
     detalhes_envio = models.ForeignKey('DetalhesEnvio', on_delete=models.CASCADE, null=True, related_name='encomendas')
+    idCheckoutSession = models.CharField('idCheckoutSession', max_length=200, null=True)
     valor_total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     updated = models.DateTimeField(auto_now=True, null=True, blank=False)
     created = models.DateTimeField(auto_now_add=True, null=True, blank=False)  
@@ -689,7 +723,7 @@ class Encomenda(models.Model):
     class Meta:
         verbose_name = "Encomenda"
         verbose_name_plural = "Encomendas"
-        ordering=['id']
+        ordering=['-id']
 
     def __str__(self):
         return f'Encomenda de {self.consumidor} - nº {self.id} '
@@ -720,7 +754,7 @@ class ProdutosEncomenda(models.Model):
     class Meta:
         verbose_name = "Produtos Encomendados"
         verbose_name_plural = "Produtos Encomendados"
-        ordering = ['id']
+        ordering = ['-id']
 
         
         

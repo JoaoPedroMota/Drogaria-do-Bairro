@@ -7,7 +7,7 @@
           <div class="col-lg-8 offset-lg-2 text-center">
               <div class="breadcrumb-text">
                 <div class="row">
-                  <p>{{respostaNomeEncomenda}}</p>
+                  <p>Colocar a encomenda nº{{respostaNomeEncomenda}} num veículo de transporte</p>
                   <br>
                  
               </div>
@@ -26,8 +26,11 @@
                     </ul>
                   {% endif %}
                   <p><label for="{{ field.name }}">{{ field.label }}</label></p>
+                  <br>
                   {% if field.name == 'veiculo' %}
+
                     <select name="{{ field.name }}">
+                     
                         <option value="" {% if not field.value %}selected{% endif %}>Veículo</option>
                             {% for choice_value, choice_label in field.field.choices %}
                                 <option value="{{ choice_value }}" {% if field.value == choice_value %}selected{% endif %}>{{ choice_label }}</option>
@@ -44,7 +47,7 @@
                     <title>arrow-left</title>
                     <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
                     </svg>
-                    <h6>Voltar</h6>
+                    <h6 class="voltar">Voltar</h6>
                 </div>
             </a>
 

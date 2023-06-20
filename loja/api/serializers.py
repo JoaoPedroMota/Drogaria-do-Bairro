@@ -432,7 +432,9 @@ class ProdutosCarrinhoRequestSerializer(ModelSerializer):
     def validate(self, data):
         quantidade = data.get('quantidade')
         produtoUP = data.get('produto')
-        if quantidade < 0:
+        if quantidade is None:
+            raise serializers.ValidationError('A quantidade tem de ser enviada')
+        elif quantidade < 0:
             raise serializers.ValidationError('A quantidade de um produto num carrinho tem de ser superior a 0')
         if produtoUP.unidade_medida=='un':
             parte_inteira = int(quantidade)
@@ -471,7 +473,7 @@ class UnidadeProducaoSingleProdutoSerializer(ModelSerializer):
     pais = campoPaisSerializador()
     class Meta:
         model = UnidadeProducao
-        fields = ['id','fornecedor', 'nome', 'morada', 'cidade', 'pais']
+        fields = ['id','fornecedor', 'nome', 'morada', 'cidade', 'pais', 'freguesia']
         read_only_fields = ['fornecedor']
 
 
@@ -531,7 +533,7 @@ class DetalhesEnvioSerializerResponse(ModelSerializer):
 class EncomendaSerializer(ModelSerializer):
     class Meta:
         model = Encomenda
-        fields = ["id","consumidor", "detalhes_envio","valor_total","updated","created","estado"]
+        fields = ["id","consumidor", "detalhes_envio", "idCheckoutSession", "valor_total","updated","created","estado"]
 
 class ProdutosEncomendaSerializer(ModelSerializer):
     class Meta:

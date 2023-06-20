@@ -5,8 +5,34 @@
 <style>
     .input-wrapper {
     position: relative;
+    
   }
-
+.form-control {
+  font-family: system-ui, sans-serif;
+    font-size: 2rem;
+    font-weight: bold;
+    line-height: 1.1;
+    display: flex;
+    align-items: center; 
+    gap: 0.5em;
+    background-color: #364b55;
+    border: none;
+}
+.form-control input[type="checkbox"] {
+    width: 1.4em;
+    height: 1.4em; 
+  }
+  .hint-message {
+    position: absolute;
+    top: 30px;
+    right: 0;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    font-size: 14px;
+    border-radius: 4px;
+    
+  }
   .hint-formulario {
   position: absolute;
   top: 0;
@@ -21,12 +47,34 @@
   color: #fff;
   font-weight: bold;
   font-size: 14px;
+  right: -1%;
+  top:5px
 }
   .ola{
     color: white;
   }
 
 </style>
+<script>
+  function toggleHintMessage(element) {
+    const hintMessage = element.getAttribute('title');
+    const hintText = document.createElement('div');
+    hintText.classList.add('hint-message');
+    hintText.textContent = hintMessage;
+  
+    element.parentNode.insertBefore(hintText, element.nextSibling);
+
+    setTimeout(() => {
+      hintText.remove();
+    }, 2000);
+    
+  }
+</script>
+
+
+
+
+
 <div class="breadcrumb-section breadcrumb-bg">
   <div class="container">
       <div class="row">
@@ -38,19 +86,22 @@
               </div>
               <br>
               <br>
-                <form method="post">
+                <form method="post" onsubmit="bloquerarBotao();">
                   {% csrf_token %}
                   {% for field in formulario %}
                   <div class="form-group">
                     <br>
                     {% if field.name == 'guardar_esta_morada' %}
                     <p><label for="{{ field.name }}">GUARDAR ESTES DETALHES PARA ENCOMENDAS FUTURAS </label></p>
+                    <br>
                     {% else %}
                     <p><label for="{{ field.name }}">{{ field.label }}</label></p>
+                    <br>
                     {% endif %}
                     {% if field.field.widget.input_type == 'select' %}
+                    
                       <div class="input-wrapper">
-                        <select name="{{ field.name }}" {% if field.required %}required{% endif %}>
+                        <select class="centered-inputEstado" name="{{ field.name }}" {% if field.required %}required{% endif %}>
                           {% for code, label in field.field.choices %}
                             <option value="{{ code }}" {% if label == field.value or code == field.value %}selected{% endif %}>{{ label }}</option>
                           {% endfor %}
@@ -58,16 +109,18 @@
                         
                       </div>
                     {% elif field.name == 'usar_informacoes_utilizador' %}
-                      <input type="checkbox" name="{{field.name}}" placeholder="field.name" value="True" {% if field.value %} checked {% endif %} >
+                      <input type="checkbox" name="{{field.name}}" placeholder="field.name" class="centered-inputNome" value="True" {% if field.value %} checked {% endif %} >
                     {% elif field.name == 'guardar_esta_morada' %}
-                    <input type="checkbox" name="{{field.name}}" placeholder="{{field.name}}" value="True" {% if field.value %} checked {% endif %} >
+                    <label class="form-control"> 
+                    <input type="checkbox" name="{{field.name}}" placeholder="{{field.name}}" class="centered-inputNome" value="True" {% if field.value %} checked {% endif %} >
+                  </label>
                     {% else %}
 
                     <div class="input-wrapper">
                         
-                        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.field.label }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
+                        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" class="centered-inputNome"placeholder="{{ field.field.label }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
                         {% if field.help_text %}
-                            <abbr title="{{ field.help_text }}" class="hint-formulario">?</abbr>
+                        <abbr title="{{ field.help_text }}" class="hint-formulario" onclick="toggleHintMessage(this)">?</abbr>
                         {% endif %}
                     </div>
                     {% endif %}
@@ -81,7 +134,7 @@
                   </div>
                   {% endfor %}
                   
-                  <input type="submit" id="login" value="ENCOMENDAR">
+                  <input type="submit" id="encomendar" value="ENCOMENDAR">
                 </form>
                 <a href="{% url 'loja-carrinho' %}" class="layout__boxTitle">
                   <div  class="container">
@@ -89,7 +142,7 @@
                       <title>arrow-left</title>
                       <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
                       </svg>
-                      <h6>Voltar</h6>
+                      <h6 class="voltar">Voltar</h6>
                   </div>
               </a>
                   

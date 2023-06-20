@@ -13,7 +13,7 @@ urlpatterns = [
     path('callback', views.callback, name='loja-callback'),
     # path('register/', views.registerUtilizador, name='loja-register-Utilizador'),
     # path('form-fornecedor/', views.formFornecedor, name='loja-form-forcedor'),
-    path('editarPerfil/', views.editarPerfil, name='loja-editarPerfil'),
+    path('perfil/<str:username>/editarPerfil/', views.editarPerfil, name='loja-editarPerfil'),
     path('completarPerfil/', views.completarPerfil, name='loja-completarPerfil'),
     path('apagar-conta/<str:pk>/', views.apagarConta, name='loja-delete-conta'),
     path('perfil/<str:userName>/', views.perfil, name='loja-perfil'),
@@ -40,11 +40,22 @@ urlpatterns = [
     path('confirmarDetalhesEnvio/', views.confirmarDetalhesEnvio, name='loja-confirmarDetalhesEnvio'),
     path('criarEncomenda/<int:idDetalhesEnvio>/', views.criarEncomenda, name='loja-criarEncomenda'),
     path('perfil/<str:username>/encomenda/<int:idEncomenda>/produtos-encomendados/<int:idProdutoEncomendado>/cancelar/<str:nomeProduto>/', views.cancelarProdutoEncomendado, name="loja-cancelarProdutosEncomendados"),
-    path('perfil/<str:username>/unidadeProducao/<int:idUnidadeProducao>/encomenda/<int:idEncomenda>/detalhes-envio/', views.getDetalhesParaFornecedor, name='loja-detalhes-envio-fornecedor'),
+    path('perfil/<str:username>/unidadeProducao/<int:idUnidadeProducao>/encomenda/<int:idEncomenda>/detalhes-envio/<int:idProdutoEncomendado>/', views.getDetalhesParaFornecedor, name='loja-detalhes-envio-fornecedor'),
     path('perfil/<str:username>/unidadeProducao/<int:idUnidadeProducao>/colocarEncomendaEmVeiculo/<int:idProdutoEncomenda>/', views.colocarProdutoEmVeiculoTransporte, name="loja-colocar-encomenda-veiculo"),
     path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/sairParaEntrega/', views.veiculoSairParaEntrega, name='loja-veiculoSairEntrega'),
     path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/entregarEncomenda/', views.entregarEncomenda, name='loja-entregarEncomenda'),
     path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/veiculoRegressou/', views.veiculoRegressou, name='loja-veiculoRegressou'),
+    path('notificacoes/<str:username>/', views.obterNotificacoesF, name='notificacoes'),
+
+    path('perfil/<str:username>/relatorioImpactoLocal/', views.relarioImpactoLocal, name='loja-relatorioImpactoLocal'),
+
+
+    path('delete-notifications/<str:username>', views.marcar_notificacao_lida, name='marcar-lido'),
+    
+    path('checkoutSession/<int:idDetalhesEnvio>/', views.createCheckoutSession, name ='loja-checkoutSession'),
+    path('paymentSuccess/<int:idDetalhesEnvio>/', views.payment_success, name='loja-paymentSuccess'),
+    path('paymentFailure/', views.payment_failure, name='loja-paymentFailure'),
+
 ]
 
 

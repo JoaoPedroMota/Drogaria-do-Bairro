@@ -1,7 +1,31 @@
 {% extends 'main.html' %}
 {% load static %}
 {% block content %}
-    	
+    <style>
+        .centered-inputEstado {
+        display: block;
+        margin: 0 auto;
+        
+        
+    }
+    .centered-inputNome {
+        display: block;
+        margin: 0 auto; 
+        padding: 11.52px !important;
+        
+    }
+    .nome label {
+    font-size: 18px; 
+    }   
+
+    @media only screen and (max-height: 935px)  { 
+        .centered-inputNome {
+            padding: 22px !important;
+            
+        }
+    }
+        
+    </style>
 	<!-- breadcrumb-section -->
 	<div class="breadcrumb-section breadcrumb-bg">
 		<div class="container">
@@ -9,48 +33,57 @@
 				<div class="col-lg-8 offset-lg-2 text-center">
 					<div class="breadcrumb-text">
 						<div class="container">
-    <div class="row">
-        <h1>Editar um Veículo</h1>
-       
-    </div>
+    
 
     <br>
     <div>
+        <h1>Editar um Veículo</h1>
         <form action="" method="POST" enctype="multipart/form-data">
+           <br>
             {% csrf_token %}
             {% for field in form %}
             {{ field.errors }}
             <br>
-            <p><label for="{{ field.name }}">{{ field.label }}</label></p>
+            <p class="nome"><label for="{{ field.name }}">{{ field.label }}</label></p>
             <br>
+            <div class="form-group text-center"> 
             {% if field.field.widget.input_type == 'select' %}
-                <select name="{{ field.name }}" id="{{ field.id_for_label }}">
+                <select  class="centered-inputEstado" name="{{ field.name }}" id="{{ field.id_for_label }}">
                     {% for choice_value, choice_label in field.field.choices %}
                         <option value="{{ choice_value }}" {% if choice_value == field.value %}selected{% endif %}>{{ choice_label }}</option>
+
+                        
                     {% endfor %}
                 </select>
             {% else %}
+            
                 <input type="{{ field.field.widget.input_type }}"
                        placeholder="{{ field.label }}"
                        name="{{ field.name }}"
                        id="{{ field.id_for_label }}"
-                       {% if field.value %}value="{{ field.value }}"{% endif %}>
+                       {% if field.value %}value="{{ field.value }}"{% endif %}
+                       class="centered-inputNome">
+
             {% endif %}
+            </div>
             {% endfor %}
             <input type="submit" id="login" value="Guardar">
         </form>
     </div>
     
-      
+  
     <a href="{% url 'loja-unidadeProducao' userName=request.user.username id=unidadeProducao.id %}" class="layout__boxTitle">
-        <div  class="container">
-            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+        <div  class="container" id="container1">
+            <svg version="1.1" xmlns= width="16" height="16" viewBox="0 0 32 32">
             <title>arrow-left</title>
             <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
+            
             </svg>
-            <h6>Voltar</h6>
+            <br>
+            <h6 class="voltar">Voltar</h6>
         </div>
     </a>
+    </div> 
 </div>
 					</div>
 				</div>
@@ -111,7 +144,7 @@
             <title>arrow-left</title>
             <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
             </svg>
-            <h6>Voltar</h6>
+            <h6 class="voltar">Voltar</h6>
         </div>
     </a>
     <div class="row button-container">

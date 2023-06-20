@@ -6,6 +6,14 @@
       <div class="row">
           <div class="col-lg-8 offset-lg-2 text-center">
               <div class="breadcrumb-text">
+                {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% endif %}">
+                    <p>{{ message }}</p>
+                </div>
+                {% endfor %}
+
+
+
                 <div class="row">
                   <br>
                  
@@ -19,14 +27,9 @@
                 {% for field in form %}
 
                 <div class="form-group">
-                  {% if field.errors %}
-                  <ul class="field-error-list">
-                    {% for error in field.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                  </ul>
-                  {% endif %}
+
                   <p><label for="{{ field.name }}">{{ field.label }}</label></p>
+                  <br>
                   {% if field.name == 'categoria' %}
                   <select name="{{ field.name }}">
                     <option value="" {% if not field.value %}selected{% endif %}>Categoria</option>
@@ -36,6 +39,15 @@
                   </select>
                   {% else %}
                   <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.label }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
+                  {% endif %}
+                  <br>
+                  {% if field.errors %}
+                  <ul class="field-error-list">
+                    {% for error in field.errors %}
+                    <li><p>{{ error }}</p></li>
+                    {% endfor %}
+                  </ul>
+                  <br>
                   {% endif %}
                 </div>
                 {% endfor %}
@@ -47,7 +59,7 @@
                     <title>arrow-left</title>
                     <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
                     </svg>
-                    <h6>Voltar</h6>
+                    <h6 class="voltar">Voltar</h6>
                 </div>
             </a>
 
