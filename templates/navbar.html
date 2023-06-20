@@ -1,7 +1,6 @@
 
 {% load static %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-
 <script>
   function som() {
     var audio = new Audio("{% static 'website/assets/mp3/som.mp3' %}");
@@ -35,8 +34,9 @@
     }
 
     var a = parseInt(localStorage.getItem('a')) || 0;
-
+    
     function loadNotifications() {
+      var soundPlayed = false;
       var notificationBody = notificationTable.find('.notification-body');
       notificationBody.empty();
 
@@ -52,51 +52,39 @@
 
           var notifications = data.notifications;
           if (notifications.length === 0) {
-            var notificationRow = $('<tr class="notification-row">Sem notificacoes</tr>');
-            var notificationItem = $('<td class="notification-item">Nenhuma notificação de momento</td>').text(message);
-            notificationRow.append(notificationItem);
+            var notificationRow = $('<tr class="notification-row"><td class="notification-item">Nenhuma notificação de momento</td></tr>');
             notificationBody.append(notificationRow);
           } else {
             for (var i = 0; i < notifications.length; i++) {
-              if (notifications.length > a) {
-                a = notifications.length;
-                var notification = notifications[i];
-                var message = notification.message;
-                var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
-                var notificationItem = $('<td class="notification-item"></td>').text(message);
-                var new2 = $('<td class="notification-novas">Novas Encomendas feitas:</td>');
-                  
-                notificationRow.append(notificationItem);
-                notificationBody.append(new2);
-                notificationBody.append(notificationRow);
-                  
-                som();
-              } else {
-                if (a > 1) {
-                  a = notifications.length;
-                  var notification = notifications[i];
-                  var message = notification.message;
-                  var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
-                  var notificationItem = $('<td class="notification-item"></td>').text(message);
-                  
-                  notificationRow.append(notificationItem);
-                  notificationBody.append(notificationRow);
-                } else {
-                  a = notifications.length;
-                  var notification = notifications[i];
-                  var message = notification.message;
-                  var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
-                  var notificationItem = $('<td class="notification-item"></td>').text(message);
-                  var new2 = $('<td class="notification-novas">A sua primeira compra Parabes:</td>');
+              var notification = notifications[i];
+              var message = notification.message;
+              var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
+              var notificationItem = $('<td class="notification-item"></td>').text(message);
+              notificationRow.append(notificationItem);
 
-                  notificationRow.append(notificationItem);
+              if (i === 0) {
+                if (a === 0) {
+                  var new2 = $('<td class="notification-novas">Notificações sobre encomendas suas1:</td>');
                   notificationBody.append(new2);
-                  notificationBody.append(notificationRow);
+                  if (!soundPlayed) {
+                      som();
+                      soundPlayed = true;
+                    }
+                 
+                } else {
+                  var new2 = $('<td class="notification-novas">Notificações sobre encomendas suas:</td>');
+                  notificationBody.append(new2);
+                  if (!soundPlayed) {
+                    som();
+                    soundPlayed = true;
+                  }
                 }
               }
-            }
 
-            var br=$('<br>');
+              notificationBody.append(notificationRow);
+            }
+            soundPlayed = false;
+            var br = $('<br>');
             notificationBody.append(br);
 
             var dele = $('<button class="delete-notifications btn btn-danger btn-sm">Delete All</button>');
@@ -118,7 +106,7 @@
                   $('#bolinha-vermelha').text(0);
                   localStorage.setItem('numeroNotificacoes', 0);
                   localStorage.setItem('a', 0);
-                  
+
                   loadNotifications();
                 },
                 error: function(xhr, status, error) {
@@ -128,32 +116,32 @@
             });
           }
 
-          var notificationItem = $('<td class="notification-item"></td>');
           var novoNumeroNotificacoes = data.numeroNotificacoes;
           $('#bolinha-vermelha').text(novoNumeroNotificacoes);
           localStorage.setItem('numeroNotificacoes', novoNumeroNotificacoes);
-          localStorage.setItem('a', a);
+          localStorage.setItem('a', notifications.length);
         },
         error: function(xhr, status, error) {
           console.log(error);
         },
         complete: function() {
-          
           setTimeout(loadNotifications, 10000);
         }
       });
     }
+
+    loadNotifications();
 
     $('.notification-icon').click(function() {
       if (notificationTable.is(':visible')) {
         notificationTable.hide();
       } else {
         notificationTable.show();
-        loadNotifications();
       }
     });
   });
 </script>
+
 
 <style>
 .notification-item {
