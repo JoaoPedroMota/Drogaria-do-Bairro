@@ -2,29 +2,31 @@
 {% load static %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
+  
   function som() {
     var audio = new Audio("{% static 'website/assets/mp3/som.mp3' %}");
     audio.play();
+    
+  }
+
+  function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      var cookies = document.cookie.split(';');
+      for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + '=') {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
   }
 
   $(document).ready(function() {
+    
     var csrftoken = getCookie('csrftoken');
-
-    function getCookie(name) {
-      var cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-          var cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === name + '=') {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
-      }
-      return cookieValue;
-    }
-
     var notificationTable = $('.notification-table');
     notificationTable.hide();
 
@@ -34,9 +36,9 @@
     }
 
     var a = parseInt(localStorage.getItem('a')) || 0;
-    
+
     function loadNotifications() {
-      var soundPlayed = false;
+      
       var notificationBody = notificationTable.find('.notification-body');
       notificationBody.empty();
 
@@ -48,8 +50,6 @@
           xhr.setRequestHeader('X-CSRFToken', csrftoken);
         },
         success: function(data) {
-          console.log(a);
-
           var notifications = data.notifications;
           if (notifications.length === 0) {
             var notificationRow = $('<tr class="notification-row"><td class="notification-item">Nenhuma notificação de momento</td></tr>');
@@ -61,29 +61,21 @@
               var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
               var notificationItem = $('<td class="notification-item"></td>').text(message);
               notificationRow.append(notificationItem);
-
-              if (i === 0) {
-                if (a === 0) {
-                  var new2 = $('<td class="notification-novas">Notificações sobre encomendas suas1:</td>');
-                  notificationBody.append(new2);
-                  if (!soundPlayed) {
-                      som();
-                      soundPlayed = true;
-                    }
-                 
-                } else {
+              if (notifications.length > 0) {
+                if (i === 0) {
                   var new2 = $('<td class="notification-novas">Notificações sobre encomendas suas:</td>');
                   notificationBody.append(new2);
-                  if (!soundPlayed) {
-                    som();
-                    soundPlayed = true;
-                  }
+                 
+                  
+                  
+                  
                 }
-              }
+                notificationBody.append(notificationRow);
 
-              notificationBody.append(notificationRow);
+              
             }
-            soundPlayed = false;
+            
+          }
             var br = $('<br>');
             notificationBody.append(br);
 
@@ -120,6 +112,7 @@
           $('#bolinha-vermelha').text(novoNumeroNotificacoes);
           localStorage.setItem('numeroNotificacoes', novoNumeroNotificacoes);
           localStorage.setItem('a', notifications.length);
+          
         },
         error: function(xhr, status, error) {
           console.log(error);
@@ -141,6 +134,7 @@
     });
   });
 </script>
+
 
 
 <style>

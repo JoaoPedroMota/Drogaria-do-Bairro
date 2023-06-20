@@ -2539,15 +2539,15 @@ def relarioImpactoLocal(request, username):
     if username != request.user.username:
         return redirect('loja-perfil', userName=request.user.username)
     consumidor = request.user.consumidor if hasattr(request.user, "consumidor") else None
-    fornecedor = request.user.consumidor if hasattr(request.user, "fornecedor") else None
+    fornecedor = request.user.fornecedor if hasattr(request.user, "fornecedor") else None
     if request.user.is_superuser:
-        url = f'http://127.0.0.1:8000/api/{request.user.username}/relatorioImpactoLocal'
+        url = f'http://127.0.0.1:8000/api/{request.user.username}/relatorioImpactoLocal/'
     elif consumidor is not None:
         produtosCarrinho = quantosProdutosNoCarrinho(request)
         context['produtosCarrinho']=produtosCarrinho
-        url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/relatorioImpactoLocal'
+        url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/relatorioImpactoLocal/'
     elif fornecedor is not None:
-        url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/relatorioImpactoLocal'
+        url = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/relatorioImpactoLocal/'
     
     sessao = requests.Session()
     sessao.cookies.update(request.COOKIES)
@@ -2555,8 +2555,8 @@ def relarioImpactoLocal(request, username):
     headers = {'X-CSRFToken':csrf_token}
     
     ####tratamento das datas de inicio e de fim
-    data_inicio = 0 ## colocar as datas no formato YYYY-mm-dd
-    data_fim = 0 ## colocar as datas no formato YYYY-mm-dd
+    data_inicio =None ## colocar as datas no formato YYYY-mm-dd
+    data_fim = None ## colocar as datas no formato YYYY-mm-dd
     
     
     
@@ -2567,11 +2567,18 @@ def relarioImpactoLocal(request, username):
     
     resposta = sessao.put(url, headers=headers, data=informacaoEnvio)
     if resposta.status_code == 200:
+        
         try:
             conteudo = resposta.json()
+            
+            
         except json.decoder.JSONDecodeError:
             messages.error(request, "ERRO - Houve um erro a carregar os dados sobre as encomendas efetuadas.")
             return redirect("loja-perfil", userName=request.user.username)
+        
+        context['dicionarioDadosImpactoLocal']=conteudo
+        return render(request,'loja/relatorio.html', context)
+    
         # verificar se é nessário tratar os dados consoante o tipo de utilizador. 
         # principalmente para super users e fornecedores
         # context['dicionarioDadosImpactoLocal'] = conteudoModificado
