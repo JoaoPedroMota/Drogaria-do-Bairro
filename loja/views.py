@@ -2533,7 +2533,6 @@ def obterNotificacoesF(request,username):
                          'numeroNotificacoes':numero
                          })
 
-
 @login_required(login_url='loja-login')
 def relarioImpactoLocal(request, username):
     context = {}
@@ -2580,7 +2579,6 @@ def relarioImpactoLocal(request, username):
     else:
         messages.error(request,"ERRO - Houve um erro a executar o pedido do relatório de impacto local.")
         return redirect("loja-perfil", userName=request.user.username)
-
 
 def marcar_notificacao_lida(request, username):
     fornecedor = str(username)

@@ -2,28 +2,21 @@
 {% load static %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
-  
-function som() {
+  function som() {
     var audio = new Audio("{% static 'website/assets/mp3/som.mp3' %}");
     audio.play();
   }
 
-
-
-
-$(document).ready(function() {
-
+  $(document).ready(function() {
     var csrftoken = getCookie('csrftoken');
 
- 
     function getCookie(name) {
       var cookieValue = null;
       if (document.cookie && document.cookie !== '') {
         var cookies = document.cookie.split(';');
         for (var i = 0; i < cookies.length; i++) {
           var cookie = cookies[i].trim();
-       
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          if (cookie.substring(0, name.length + 1) === name + '=') {
             cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
             break;
           }
@@ -40,82 +33,131 @@ $(document).ready(function() {
       $('#bolinha-vermelha').text(numeroNotificacoes);
     }
 
-    $('.notification-icon').click(function() {
-      if (notificationTable.is(':visible')) {
-        notificationTable.hide();
-      } else {
-        notificationTable.show();
-        var notificationBody = notificationTable.find('.notification-body');
-        notificationBody.empty();
-        $.ajax({
-          url: '/notificacoes/{{ request.user.username }}',
-          type: 'GET',
-          dataType: 'json',
-          beforeSend: function(xhr) {
-    
-            xhr.setRequestHeader('X-CSRFToken', csrftoken);
-          },
-          success: function(data) {
-            var notifications = data.notifications;
-            if (notifications.length==0){
-              var notificationRow = $('<tr class="notification-row"></tr>');
-              var notificationItem = $('<td class="notification-item">Com nenhuma notificação de momento</td>').text(message);
-              notificationRow.append(notificationItem);
-              notificationBody.append(notificationRow);
-            }else{
-            for (var i = 0; i < notifications.length; i++) {
-              som();
-              var notification = notifications[i];
-              var message = notification.message;
-              var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
-              var notificationItem = $('<td class="notification-item"></td>').text(message);
-              notificationRow.append(notificationItem);
-              notificationBody.append(notificationRow);
-              
-            }
-          
-            var dele = $('<button class="delete-notifications">Delete All</button>');
-            notificationBody.append(dele);
-          }
-            var notificationItem = $('<td class="notification-item"></td>');
-            var novoNumeroNotificacoes = data.numeroNotificacoes;
-            $('#bolinha-vermelha').text(novoNumeroNotificacoes);
-            localStorage.setItem('numeroNotificacoes', novoNumeroNotificacoes);
+    var a = parseInt(localStorage.getItem('a')) || 0;
 
-            
-            $('.delete-notifications').click(function() {
+    function loadNotifications() {
+      var notificationBody = notificationTable.find('.notification-body');
+      notificationBody.empty();
+
+      $.ajax({
+        url: '/notificacoes/{{ request.user.username }}',
+        type: 'GET',
+        dataType: 'json',
+        beforeSend: function(xhr) {
+          xhr.setRequestHeader('X-CSRFToken', csrftoken);
+        },
+        success: function(data) {
+          console.log(a);
+
+          var notifications = data.notifications;
+          if (notifications.length === 0) {
+            var notificationRow = $('<tr class="notification-row">Sem notificacoes</tr>');
+            var notificationItem = $('<td class="notification-item">Nenhuma notificação de momento</td>').text(message);
+            notificationRow.append(notificationItem);
+            notificationBody.append(notificationRow);
+          } else {
+            for (var i = 0; i < notifications.length; i++) {
+              if (notifications.length > a) {
+                a = notifications.length;
+                var notification = notifications[i];
+                var message = notification.message;
+                var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
+                var notificationItem = $('<td class="notification-item"></td>').text(message);
+                var new2 = $('<td class="notification-novas">Novas Encomendas feitas:</td>');
+                  
+                notificationRow.append(notificationItem);
+                notificationBody.append(new2);
+                notificationBody.append(notificationRow);
+                  
+                som();
+              } else {
+                if (a > 1) {
+                  a = notifications.length;
+                  var notification = notifications[i];
+                  var message = notification.message;
+                  var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
+                  var notificationItem = $('<td class="notification-item"></td>').text(message);
+                  
+                  notificationRow.append(notificationItem);
+                  notificationBody.append(notificationRow);
+                } else {
+                  a = notifications.length;
+                  var notification = notifications[i];
+                  var message = notification.message;
+                  var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
+                  var notificationItem = $('<td class="notification-item"></td>').text(message);
+                  var new2 = $('<td class="notification-novas">A sua primeira compra Parabes:</td>');
+
+                  notificationRow.append(notificationItem);
+                  notificationBody.append(new2);
+                  notificationBody.append(notificationRow);
+                }
+              }
+            }
+
+            var br=$('<br>');
+            notificationBody.append(br);
+
+            var dele = $('<button class="delete-notifications btn btn-danger btn-sm">Delete All</button>');
+            notificationBody.append(dele);
+
+            dele.click(function() {
               $.ajax({
                 url: '/delete-notifications/{{ request.user.username }}',
                 type: 'POST',
                 dataType: 'json',
                 beforeSend: function(xhr) {
-                 
                   xhr.setRequestHeader('X-CSRFToken', csrftoken);
                 },
                 success: function(response) {
-                  e
                   notificationBody.find('.notification-row').remove();
-                 
+                  notificationBody.find('.notification-novas').remove();
+                  notificationBody.find('.delete-notifications').remove();
+
                   $('#bolinha-vermelha').text(0);
                   localStorage.setItem('numeroNotificacoes', 0);
+                  localStorage.setItem('a', 0);
+                  
+                  loadNotifications();
                 },
                 error: function(xhr, status, error) {
                   console.log(error);
                 }
               });
             });
-          },
-          
-          error: function(xhr, status, error) {
-            console.log(error);
           }
-        });
-        
+
+          var notificationItem = $('<td class="notification-item"></td>');
+          var novoNumeroNotificacoes = data.numeroNotificacoes;
+          $('#bolinha-vermelha').text(novoNumeroNotificacoes);
+          localStorage.setItem('numeroNotificacoes', novoNumeroNotificacoes);
+          localStorage.setItem('a', a);
+        },
+        error: function(xhr, status, error) {
+          console.log(error);
+        },
+        complete: function() {
+          
+          setTimeout(loadNotifications, 10000);
+        }
+      });
+    }
+
+    $('.notification-icon').click(function() {
+      if (notificationTable.is(':visible')) {
+        notificationTable.hide();
+      } else {
+        notificationTable.show();
+        loadNotifications();
       }
     });
   });
-
 </script>
+
+
+
+
+
 <style>
 .notification-item {
   word-wrap: break-word;
@@ -125,6 +167,20 @@ $(document).ready(function() {
   border: 1px solid black;
   
 }
+
+
+
+.notification-novas {
+  word-wrap: break-word;
+  font-style: italic;
+  color: green;
+  padding: 10px; 
+  color: 051922;
+  border-radius: 10px;
+  border: 1px solid black;
+  
+}
+
 .notification-item:hover{
   background-color: antiquewhite;
 }
