@@ -7,6 +7,32 @@
     position: relative;
   }
 
+  .hint-message {
+    position: absolute;
+    top: 30px;
+    right: 0;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    font-size: 14px;
+    border-radius: 4px;
+  }
+  .hint-formulario {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgb(8, 120, 211);
+  color: #fff;
+  font-weight: bold;
+  font-size: 14px;
+}
+
   .hint-formulario {
   position: absolute;
   top: 0;
@@ -62,23 +88,31 @@
                     {% if field.name == 'preco_a_granel' %}
                     <br>
                     <p><label for="{{ field.name }}">Preço a granel  </label></p>
-                    <p class="pequeno">(caso não seja vendido à unidade)</p>
+                    <br>
+                    <p class="pequeno">(caso seja vendido ao peso/volume)</p>
                     <br>
                     {% elif field.name == 'unidade_Medida_Por_Unidade' %}
                     <p><label for="{{ field.name }}">Unidade de medida da embalagem/unidade  </label></p>
+                    <br>
+
                     <p class="pequeno">(caso não seja vendido à unidade)</p>
                     <br>
                     {% elif field.name == 'quantidade_por_unidade' %}
                     <p><label for="{{ field.name }}">Quantidade de produto por embalagem/unidade  </label></p>
+                    <br>
+
                     <p class="pequeno">(caso seja vendido à unidade)</p>
                     <br>
                     {% elif field.name == 'preco_por_unidade' %}
                     <p><label for="{{ field.name }}">Preco por embalagem/unidade  </label></p>
+                    <br>
+
                     <p class="pequeno">(caso seja vendido à unidade)</p>
                     <br>
                     
                     {% elif field.name == 'imagem_produto' %}
                     <p><label for="{{ field.name }}">Imagem do produto  </label></p>
+                    <br>
                     <p class="pequeno">(formatos aceites: PNG,JPG,SVG,GIF, tamanho máximo:2mb)</p>
                     <br>
                     {% else %}
@@ -94,12 +128,14 @@
                               <option value="{{ choice.0 }}" {% if field.value == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
                           {% endfor %}
                       </select>
+                    <br>
+
                       {% else %}
                           <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" placeholder="{{ field.name }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
                       {% endif %}
                       
                       {% if field.help_text %}
-                      <abbr title="{{ field.help_text }}" class="hint-formulario">?</abbr>
+                      <abbr title="{{ field.help_text }}" class="hint-formulario" onclick="toggleHintMessage(this)">?</abbr>
                       {% endif %}
                     </div>
                     {% else %}
@@ -131,5 +167,19 @@
       </div>
   </div>
 </div>
+<script>
+  function toggleHintMessage(element) {
+    const hintMessage = element.getAttribute('title');
+    const hintText = document.createElement('div');
+    hintText.classList.add('hint-message');
+    hintText.textContent = hintMessage;
+  
+    element.parentNode.insertBefore(hintText, element.nextSibling);
 
+    setTimeout(() => {
+      hintText.remove();
+    }, 2000);
+    
+  }
+</script>
   {% endblock %}

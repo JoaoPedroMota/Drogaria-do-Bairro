@@ -140,6 +140,12 @@ color: white;
                     <br>
                     <input type="submit" id="login" value="EDITAR PERFIL">
                     </form>
+                    
+                    <form action="{% url 'loja-relatorioImpactoLocal' username=request.user.username %}" method="" >
+                        {% csrf_token %}
+                        <br>
+                        <input type="submit" id="login" value="O MEU RELATÓRIO DE IMPACTO LOCAL">
+                    </form>
 
                     {% endif %}
                 </div>
