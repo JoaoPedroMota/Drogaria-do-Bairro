@@ -170,7 +170,7 @@ def loja(request):
         if request.session.get('carrinho') is not None and request.session.get('carrinho') !={}:
             request.session['carrinho'] = {}
     produtosCarrinho = quantosProdutosNoCarrinho(request)
-    print(produtosCarrinho)
+    # print(produtosCarrinho)
     if produtosCarrinho == -1:
         context={"produtosCarrinho":"E"}
     else:
@@ -2050,8 +2050,8 @@ def getProdutosEncomenda(request, username, idEncomenda):
         todosProdutos = resposta.json() ### todos os produtos encomendados
         i =0
         for produto in todosProdutos:
-            if i==0:
-                print("\n\n\n\n", produto,"\n\n\n\n",produto['produtos'],"\n\n\n\n")
+            # if i==0:
+                # print("\n\n\n\n", produto,"\n\n\n\n",produto['produtos'],"\n\n\n\n")
             produto_up = produto['produtos']
             url = f'http://127.0.0.1:8000/api/produtos_loja/{produto_up}/'
             resposta_2 = requests.get(url)
