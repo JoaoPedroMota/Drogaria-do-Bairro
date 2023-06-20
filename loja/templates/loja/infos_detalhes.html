@@ -3,94 +3,112 @@
 {% block content %}
 
 <style>
-    .input-wrapper {
+  .input-wrapper {
     position: relative;
   }
 
   .hint-formulario {
-  position: absolute;
-  top: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background-color: rgb(8, 120, 211);
-  color: #fff;
-  font-weight: bold;
-  font-size: 14px;
-}
-  .ola{
-    color: white;
-  }
-  .detalhe{
-    font-size: 35px !important;
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: rgb(8, 120, 211);
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
   }
 
+  .ola {
+    color: white;
+  }
+
+  .detalhe {
+    font-size: 35px !important;
+  }
 </style>
 <div class="breadcrumb-section breadcrumb-bg">
   <div class="container">
-      <div class="row">
-          <div class="col-lg-8 offset-lg-2 text-center">
-              <div class="breadcrumb-text">
-                <div class="row">
-                 
-                  {% for detalhe in infos %}
-                  {% if request.user.is_consumidor %}
-                  <h1>Detalhes de Envio da Encomenda nº {{idEncomenda}}</h1>
-                  {% elif request.user.is_fornecedor %}
-                  <h1>Detalhes de Envio da Encomenda nº {{detalhe.idEncomenda}}</h1>
-                  {% endif %}
-              </div>
-              <br>
-              <br>
-              
-                <div>
-                    <h1 class="detalhe">Nome:</h1>
-                    <br>
-                    <p>{{ detalhe.nome }}</p>
-                </div>
-                <div>
-                    <h1 class="detalhe">Morada:</h1>
-                    <br>
-                    <p>{{ detalhe.morada }}</p>
-                </div>
-                <div>
-                    <h1 class="detalhe" >Telemovel:</h1>
-                    <br>
-                    <p>{{ detalhe.telemovel }}</p>
-                </div>
-                <div>
-                    <h1 class="detalhe">Email:</h1>
-                    <br>
-                    <p>{{ detalhe.email }}</p>
-                </div>
-                <div>
-                    <h1 class="detalhe">Instrucoes de Entrega:</h1>
-                    <br>
-                    <p>{{ detalhe.instrucoes_entrega }}</+>
-                </div>
-            {% endfor %}
-            
-                <br>
-                <br>
-                <a href="{% url 'loja-perfil' userName=request.user.username  %}" class="layout__boxTitle">
-                  <div  class="container">
-                      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
-                      <title>arrow-left</title>
-                      <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
-                      </svg>
-                      <h6 class="voltar">Voltar</h6>
-                  </div>
-              </a>
-                  
+    <div class="row">
+      <div class="col-lg-8 offset-lg-2 text-center">
+        <div class="breadcrumb-text">
+          <div class="row">
 
-                 
-              </div>
+            {% for detalhe in infos %}
+            {% if request.user.is_consumidor %}
+            <h1>Detalhes de Envio da Encomenda nº {{idEncomenda}}</h1>
+            {% elif request.user.is_fornecedor %}
+            <h1>Detalhes de Envio da Encomenda nº {{detalhe.idEncomenda}}</h1>
+            {% endif %}
           </div>
+          <br>
+          <br>
+
+          <div>
+            <h1 class="detalhe">Nome:</h1>
+            <br>
+            <p>{{ detalhe.nome }}</p>
+          </div>
+          <div>
+            <h1 class="detalhe">Morada:</h1>
+            <br>
+            <p>{{ detalhe.morada }}</p>
+          </div>
+          <div>
+            <h1 class="detalhe">Telemovel:</h1>
+            <br>
+            <p>{{ detalhe.telemovel }}</p>
+          </div>
+          <div>
+            <h1 class="detalhe">Email:</h1>
+            <br>
+            <p>{{ detalhe.email }}</p>
+          </div>
+          <div>
+            <h1 class="detalhe">Instrucoes de Entrega:</h1>
+            <br>
+            <p>{{ detalhe.instrucoes_entrega }}</+>
+          </div>
+          {% endfor %}
+          {% if request.user.is_consumidor %}
+          <br>
+          <br>
+          <a href="{% url 'loja-perfil' userName=request.user.username  %}" class="layout__boxTitle">
+            <div class="container">
+              <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+                <title>arrow-left</title>
+                <path
+                  d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z">
+                </path>
+              </svg>
+              <h6 class="voltar">Voltar</h6>
+            </div>
+          </a>
+          {% else %}
+          <br>
+          <br>
+          <a href="{% url 'loja-unidadeProducao' userName=request.user.username id=unidadeProducao %}" class="layout__boxTitle">
+            <div class="container">
+              <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+                <title>arrow-left</title>
+                <path
+                  d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z">
+                </path>
+              </svg>
+              <h6 class="voltar">Voltar</h6>
+            </div>
+          </a>
+          {% endif %}
+
+
+
+        </div>
       </div>
+    </div>
   </div>
 </div>
 

@@ -227,7 +227,7 @@
                                 {% endif %}
                                 <br>
                             {% if produtosUP %}
-                            
+                                {% if encomenda %}
                                 <h2>Estado das suas encomendas</h2>    
                                     <table id="customers">
                                         <tr>
@@ -244,31 +244,40 @@
                                         </tr>
                                         {% for produtoEncomenda in encomenda %}
                                         <tr>
-                                            <td>{{ produtoEncomenda.encomenda}}</td>
-                                            <td>{{ produtoEncomenda.produtos}}</td>
+                                            <td>{{ forloop.revcounter }}</td>
+                                            {% for produto in produtosUP %}
+                                                {% if produto.id == produtoEncomenda.produtos %}
+                                                    <td>{{ produto.produto }}</td>
+                                                {% endif %}
+                                            {% endfor %}
                                             <td>{{ produtoEncomenda.quantidade}}</td>
                                             <td>{{ produtoEncomenda.preco}}</td>
                                             <td>{{ produtoEncomenda.precoKilo}}</td>
                                             
                                             {% if produtoEncomenda.estado == "Em processamento" %}
-                                            <td style="font-weight: bold; color: rgb(255, 255, 0) ; text-shadow: -0.5px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
+                                            <!-- text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black; -->
+                                            <td style="font-weight: bold; color: rgb(0, 88, 103) ;">{{ produtoEncomenda.estado}}</td>
                                             {% elif produtoEncomenda.estado == "Enviado" %}
-                                            <td style="font-weight: bold; color: rgb(81, 255, 191); text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
+                                            <!-- text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black; -->
+                                            <td style="font-weight: bold; color: rgb(0, 4, 248);">{{ produtoEncomenda.estado}}</td>
                                             {% elif produtoEncomenda.estado == 'A chegar' %}
-                                            <td style="font-weight: bold; color: rgb(255, 255, 0); text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
+                                            <!-- text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black; -->
+                                            <td style="font-weight: bold; color: rgb(255, 140, 0);">{{ produtoEncomenda.estado}}</td>
                                             {% elif produtoEncomenda.estado == "Entregue" %}
-
-                                            <td style="font-weight: bold; color: green; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
+                                            <!-- text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black; -->
+                                            <td style="font-weight: bold; color: green;">{{ produtoEncomenda.estado}}</td>
                                             {% elif produtoEncomenda.estado == "Cancelado" %}
-                                            
-                                            <td style="font-weight: bold; color: red; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>
-                                            {% elif produtoEncomenda.estado == 'A sair da Unidade de Producao' %}
-                                            <td style="font-weight: bold; color: rgb(84, 29, 95); text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black;">{{ produtoEncomenda.estado}}</td>"
-                                            
-                                            
+                                            <!-- text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black; -->
+                                            <td style="font-weight: bold; color: red;">{{ produtoEncomenda.estado}}</td>
+                                            {% elif produtoEncomenda.estado == 'A sair da Unidade de Producao' %} 
+                                            <!-- text-shadow: -1px 0 black, 0 1px black, 1px black, 0 -1px black; -->
+                                            <td style="font-weight: bold; color: rgb(84, 29, 95); ">{{ produtoEncomenda.estado}}</td>"
+                                            {% else %}      
+                                            <!--text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;-->
+                                            <td style="font-weight: bold; color: rgb(0, 0, 0);">{{ produtoEncomenda.estado}}</td>                                            
                                             {% endif %}
                                             <td>
-                                                <a href="{% url 'loja-detalhes-envio-fornecedor' idProdutoEncomendado=produtoEncomenda.id username=request.user.username idUnidadeProducao=unidadeProducao   idEncomenda=produtoEncomenda.encomenda.id %}">Ver detalhes</a>
+                                                <a href="{% url 'loja-detalhes-envio-fornecedor' idProdutoEncomendado=produtoEncomenda.id username=request.user.username idUnidadeProducao=unidadeProducao   idEncomenda=produtoEncomenda.encomenda %}">Ver detalhes</a>
                                             </td>
                                             {% for idProdutoEncomendado, estaNumVeiculoPar in produtosEstaoEmVeiculos.items %}
                                                 {% if idProdutoEncomendado == produtoEncomenda.id %}
@@ -292,13 +301,24 @@
                                                             </td>
                                                         {% elif produtoEncomenda.estado == "A chegar" %}
                                                             <td>
+                                                                {% for produto in produtosUP %}
+                                                                {% if produto.id == produtoEncomenda.produtos %}
                                                                 <form action="{% url 'loja-entregarEncomenda' username=request.user.username idUnidadeProducao=unidadeProducao idVeiculo=estaNumVeiculoPar.2 %}" method="post">
                                                                     {% csrf_token %}
-                                                                    <button type="submit" class="btn btn-info btn-sm" onclick="return confirm('Tem certeza que esta encomenda ({{produtoEncomenda.encomenda}}), com o produto ({{produtoEncomenda.produtos}}) foram entregues?')">
+                                                                    <button type="submit" class="btn btn-info btn-sm" onclick="return confirm('Tem certeza que esta encomenda ({{forloop.revcounter}}), com o produto ({{ produto.produto }}) foram entregues?')">
                                                                         Entregar e finalizar encomenda
                                                                     </button>
                                                                     
                                                                 </form>
+                                                                {% endif %}
+                                                                {% endfor %}
+                                                                
+                                                                    
+                                                                
+                                                            
+
+
+
                                                                 <br>
                                                                 <p>Produto está a ser entregue no veículo {{estaNumVeiculoPar.1}}</p>
                                                             </td>
@@ -321,8 +341,12 @@
                                     {% endfor %}
                                 </table>
                                 {% else %}
-                                <p>Nenhuma encomenda de momento</p>    
+                                <br>
+                                <br>
+                                <h2>Ainda não tem encomendas nesta unidade de produção, de momento</h2> 
+                                <br>
                                 {% endif %}
+                            {% endif %}
                                 <br>
                             <div id="botaoRemoverUnidadeProducao" style="margin-top: 15px;">
                                 <form action="{% url 'loja-removerUnidadeProducao' userName=request.user.username id=unidadeProducao %}" method="post">
