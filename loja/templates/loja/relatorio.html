@@ -27,9 +27,20 @@
 			
 		</div>
 	</div>
-	<!-- end breadcrumb section -->
-
-	<!-- featured section -->
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
+	
+	
+	<br>
+	<!-- featured section -->>
 	<div class="product-section mt-150 mb-150">
 
 		<style>
@@ -63,26 +74,101 @@
 			  border: whi;
 			  background: white;
 			}
+			
 		  </style>
 		</head>
 		<body>
 			
+			
+
 			<div class="chartCard" style="margin-top: -400px;">
-			<div class="chartBox">
-			  <canvas id="myChart"></canvas>
+				<div class="chartBox">
+					<h1 style="color:black ;font-weight:bold">Freguesias Iguais</h1>
+					<br>
+					<br>	
+					<br>
+					<br>	
+					<br>
+					<br>	
+				  	<canvas id="freguesiasChart"></canvas>
+				</div>
 			</div>
-		  </div>
-		  
+			<br>
+					<br>
+					<br>	
+					<br>	
+			<div class="chartCard" style="margin-top: -400px;">
+				
+				<div class="chartBox">
+					<h1 style="color:black ;font-weight:bold">Cidades Iguais</h1>
+					<br>
+					<br>
+					<br>
+					<br>	
+					<br>
+					<br>	
+					  <canvas id="myChart"></canvas>
+					</div>
+				  </div>
+				  <br>
+				  <br>
+				  <br>	
+				  <br>		  
+			<div class="chartCard" style="margin-top: -400px;">
+				
+				<div class="chartBox">
+					<h1 style="color:black ;font-weight:bold">Freguesias Iguais</h1>
+					<br>
+					<br>
+					<br>
+					<br>	
+					<br>
+					<br>	
+					<canvas id="paisesChart"></canvas>
+				</div>
+			</div>
+			<br>
+			<br>
+			<br>	
+			<br>	
+			<div class="chartCard" style="margin-top: -400px;">
+
+				<div class="chartBox">
+					<h1 style="color:black ;font-weight:bold">Mesmo Continente</h1>
+					<br>
+					<br>
+					<br>
+					<br>
+					<br>	
+					<br>	
+						<canvas id="continentesChart"></canvas>
+				</div>
+			</div>
+			<br>
+					<br>
+					<br>	
+					<br>	
+			<div class="chartCard" style="margin-top: -400px;">
+				<div class="chartBox">
+					<h1 style="color:black ;font-weight:bold">Resto Do Mundo</h1>
+					<br>
+					<br>
+					<br>
+					<br>
+					<br>	
+					<br>	
+						<canvas id="mundosChart"></canvas>
+				</div>
+			</div>
 		  <script>
 			
 			var dicionarioImpactoLocal =JSON.parse('{{ dicionarioDadosImpactoLocal|safe }}');
 			
-			// var freguesias=dicionarioImpactoLocal.FreguesiasIguais;
+			var freguesias=dicionarioImpactoLocal.FreguesiasIguais;
 			var cidades=dicionarioImpactoLocal.CidadesIguais;
-			console.log(cidades);
-			// var paises=dicionarioImpactoLocal;
-			// var continentes=dicionarioImpactoLocal;
-			// var mundo=dicionarioImpactoLocal;
+			var paises=dicionarioImpactoLocal.Mesmopais;
+			var continentes=dicionarioImpactoLocal.MesmoContinente;
+			var mundos=dicionarioImpactoLocal.RestoDoMundo;
 			const data = {
 			labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
 			datasets: []
@@ -166,6 +252,8 @@
 			colorIndex = (colorIndex + 1) % colors.length; // Loop through colors
 			}
 
+			
+
 			const config = {
 			type: 'bar',
 			data,
@@ -182,12 +270,164 @@
 			document.getElementById('myChart'),
 			config
 			);
-				
-						
-
-
+			// -------------------------------------------------------------------------------------------------------------
 			
+			const freguesiasData = {
+			labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
+			datasets: []
+			};
+
+			let freguesiasColorIndex = colorIndex ;
+
+			for (const freguesia in freguesias) {
+			const obj = freguesias[freguesia];
+			const dataset = {
+				label: freguesia,
+				data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
+				backgroundColor: [colors[freguesiasColorIndex]],
+				borderColor: [colors[freguesiasColorIndex]],
+				borderWidth: 1
+			};
+			freguesiasData.datasets.push(dataset);
+			freguesiasColorIndex = (freguesiasColorIndex + 1) % colors.length; // Loop through colors
+			}
+
+			const freguesiasConfig = {
+			type: 'bar',
+			data: freguesiasData,
+			options: {
+				scales: {
+				y: {
+					beginAtZero: true
+				}
+				}
+			}
+			};
+
+			const freguesiasChart = new Chart(
+			document.getElementById('freguesiasChart'),
+			freguesiasConfig
+			);			
+
+
+		// -------------------------------------------------------------------------------------------------------------
+			
+		const paisesData = {
+			labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
+			datasets: []
+			};
+
+			let paisesColorIndex = freguesiasColorIndex;
+
+			for (const pais in paises) {
+			const obj = paises[pais];
+			const dataset = {
+				label: pais,
+				data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
+				backgroundColor: [colors[ paisesColorIndex]],
+				borderColor: [colors[ paisesColorIndex]],
+				borderWidth: 1
+			};
+			paisesData.datasets.push(dataset);
+			paisesColorIndex = ( paisesColorIndex + 1) % colors.length; // Loop through colors
+			}
+
+			const paisesConfig = {
+			type: 'bar',
+			data: paisesData,
+			options: {
+				scales: {
+				y: {
+					beginAtZero: true
+				}
+				}
+			}
+			};
+
+			const paisesChart = new Chart(
+			document.getElementById('paisesChart'),
+			paisesConfig
+			);		
+
+			// -------------------------------------------------------------------------------------------------------------
+
+			const continentesData = {
+			labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
+			datasets: []
+			};
+
+			let continentesColorIndex = paisesColorIndex;
+
+			for (const continente in continentes) {
+			const obj = continentes[continente];
+			const dataset = {
+				label: continentes,
+				data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
+				backgroundColor: [colors[ continentesColorIndex]],
+				borderColor: [colors[ continentesColorIndex]],
+				borderWidth: 1
+			};
+			continentesData.datasets.push(dataset);
+			continentesColorIndex = ( continentesColorIndex + 1) % colors.length; // Loop through colors
+			}
+
+			const continentesConfig = {
+			type: 'bar',
+			data: continentesData,
+			options: {
+				scales: {
+				y: {
+					beginAtZero: true
+				}
+				}
+			}
+			};
+
+			const continentesChart = new Chart(
+			document.getElementById('continentesChart'),
+			continentesConfig
+			);		
+
+			// -------------------------------------------------------------------------------------------------------------
+			const mundosData = {
+			labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
+			datasets: []
+			};
+
+			let mundosColorIndex = continentesColorIndex;
+
+			for (const mundo in mundos) {
+			const obj = mundos[mundo];
+			const dataset = {
+				label: mundos,
+				data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
+				backgroundColor: [colors[ mundosColorIndex]],
+				borderColor: [colors[ mundosColorIndex]],
+				borderWidth: 1
+			};
+			mundosData.datasets.push(dataset);
+			mundosColorIndex = ( mundosColorIndex + 1) % colors.length; // Loop through colors
+			}
+
+			const mundosConfig = {
+			type: 'bar',
+			data: continentesData,
+			options: {
+				scales: {
+				y: {
+					beginAtZero: true
+				}
+				}
+			}
+			};
+
+			const mundosChart = new Chart(
+			document.getElementById('mundosChart'),
+			mundosConfig
+			);		
+
 		  </script>
+		  
 
 	</div>
 	
