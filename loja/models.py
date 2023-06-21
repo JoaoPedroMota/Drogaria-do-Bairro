@@ -340,15 +340,15 @@ class UnidadeProducao(models.Model):
     def __str__(self):
         return self.nome
     def save(self, *args, **kwargs):
+        if self.cidade is not None and self.freguesia is not None:
+            self.cidade = unidecode(self.cidade)
+            # print(self.cidade)
+            # print(self.freguesia)
+            self.freguesia = unidecode(self.freguesia)
         
-        self.cidade = unidecode(self.cidade)
-        print(self.cidade)
-        print(self.freguesia)
-        self.freguesia = unidecode(self.freguesia)
-        
-        # Transformar a cidade em uppercase
-        self.cidade = self.cidade.upper()
-        self.freguesia = self.freguesia.upper()
+            # Transformar a cidade em uppercase
+            self.cidade = self.cidade.upper()
+            self.freguesia = self.freguesia.upper()
         # Chamar o método save padrão do modelo
         super().save(*args, **kwargs)
     

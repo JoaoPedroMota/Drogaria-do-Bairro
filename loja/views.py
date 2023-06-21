@@ -2535,11 +2535,18 @@ def obterNotificacoesF(request,username):
 
 @login_required(login_url='loja-login')
 def relarioImpactoLocal(request, username):
+    data_inicio = 0 ## colocar as datas no formato YYYY-mm-dd
+    data_fim = 0 ## colocar as datas no formato YYYY-mm-dd
+    # if request.method == "POST":
+        # data_inicio = request.POST.get('dataInicio) if request.POST.get('dataInicio) is not None else None
+        # data_fim = request.POST.get('dataFim) if request.POST.get('dataFim) is not None else None
+    
+    
     context = {}
     if username != request.user.username:
         return redirect('loja-perfil', userName=request.user.username)
     consumidor = request.user.consumidor if hasattr(request.user, "consumidor") else None
-    fornecedor = request.user.consumidor if hasattr(request.user, "fornecedor") else None
+    fornecedor = request.user.fornecedor if hasattr(request.user, "fornecedor") else None
     if request.user.is_superuser:
         url = f'http://127.0.0.1:8000/api/{request.user.username}/relatorioImpactoLocal'
     elif consumidor is not None:
@@ -2555,8 +2562,7 @@ def relarioImpactoLocal(request, username):
     headers = {'X-CSRFToken':csrf_token}
     
     ####tratamento das datas de inicio e de fim
-    data_inicio = 0 ## colocar as datas no formato YYYY-mm-dd
-    data_fim = 0 ## colocar as datas no formato YYYY-mm-dd
+
     
     
     

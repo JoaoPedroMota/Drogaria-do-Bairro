@@ -173,10 +173,21 @@ class UnidadeProducaoList(APIView):
     def post(self, request, username, formato=None):
         utilizador = Utilizador.objects.get(username=username)
         fornecedor = Fornecedor.objects.get(utilizador=utilizador)
+        campos = ''
         if request.user.is_consumidor:
-            return Response("Não pode criar uma unidade de produção. Não é um fornecedor!")
+            return Response("Não pode criar uma unidade de produção. Não é um fornecedor!", status=status.HTTP_403_FORBIDDEN)
         if request.user.fornecedor != fornecedor:
-            return Response("Só pode criar unidades de produção para si e não para os outros.")
+            return Response("Só pode criar unidades de produção para si e não para os outros.",status=status.HTTP_403_FORBIDDEN )
+        if 'nome' not in request.data:
+            campos+='nome, '
+        if 'cidade' not in request.data:
+            campos+= 'cidade, '
+        if 'freguesia' not in request.data:
+            campos+='freguesia, '
+        if 'morada' not in request.data:
+            campos+='morada'
+        if campos != '':
+            return Response({"detail":f"O(s) campo(s) {campos} são obrigatórios"})
         deserializer = UnidadeProducaoSerializer(data=request.data)
         if deserializer.is_valid():
             up_guardada = deserializer.save(fornecedor=fornecedor)
@@ -227,6 +238,20 @@ class UnidadeProducaoDetail(APIView):
             if request.user.fornecedor != fornecedor:
                 return Response("Só pode editar unidades de produção para si e não para os outros", status=status.HTTP_400_BAD_REQUEST)
             up = self.get_object(idUnidadeProducao, username)
+            campos = ''
+            if 'nome' not in request.data:
+                campos+='nome, '
+            if 'cidade' not in request.data:
+                campos+= 'cidade, '
+            if 'freguesia' not in request.data:
+                campos+='freguesia, '
+            if 'morada' not in request.data:
+                campos+='morada'
+            if campos != '':
+                return Response({"detail":f"O(s) campo(s) {campos} são obrigatórios"})
+            
+            
+            
             deserializer = UnidadeProducaoSerializer(up, data=request.data)
             if deserializer.is_valid():
                 deserializer.save()
@@ -485,6 +510,9 @@ class ProdutoUnidadeProducaoList(APIView):
         except UnidadeProducao.DoesNotExist:
             raise Http404
         #print("PRINT NA API. REQUEST.DATA:",request.data)
+        if request.data.get('unidade_producao') is None:
+            print("entrei")
+            return Response("Tem de enviar a unidade de producao", status=status.HTTP_400_BAD_REQUEST)
         if int(request.data.get('unidade_producao')) != int(idUnidadeProducao):
             return Response(f'Não pode adicionar produtos a outra unidade de produção que não a atual. Você está na unidade de produção:{unidadeProducao.nome}. Use o id {unidadeProducao.id}', status=status.HTTP_400_BAD_REQUEST)
         serializar = ProdutoUnidadeProducaoSerializer(data=request.data)
