@@ -1,8 +1,10 @@
 {% extends 'main.html' %}
 {% load static %}
 {% block content%}
+	
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
-
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+	
 	<div class="breadcrumb-section breadcrumb-bg">
 		<div class="container">
 			
@@ -42,6 +44,29 @@
                         <p style="color:white">{{total.ProdutosEncomendados}} encomendas</p>
 						
 						{% endif %}
+						<br>
+						<br>
+						<br>
+						<br>
+						<br>
+						<form  class='formdata' method="post">
+							{% csrf_token %}
+							{{form.as_p}}
+							
+							<!-- <p><label>Data de Início  </label></p>
+							<br>
+							<p class="pequeno"> (data de inicio para filtrar encomendas) </p>
+							<br>
+							<input type="date" name="dataInicio" id="dateField">
+							<br>
+							<p><label>Data de Fim  </label></p>
+							<br>
+							<p class="pequeno"> (data de fim para filtrar encomendas inclusive) </p>
+							<br>
+							<input type="date" name="dataFim" id="dateField"> -->
+							<input type="submit" value="Filtrar por estas datas">
+						</form>
+						
 					</div>
 				</div>
 			
@@ -62,6 +87,9 @@
 	<div class="product-section mt-150 mb-150">
 
 		<style>
+			
+			
+
 			* {
 			  margin: 0;
 			  padding: 0;
@@ -91,6 +119,10 @@
 			  border-radius: 20px;
 			  border: whi;
 			  background: white;
+			}
+			.pequeno{
+				font-size: 10px !important;
+				color: white !important;
 			}
 			
 		  </style>

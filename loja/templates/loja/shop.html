@@ -3,7 +3,7 @@
 {% block content%}
 
 <head>
-    <title>Your Page Title</title>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <!-- breadcrumb-section -->
@@ -116,12 +116,12 @@
     </ul>
 {% endif %}
 
-{% for categoria in categoria %}
+<!-- {% for categoria in categoria %}
     {% if categoria.categoria_pai is null %}
     <div class="categoria">
         <span class="seta">></span>
         <a href="{% url 'loja-ver-produtos' %}?q={{categoria.nome}}" >{{categoria.nome}}</a>
-        <ul class ="subcategorias">
+        <ul>
             {% for subcategoria in categoriaProduto %}
                 {% if subcategoria.categoria_pai and subcategoria.categoria_pai.id == categoria.id %}
                     <li><a href="{% url 'loja-ver-produtos' %}?q={{subcategoria.nome}}" >{{subcategoria.nome}}</a></li>
@@ -130,7 +130,7 @@
         </ul>
     </div>
     {% endif %}
-{% endfor %}
+{% endfor %} -->
 
 <script>
     $(document).ready(function() {

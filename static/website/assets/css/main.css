@@ -206,7 +206,10 @@ p:last-child {
   -webkit-animation: spinRight 800ms linear infinite;
   animation: spinRight 800ms linear infinite;
 }
-
+.pequeno{
+  font-size: 10px !important;
+  color: white !important;
+}
 .circle:before {
   content: '';
   width: 6vmax;

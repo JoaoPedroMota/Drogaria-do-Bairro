@@ -592,12 +592,14 @@ class ProdutoUnidadeProducaoAll(APIView):
                     Q(produto__nome__icontains=criterio_pesquisa) |
                     Q(produto__categoria__nome__icontains=criterio_pesquisa)
                     )
-                if produtos.count() == 1:
-                    serializer = ProdutoUnidadeProducaoSerializer(produtos, many=False)
-                if produtos.count() > 1:
-                    serializer = ProdutoUnidadeProducaoSerializer(produtos, many=True)
+                # if produtos.count() == 1:
+                #     serializer = ProdutoUnidadeProducaoSerializer(produtos, many=False)
+                # if produtos.count() > 1:
+                #     serializer = ProdutoUnidadeProducaoSerializer(produtos, many=True)
+                if produtos.exists() :
+                   serializer = ProdutoUnidadeProducaoSerializer(produtos, many=True)
                 else:
-                    return Response(status=status.HTTP_404_NOT_FOUND)
+                    return Response({},status=status.HTTP_404_NOT_FOUND)
                 return Response(serializer.data, status=status.HTTP_200_OK)
                 
             else:

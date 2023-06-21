@@ -1125,14 +1125,17 @@ def sP(request,produto_id):
     return render(request, 'loja/single-product.html',context)
 
 def ver_produtos(request):
+   
     q = request.GET.get('q', '')
-    print(q)
+    
     url1 = 'http://127.0.0.1:8000/api/produtos/'
     url2 = 'http://127.0.0.1:8000/api/produtos_loja/'
     url3 = 'http://127.0.0.1:8000/api/categorias/'
     response1 = requests.get(url1).json()
-
+   
+    
     response2 = requests.get(url2, data={"q":q}).json()
+    
     response3 = requests.get(url3).json()
 
 
@@ -2693,8 +2696,20 @@ def relarioImpactoLocal(request, username):
     headers = {'X-CSRFToken':csrf_token}
     
     ####tratamento das datas de inicio e de fim
-    data_inicio =None ## colocar as datas no formato YYYY-mm-dd
+    data_inicio = None ## colocar as datas no formato YYYY-mm-dd
     data_fim = None ## colocar as datas no formato YYYY-mm-dd
+
+    form = DateRangeForm()
+
+    if request.method == "POST":
+        form = DateRangeForm(request.POST)
+        print(form)
+        if form.is_valid():
+            data_inicio = form.cleaned_data['dataInicio']
+            data_fim = form.cleaned_data['dataFim']
+            
+        # data_inicio = request.POST.get('dataInicio) if request.POST.get('dataInicio) is not None else None
+        # data_fim = request.POST.get('dataFim) if request.POST.get('dataFim) is not None else None
     
     
     
@@ -2716,6 +2731,8 @@ def relarioImpactoLocal(request, username):
         json_data = json.dumps(conteudo)
         context['dicionarioDadosImpactoLocal'] = json_data
         context['total']=conteudo['Total']
+        context['form']=form
+        
         return render(request,'loja/relatorio.html', context)
     
         # verificar se é nessário tratar os dados consoante o tipo de utilizador. 
