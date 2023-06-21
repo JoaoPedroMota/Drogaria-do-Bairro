@@ -648,36 +648,58 @@ class SingleProductDetails(APIView):
         return Response(serializador.data, status=status.HTTP_200_OK)
 
 
+class VeiculoDetail(APIView):
+    def get_object(self, identifier):
+        try:
+            return Veiculo.objects.get(pk=identifier)
+        except Veiculo.DoesNotExist:
+            raise Http404
+
+    def get(self, request, idVeiculo, idFornecedor, idUnidadeProducao, format=None):
+        try:
+            veiculo = self.get_object(idVeiculo)
+            respostaDevolver = VeiculoSerializer(veiculo, many=False)
+            return Response(respostaDevolver.data)
+        except:
+            return Response(status=404)
+    
+    def delete(self, request, username, idUnidadeProducao, format=None):
+        user = Utilizador.objects.get(username=username)
+        fornecedor = user.fornecedor
+        if request.user.is_consumidor:
+            return Response("Não pode apagar um veiculo. Não é um fornecedor!")
+        if request.user.fornecedor != fornecedor:
+            return Response("Só pode apagar os seus veiculos e não os dos outros")
+        veiculo = self.get_object(idUnidadeProducao, username)
+        veiculo.delete()
+        return Response(f"veiculo '{veiculo.nome}' apagado com sucesso!",status=status.HTTP_204_NO_CONTENT)
 
 
-
-
-
-
-
-
-
-
-@api_view(['GET'])
-def getVeiculos(request, username, idUnidadeProducao, format=None):
-    utilizador_temp = Utilizador.objects.get(username=username)
-    fornecedor = Fornecedor.objects.get(utilizador=utilizador_temp)
-    unidadeProducao = fornecedor.unidades_producao.get(pk=idUnidadeProducao)
-    veiculos = unidadeProducao.veiculos.all()
-    respostaDevolver = VeiculoSerializer(veiculos, many=True)
-    return Response(respostaDevolver.data)
-
-@api_view(['GET'])
-def getVeiculo(request,username, idVeiculo, idUnidadeProducao, format=None):
-    utilizador = Utilizador.objects.get(username=username)
-    fornecedor = Fornecedor.objects.get(utilizador=utilizador)
-    unidadeProducao = fornecedor.unidades_producao.get(pk=idUnidadeProducao)
-    veiculo = unidadeProducao.veiculos.get(id=idVeiculo)
-    respostaDevolver = VeiculoSerializer(veiculo, many=False)
-    return Response(respostaDevolver.data)
-
+class VeiculoList(APIView):
+    def get(self, request, idVeiculo, idFornecedor, idUnidadeProducao, format=None):
+        veiculos = Veiculo.objects.all()
+        if veiculos.count() == 1:
+            serializar = VeiculoSerializer(veiculos, many=False)
+        elif veiculos.count() > 1:
+            serializar = VeiculoSerializer(veiculos, many=True)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializar.data, status=status.HTTP_200_OK)
+    def post(self, request, username, idUnidadeProducao, formato=None):
+        utilizador = Utilizador.objects.get(username=username)
+        fornecedor = Fornecedor.objects.get(utilizador=utilizador)
+        if request.user.is_consumidor:
+            return Response("Não pode criar um veiculo. Não é um fornecedor!")
+        if request.user.fornecedor != fornecedor:
+            return Response("Só pode criar veiculos para si e não para os outros.")
+        deserializer = VeiculoSerializer(data=request.data)
+        if deserializer.is_valid():
+            veiculo_guardado = deserializer.save(idUnidadeProducao=idUnidadeProducao)
+            return Response(deserializer.data, status=status.HTTP_201_CREATED)
+        return Response(deserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+        
 ########################
-
 
 class CarrinhoList(APIView):
     """Devolve todos os ids dos carrinhos existentes e a que consumidor pertencem,
