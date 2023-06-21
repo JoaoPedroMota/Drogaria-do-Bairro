@@ -45,14 +45,14 @@ def createCheckoutSession(request, idDetalhesEnvio):
     csrf_token = get_token(request)
     headers = {'X-CSRFToken':csrf_token}
 
-    url = f'https://drogariadobairro.pt/api/{request.user.username}/consumidor/carrinho/'
+    url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/'
     response = sessao.get(url, headers=headers).json()
 
     line_items = []
     for produto in response:
         idProduto = produto['produto']['produto']
 
-        url = f'https://drogariadobairro.pt/api/produtosID/{idProduto}/'
+        url = f'http://127.0.0.1:8000/api/produtosID/{idProduto}/'
         response2 = sessao.get(url, headers=headers).json()
 
         produtoNome = response2['nome']
@@ -75,8 +75,8 @@ def createCheckoutSession(request, idDetalhesEnvio):
         payment_method_types = ['card'],
         line_items = line_items,
         mode = 'payment',
-        success_url=f'https://drogariadobairro.pt/paymentSuccess/{idDetalhesEnvio}/',
-        cancel_url = 'https://drogariadobairro.pt/paymentFailure/',
+        success_url=f'http://127.0.0.1:8000/paymentSuccess/{idDetalhesEnvio}/',
+        cancel_url = 'http://127.0.0.1:8000/paymentFailure/',
     )
 
     request.session['checkout_session_id'] = checkout_session.id
@@ -313,7 +313,7 @@ def checkout(request):
 
 def loginUtilizador(request):
     return oauth.auth0.authorize_redirect(
-        request, request.build_absolute_uri('https://drogariadobairro.pt/callback')
+        request, request.build_absolute_uri(reverse("loja-callback"))
     )
 
 
@@ -329,9 +329,9 @@ def callback(request):
     login(request, user)
 
     if created:
-        return redirect('https://drogariadobairro.pt/completarPerfil')
+        return redirect('loja-completarPerfil')
     else:
-        return redirect('https://drogariadobairro.pt')
+        return redirect(request.build_absolute_uri(reverse("loja-home")))
 
     # username = token['userinfo']['nickname']
 
@@ -357,7 +357,7 @@ def logout(request):
         f"https://{settings.AUTH0_DOMAIN}/v2/logout?"
         + urlencode(
             {
-                "returnTo": request.build_absolute_uri('https://drogariadobairro.pt'),
+                "returnTo": request.build_absolute_uri(reverse("loja-home")),
                 "client_id": settings.AUTH0_CLIENT_ID,
             },
             quote_via=quote_plus,
@@ -1702,7 +1702,7 @@ def confirmarDetalhesEnvio(request):
     
    
     
-    url = f'https://drogariadobairro.pt/api/{request.user.username}/consumidor/detalhes_envio/'
+    url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/detalhes_envio/'
 
     sessao = requests.Session()
     sessao.cookies.update(request.COOKIES)
@@ -1920,7 +1920,7 @@ def criarEncomenda(request, idDetalhesEnvio):
     if consumidor is None:
         return redirect('loja-home')
 
-    url = f'https://drogariadobairro.pt/api/{request.user.username}/consumidor/encomendarCarrinho/'
+    url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/encomendarCarrinho/'
     #print("CHEGUEI A CRIAR ENCOMENDAS")
     sessao = requests.Session()
     sessao.cookies.update(request.COOKIES)
@@ -1949,7 +1949,7 @@ def detalhesEnvio(request, username):
     produtosCarrinho = quantosProdutosNoCarrinho(request)
     context = {"produtosCarrinho":produtosCarrinho} # "produtosCarrinho":produtosCarrinho
     formulario = DetalhesEnvioForm(utilizador=request.user)
-    url = f'https://drogariadobairro.pt/api/{request.user.username}/consumidor/detalhes_envio/'
+    url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/detalhes_envio/'
 
     sessao = requests.Session()
     sessao.cookies.update(request.COOKIES)
@@ -2080,7 +2080,7 @@ def getProdutosEncomenda(request, username, idEncomenda):
             # if i==0:
                 # print("\n\n\n\n", produto,"\n\n\n\n",produto['produtos'],"\n\n\n\n")
             produto_up = produto['produtos']
-            url = f'https://drogariadobairro.pt/api/produtos_loja/{produto_up}/'
+            url = f'http://127.0.0.1:8000/api/produtos_loja/{produto_up}/'
             resposta_2 = requests.get(url)
             
             preco = produto['preco']
