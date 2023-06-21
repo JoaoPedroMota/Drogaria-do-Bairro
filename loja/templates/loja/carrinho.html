@@ -10,6 +10,17 @@
   }
 </style>
 <!-- breadcrumb-section -->
+
+<script>
+    
+    function atualizarPreco(input, preco) {
+        var valor = input.value;
+        var novoPreco = valor * preco;
+        var precoElement = input.parentNode.querySelector('.preco');
+        precoElement.innerText = novoPreco.toFixed(2) + "€";
+}
+</script>
+
 <div class="breadcrumb-section breadcrumb-bg">
     <div class="container">
         <div class="row">
@@ -31,6 +42,8 @@
 </ul>
 {% endif %}
 <!-- cart -->
+<form method="post" action="{% url 'loja-updateCarrinho' %}">
+{% csrf_token %}
 <div class="cart-section mt-150 mb-150">
    
     <div class="container">
@@ -50,25 +63,28 @@
                                 
                             </tr>
                         </thead>
-                        <tbody>
-                            {% for produto in produtos %}
-                                {% with i=forloop.counter0|add:1 %}
-                                <tr class="table-body-row">
-                                    <td class="product-remove"><a href="{% url 'loja-remover-do-carrinho' produto.idNoCarrinho %}"><i class="far fa-window-close"></i></a></td>
-                                    <td class="numeroCarrinhoSoTabela">{{i}}</td>
-                                    <td class="product-image">
-                                        <img src="{% static produto.produto.imagem_produto %}" alt="{{produto.nomeProduto}}">
-                                    </td>
-                                    <td class="product-name">{{ produto.nomeProduto }}</td>
-                                    <td class="product-quantity">{{produto.precoKilo}}€/{{produto.produto.unidade_medida}}</td>    
-                                    <td class="product-price">{{produto.preco|floatformat:2}}€</td>
-                                    <td class="">{{ produto.quantidade|floatformat:2 }} {{produto.produto.unidade_medida}}</td>
-                                    
-                                </tr>
-                                {% endwith %}
-                        </tbody>
-                        {% endfor %}
-                    </table>
+    <tbody>
+    {% for produto in produtos %}
+    {% with i=forloop.counter0|add:1 %}
+        <tr class="table-body-row">
+            <td class="product-remove"><a href="{% url 'loja-remover-do-carrinho' produto.idNoCarrinho %}"><i class="far fa-window-close"></i></a></td>
+            <td class="numeroCarrinhoSoTabela">{{i}}</td>
+            <td class="product-image">
+                <img src="{% static produto.produto.imagem_produto %}" alt="produto.nomeProduto">
+            </td>
+            <td class="product-name">{{ produto.nomeProduto }}</td>
+            <td class="product-quantity">{{produto.precoKilo}}€/{{produto.produto.unidade_medida}}</td>    
+            <td class="product-price">{{produto.preco|floatformat:2}}€</td>
+            <td><input type="number" class="styled-input" step="1" min="0.1" max="999" placeholder="{{produto.quantidade|floatformat:2}}" name="quantidade_{{ produto.produto.id }}"  value="{{ produto.quantidade }}" >{{ produto.quantidade }} {{produto.produto.unidade_medida}}</td>
+            {% endwith %}
+        </tr>
+    </tbody>
+{% endfor %}
+    </table>
+    <div class="cart-buttons">
+        <input type="submit" value="Atualizar Carrinho">
+    </div>
+                </form>
                 </div>
             </div>
 
@@ -96,9 +112,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <div class="cart-buttons">
-                        <a href="/cart" class="boxed-btn">Update Cart</a>
-                    </div>
+                   
                 </div>
 
                 <div class="coupon-section">

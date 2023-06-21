@@ -220,6 +220,30 @@ class DetalhesEnvioForm(forms.ModelForm):
                 self.add_error('email',f"Selecionou utilizar informações do utilizador, logo o email tem de ser igual ao que está definida no utilizador: {utilizador.email}")
         return cleaned_data
 
+
+
+class DateRangeForm(forms.Form):
+    dataInicio = forms.DateField(
+        label='Data de Início',
+        widget=forms.DateInput(format='%d-%m-%Y', attrs={'type': 'date'}),
+        required=False  # torna o campo não obrigatório
+    )
+    dataFim = forms.DateField(
+        label='Data de Fim',
+        widget=forms.DateInput(format='%d-%m-%Y', attrs={'type': 'date'}),
+        required=False  # torna o campo não obrigatório
+    )
+    def clean(self):
+        cleaned_data = super().clean()
+        dataInicio = cleaned_data.get('dataInicio')
+        dataFim = cleaned_data.get('dataFim')
+
+        if dataInicio and dataFim and dataInicio >= dataFim:
+           self.add_error('dataInicio', "A data início tem de ser anterior à data de fim")
+           self.add_error('dataFim', "A data fim tem de ser posterior à data de início")
+        else:
+            return cleaned_data
+
 class ConfirmarDetalhesEnvioForm(forms.ModelForm):
     class Meta:
         model = DetalhesEnvio

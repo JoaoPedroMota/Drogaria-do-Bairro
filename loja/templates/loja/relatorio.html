@@ -1,416 +1,475 @@
 {% extends 'main.html' %}
 {% load static %}
 {% block content%}
-	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 
-	<div class="breadcrumb-section breadcrumb-bg">
-		<div class="container">
-			
-				<div class="col-lg-8 offset-lg-2 text-center">
-					<div class="breadcrumb-text">
-						<h1>Relatório Geral</h1>
-						<br>
-                        {% if request.user.is_fornecedor %}
-						<p>Total Dinheiro ganho:</p>
-                        <br>
-						
-                        <p style="color:white">{{total.dinheiroGastoGanho}}€</p>
-						<br>
-						<p>Número de Encomendadas recebidas</p>
-						
-                        <br>
-                        <p style="color:white">{{total.ProdutosEncomendados}} encomendas</p>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 
-                        
-						{%elif request.user.is_consumidor%}
-						<p>Contribuição aos fornecedores registados no site  :</p>
-                        <br>
-                        <p style="color:white">{{total.dinheiroGastoGanho}}€</p>
-						<br>
-						<p>Número de Encomendadas feitas</p>
-                        <br>
-                        <p style="color:white">{{total.ProdutosEncomendados}} encomendas</p>
+<div class="breadcrumb-section breadcrumb-bg">
+	<div class="container">
 
-						{% elif request.user.is_superuser %}
+		<div class="col-lg-8 offset-lg-2 text-center">
+			<div class="breadcrumb-text">
+				<h1>Relatório Geral</h1>
+				<br>
+				{% if request.user.is_fornecedor %}
+				<p>Total Dinheiro ganho:</p>
+				<br>
 
-						<p>Dinheiro angariado pelo o site  :</p>
-                        <br>
-                        <p style="color:white">{{total.dinheiroGastoGanho}}€</p>
-						<br>
-						<p>Número de Encomendadas realizadas no site</p>
-                        <br>
-                        <p style="color:white">{{total.ProdutosEncomendados}} encomendas</p>
-						
-						{% endif %}
-					</div>
+				<p style="color:white">{{total.dinheiroGastoGanho}}€</p>
+				<br>
+				<p>Número de Encomendadas recebidas</p>
+
+				<br>
+				<p style="color:white">{{total.ProdutosEncomendados}} encomendas</p>
+
+
+				{%elif request.user.is_consumidor%}
+				<p>Contribuição aos fornecedores registados no site :</p>
+				<br>
+				<p style="color:white">{{total.dinheiroGastoGanho}}€</p>
+				<br>
+				<p>Número de Encomendadas feitas</p>
+				<br>
+				<p style="color:white">{{total.ProdutosEncomendados}} encomendas</p>
+
+				{% elif request.user.is_superuser %}
+
+				<p>Dinheiro angariado pelo o site :</p>
+				<br>
+				<p style="color:white">{{total.dinheiroGastoGanho}}€</p>
+				<br>
+				<p>Número de Encomendadas realizadas no site</p>
+				<br>
+				<p style="color:white">{{total.ProdutosEncomendados}} encomendas</p>
+
+				{% endif %}
+				<br>
+				<br>
+				{% if messages %}
+				<div class="alert alert-success">
+					{% for message in messages %}
+						<p>{{ message }}</p>
+					{% endfor %}
 				</div>
-			
+				{% endif %}
+				<br>
+				<br>
+				<form class='formdata' method="post">
+					{% csrf_token %}
+					{% for field in form %}
+					<div class="form-group">
+						<p>{{ field.label }}</p>
+						<br>
+						<input type="{{ field.field.widget.input_type }}" class="centered-inputNome"
+							id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}">
+						{% if field.errors %}
+						<ul class="field-error-list">
+							{% for error in field.errors %}
+								<div class="invalid-feedback d-block">{{ error }}</div>
+							{% endfor %}
+						</ul>
+						{% endif %}
+						</div>
+					<br>
+					{% endfor %}
+					<input type="submit" value="Filtrar por estas datas">
+				</form>
+				<a href="{% url 'loja-perfil' request.user.username %}" class="layout__boxTitle">
+					<div class="container">
+						<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+							viewBox="0 0 32 32">
+							<title>arrow-left</title>
+							<path
+								d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z">
+							</path>
+						</svg>
+						<h6 class="voltar">Voltar</h6>
+					</div>
+				</a>
+			</div>
 		</div>
-	</div>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<!-- featured section -->>
-	<div class="product-section mt-150 mb-150">
 
-		<style>
-			* {
-			  margin: 0;
-			  padding: 0;
-			  font-family: sans-serif;
-			}
-			.chartMenu {
-			  width: 100vw;
-			  height: 40px;
-			  background: #1A1A1A;
-			  color: rgba(54, 162, 235, 1);
-			}
-			.chartMenu p {
-			  padding: 10px;
-			  font-size: 20px;
-			}
-			.chartCard {
-			  width: 100vw;
-			  height: calc(100vh - 40px);
-			 
-			  display: flex;
-			  align-items: center;
-			  justify-content: center;
-			}
-			.chartBox {
+	</div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<!-- featured section -->>
+<div class="product-section mt-150 mb-150">
+
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			font-family: sans-serif;
+		}
+
+		.chartMenu {
+			width: 100vw;
+			height: 40px;
+			background: #1A1A1A;
+			color: rgba(54, 162, 235, 1);
+		}
+
+		.chartMenu p {
+			padding: 10px;
+			font-size: 20px;
+		}
+
+		.chartCard {
+			width: 100vw;
+			height: calc(100vh - 40px);
+
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		/* .chartBox {
 			  width: 700px;
 			  padding: 20px;
 			  border-radius: 20px;
 			  border: whi;
 			  background: white;
-			}
-			
-		  </style>
-		</head>
-		<body>
-			
-			
+			} */
+		.pequeno {
+			font-size: 10px !important;
+			color: white !important;
+		}
+	</style>
+	</head>
 
-			<div class="chartCard" style="margin-top: -400px;">
-				<div class="chartBox">
-					<h1 style="color:black ;font-weight:bold">Freguesias Iguais</h1>
-					<br>
-					<br>	
-					<br>
-					<br>	
-					<br>
-					<br>	
-				  	<canvas id="freguesiasChart"></canvas>
-				</div>
-			</div>
-			<br>
-					<br>
-					<br>	
-					<br>	
-			<div class="chartCard" style="margin-top: -400px;">
-				
-				<div class="chartBox">
-					<h1 style="color:black ;font-weight:bold">Cidades Iguais</h1>
-					<br>
-					<br>
-					<br>
-					<br>	
-					<br>
-					<br>	
-					  <canvas id="myChart"></canvas>
-					</div>
-				  </div>
-				  <br>
-				  <br>
-				  <br>	
-				  <br>		  
-			<div class="chartCard" style="margin-top: -400px;">
-				
-				<div class="chartBox">
-					<h1 style="color:black ;font-weight:bold">Países Iguais</h1>
-					<br>
-					<br>
-					<br>
-					<br>	
-					<br>
-					<br>	
-					<canvas id="paisesChart"></canvas>
-				</div>
-			</div>
-			<br>
-			<br>
-			<br>	
-			<br>	
-			<div class="chartCard" style="margin-top: -400px;">
+	<body>
 
-				<div class="chartBox">
-					<h1 style="color:black ;font-weight:bold">Mesmo Continente</h1>
-					<br>
-					<br>
-					<br>
-					<br>
-					<br>	
-					<br>	
-						<canvas id="continentesChart"></canvas>
-				</div>
+
+
+		<div class="chartCard" style="margin-top: -400px;">
+			<div class="chartBox">
+				<h1 style="color:black ;font-weight:bold">Freguesias Iguais</h1>
+				<br>
+				<br>
+				<br>
+				<br>
+				<br>
+				<br>
+				<canvas id="freguesiasChart"></canvas>
 			</div>
-			<br>
-					<br>
-					<br>	
-					<br>	
-			<div class="chartCard" style="margin-top: -400px;">
-				<div class="chartBox">
-					<h1 style="color:black ;font-weight:bold">Resto Do Mundo</h1>
-					<br>
-					<br>
-					<br>
-					<br>
-					<br>	
-					<br>	
-						<canvas id="mundosChart"></canvas>
-				</div>
+		</div>
+		<br>
+		<br>
+		<br>
+		<br>
+		<div class="chartCard" style="margin-top: -400px;">
+			<div class="chartBox">
+				<h1 style="color:black ;font-weight:bold">Cidades Iguais</h1>
+				<br>
+				<br>
+				<br>
+				<br>
+				<br>
+				<br>
+				<canvas id="myChart"></canvas>
 			</div>
-		  <script>
-			
-			var dicionarioImpactoLocal =JSON.parse('{{ dicionarioDadosImpactoLocal|safe }}');
-			
-			var freguesias=dicionarioImpactoLocal.FreguesiasIguais;
-			var cidades=dicionarioImpactoLocal.CidadesIguais;
-			var paises=dicionarioImpactoLocal.Mesmopais;
-			var continentes=dicionarioImpactoLocal.MesmoContinente;
-			var mundos=dicionarioImpactoLocal.RestoDoMundo;
+		</div>
+		<br>
+		<br>
+		<br>
+		<br>
+		<div class="chartCard" style="margin-top: -400px;">
+			<div class="chartBox">
+				<h1 style="color:black ;font-weight:bold">Países Iguais</h1>
+				<br>
+				<br>
+				<br>
+				<br>
+				<br>
+				<br>
+				<canvas id="paisesChart"></canvas>
+			</div>
+		</div>
+		<br>
+		<br>
+		<br>
+		<br>
+		<div class="chartCard" style="margin-top: -400px;">
+			<div class="chartBox">
+				<h1 style="color:black ;font-weight:bold">Mesmo Continente</h1>
+				<br>
+				<br>
+				<br>
+				<br>
+				<br>
+				<br>
+				<canvas id="continentesChart"></canvas>
+			</div>
+		</div>
+		<br>
+		<br>
+		<br>
+		<br>
+		<div class="chartCard" style="margin-top: -400px;">
+			<div class="chartBox">
+				<h1 style="color:black ;font-weight:bold">Resto Do Mundo</h1>
+				<br>
+				<br>
+				<br>
+				<br>
+				<br>
+				<br>
+				<canvas id="mundosChart"></canvas>
+			</div>
+		</div>
+		<script>
+
+			var dicionarioImpactoLocal = JSON.parse('{{ dicionarioDadosImpactoLocal|safe }}');
+
+			var eConsumidor = "{{request.user.is_consumidor}}"
+			var Comparar = "True"
+			console.log(eConsumidor);
+			console.log(typeof (eConsumidor));
+
+
+			var freguesias = dicionarioImpactoLocal.FreguesiasIguais;
+			var cidades = dicionarioImpactoLocal.CidadesIguais;
+			var paises = dicionarioImpactoLocal.Mesmopais;
+			var continentes = dicionarioImpactoLocal.MesmoContinente;
+			var mundos = dicionarioImpactoLocal.RestoDoMundo;
+
+
+
 			const data = {
-			labels: ['Dinheiro Ganho', 'Numero Produtos Encomendados'],
-			datasets: []
+				labels: ['Dinheiro Ganho', 'Numero Produtos Encomendados'],
+				datasets: []
 			};
 
 			const colors = [
-			'rgba(255, 26, 104, 0.65)', // Rosa Choque
-			'rgba(54, 162, 235, 0.65)', // Azul Vivo
-			'rgba(255, 197, 26, 0.65)', // Amarelo Vívido
-			'rgba(46, 204, 113, 0.65)', // Verde Esmeralda
-			'rgba(255, 99, 71, 0.65)', // Vermelho Tomate
-			'rgba(52, 152, 219, 0.65)', // Azul Clara
-			'rgba(230, 126, 34, 0.65)', // Laranja Escura
-			'rgba(155, 89, 182, 0.65)', // Roxo Ametista
-			'rgba(231, 76, 60, 0.65)', // Vermelho Pôr do Sol
-			'rgba(26, 188, 156, 0.65)', // Verde Turquesa
-			'rgba(241, 196, 15, 0.65)', // Amarelo Sol
-			'rgba(149, 165, 166, 0.65)', // Cinzento Suave
-			'rgba(46, 204, 113, 0.65)', // Verde Esmeralda
-			'rgba(192, 57, 43, 0.65)', // Vermelho Pimenta
-			'rgba(26, 82, 118, 0.65)', // Azul Petróleo
-			'rgba(249, 105, 14, 0.65)', // Laranja Abóbora
-			'rgba(142, 68, 173, 0.65)', // Roxo Brilhante
-			'rgba(243, 156, 18, 0.65)', // Laranja Radiante
-			'rgba(46, 134, 193, 0.65)', // Azul Capri
-			'rgba(230, 126, 34, 0.65)', // Laranja Escura
-			'rgba(22, 160, 133, 0.65)', // Verde Mar
-			'rgba(211, 84, 0, 0.65)', // Laranja Âmbar
-			'rgba(189, 195, 199, 0.65)', // Cinzento Prateado
-			'rgba(231, 76, 60, 0.65)', // Vermelho Pôr do Sol
-			'rgba(142, 68, 173, 0.65)', // Roxo Brilhante
-			'rgba(52, 73, 94, 0.65)', // Azul Meia-Noite
-			'rgba(243, 156, 18, 0.65)', // Laranja Radiante
-			'rgba(39, 174, 96, 0.65)', // Verde Esmeralda Brilhante
-			'rgba(128, 0, 0, 0.65)', // Marrom Escuro
-			'rgba(52, 73, 94, 0.65)', // Azul Meia-Noite
-			'rgba(52, 152, 219, 0.65)', // Azul Clara
-			'rgba(241, 196, 15, 0.65)', // Amarelo Sol
-			'rgba(243, 156, 18, 0.65)', // Laranja Radiante
-			'rgba(211, 84, 0, 0.65)', // Laranja Âmbar
-			'rgba(192, 57, 43, 0.65)', // Vermelho Pimenta
-			'rgba(241, 196, 15, 0.65)', // Amarelo Sol
-			'rgba(22, 160, 133, 0.65)', // Verde Mar
-			'rgba(211, 84, 0, 0.65)', // Laranja Âmbar
-			'rgba(142, 68, 173, 0.65)', // Roxo Brilhante
-			'rgba(243, 156, 18, 0.65)', // Laranja Radiante
-			'rgba(26, 82, 118, 0.65)', // Azul Petróleo
-			'rgba(52, 73, 94, 0.65)', // Azul Meia-Noite
-			'rgba(46, 204, 113, 0.65)', // Verde Esmeralda
-			'rgba(230, 126, 34, 0.65)', // Laranja Escura
-			'rgba(142, 68, 173, 0.65)', // Roxo Brilhante
-			'rgba(243, 156, 18, 0.65)', // Laranja Radiante
-			'rgba(39, 174, 96, 0.65)', // Verde Esmeralda Brilhante
-			'rgba(128, 0, 0, 0.65)', // Marrom Escuro
-			'rgba(22, 160, 133, 0.65)', // Verde Mar
-			'rgba(231, 76, 60, 0.65)', // Vermelho Pôr do Sol
-			'rgba(52, 152, 219, 0.65)', // Azul Clara
-			'rgba(241, 196, 15, 0.65)', // Amarelo Sol
-			'rgba(230, 126, 34, 0.65)', // Laranja Escura
-			'rgba(189, 195, 199, 0.65)', // Cinzento Prateado
-			'rgba(26, 188, 156, 0.65)', // Verde Turquesa
-			'rgba(155, 89, 182, 0.65)', // Roxo Ametista
-			'rgba(231, 76, 60, 0.65)', // Vermelho Pôr do Sol
-			'rgba(46, 204, 113, 0.65)', // Verde Esmeralda
-			'rgba(54, 162, 235, 0.65)', // Azul Vivo
-			'rgba(255, 26, 104, 0.65)', // Rosa Choque
+				'rgba(255, 26, 104, 0.65)', // Rosa Choque
+				'rgba(54, 162, 235, 0.65)', // Azul Vivo
+				'rgba(255, 197, 26, 0.65)', // Amarelo Vívido
+				'rgba(46, 204, 113, 0.65)', // Verde Esmeralda
+				'rgba(255, 99, 71, 0.65)', // Vermelho Tomate
+				'rgba(52, 152, 219, 0.65)', // Azul Clara
+				'rgba(230, 126, 34, 0.65)', // Laranja Escura
+				'rgba(155, 89, 182, 0.65)', // Roxo Ametista
+				'rgba(231, 76, 60, 0.65)', // Vermelho Pôr do Sol
+				'rgba(26, 188, 156, 0.65)', // Verde Turquesa
+				'rgba(241, 196, 15, 0.65)', // Amarelo Sol
+				'rgba(149, 165, 166, 0.65)', // Cinzento Suave
+				'rgba(46, 204, 113, 0.65)', // Verde Esmeralda
+				'rgba(192, 57, 43, 0.65)', // Vermelho Pimenta
+				'rgba(26, 82, 118, 0.65)', // Azul Petróleo
+				'rgba(249, 105, 14, 0.65)', // Laranja Abóbora
+				'rgba(142, 68, 173, 0.65)', // Roxo Brilhante
+				'rgba(243, 156, 18, 0.65)', // Laranja Radiante
+				'rgba(46, 134, 193, 0.65)', // Azul Capri
+				'rgba(230, 126, 34, 0.65)', // Laranja Escura
+				'rgba(22, 160, 133, 0.65)', // Verde Mar
+				'rgba(211, 84, 0, 0.65)', // Laranja Âmbar
+				'rgba(189, 195, 199, 0.65)', // Cinzento Prateado
+				'rgba(231, 76, 60, 0.65)', // Vermelho Pôr do Sol
+				'rgba(142, 68, 173, 0.65)', // Roxo Brilhante
+				'rgba(52, 73, 94, 0.65)', // Azul Meia-Noite
+				'rgba(243, 156, 18, 0.65)', // Laranja Radiante
+				'rgba(39, 174, 96, 0.65)', // Verde Esmeralda Brilhante
+				'rgba(128, 0, 0, 0.65)', // Marrom Escuro
+				'rgba(52, 73, 94, 0.65)', // Azul Meia-Noite
+				'rgba(52, 152, 219, 0.65)', // Azul Clara
+				'rgba(241, 196, 15, 0.65)', // Amarelo Sol
+				'rgba(243, 156, 18, 0.65)', // Laranja Radiante
+				'rgba(211, 84, 0, 0.65)', // Laranja Âmbar
+				'rgba(192, 57, 43, 0.65)', // Vermelho Pimenta
+				'rgba(241, 196, 15, 0.65)', // Amarelo Sol
+				'rgba(22, 160, 133, 0.65)', // Verde Mar
+				'rgba(211, 84, 0, 0.65)', // Laranja Âmbar
+				'rgba(142, 68, 173, 0.65)', // Roxo Brilhante
+				'rgba(243, 156, 18, 0.65)', // Laranja Radiante
+				'rgba(26, 82, 118, 0.65)', // Azul Petróleo
+				'rgba(52, 73, 94, 0.65)', // Azul Meia-Noite
+				'rgba(46, 204, 113, 0.65)', // Verde Esmeralda
+				'rgba(230, 126, 34, 0.65)', // Laranja Escura
+				'rgba(142, 68, 173, 0.65)', // Roxo Brilhante
+				'rgba(243, 156, 18, 0.65)', // Laranja Radiante
+				'rgba(39, 174, 96, 0.65)', // Verde Esmeralda Brilhante
+				'rgba(128, 0, 0, 0.65)', // Marrom Escuro
+				'rgba(22, 160, 133, 0.65)', // Verde Mar
+				'rgba(231, 76, 60, 0.65)', // Vermelho Pôr do Sol
+				'rgba(52, 152, 219, 0.65)', // Azul Clara
+				'rgba(241, 196, 15, 0.65)', // Amarelo Sol
+				'rgba(230, 126, 34, 0.65)', // Laranja Escura
+				'rgba(189, 195, 199, 0.65)', // Cinzento Prateado
+				'rgba(26, 188, 156, 0.65)', // Verde Turquesa
+				'rgba(155, 89, 182, 0.65)', // Roxo Ametista
+				'rgba(231, 76, 60, 0.65)', // Vermelho Pôr do Sol
+				'rgba(46, 204, 113, 0.65)', // Verde Esmeralda
+				'rgba(54, 162, 235, 0.65)', // Azul Vivo
+				'rgba(255, 26, 104, 0.65)', // Rosa Choque
 			];
 
 			let colorIndex = 0;
 
 			for (const cidade in cidades) {
-			const obj = cidades[cidade];
-			const dataset = {
-				label: cidade,
-				data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
-				backgroundColor: [colors[colorIndex]],
-				borderColor: [colors[colorIndex]],
-				borderWidth: 1
-			};
-			data.datasets.push(dataset);
-			colorIndex = (colorIndex + 1) % colors.length; // Loop through colors
+				const obj = cidades[cidade];
+				const dataset = {
+					label: cidade,
+					data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
+					backgroundColor: [colors[colorIndex]],
+					borderColor: [colors[colorIndex]],
+					borderWidth: 1
+				};
+				data.datasets.push(dataset);
+				colorIndex = (colorIndex + 1) % colors.length; // Loop through colors
 			}
 
-			
+
 
 			const config = {
-			type: 'bar',
-			data,
-			options: {
-				scales: {
-				y: {
-					beginAtZero: true
+				type: 'bar',
+				data,
+				options: {
+					scales: {
+						y: {
+							beginAtZero: true
+						}
+					}
 				}
-				}
-			}
 			};
 
 			const myChart = new Chart(
-			document.getElementById('myChart'),
-			config
+				document.getElementById('myChart'),
+				config
 			);
 			// -------------------------------------------------------------------------------------------------------------
-			
+
 			const freguesiasData = {
-			labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
-			datasets: []
+				labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
+				datasets: []
 			};
 
-			let freguesiasColorIndex = colorIndex ;
+			let freguesiasColorIndex = colorIndex;
 
 			for (const freguesia in freguesias) {
-			const obj = freguesias[freguesia];
-			const dataset = {
-				label: freguesia,
-				data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
-				backgroundColor: [colors[freguesiasColorIndex]],
-				borderColor: [colors[freguesiasColorIndex]],
-				borderWidth: 1
-			};
-			freguesiasData.datasets.push(dataset);
-			freguesiasColorIndex = (freguesiasColorIndex + 1) % colors.length; // Loop through colors
+				const obj = freguesias[freguesia];
+				const dataset = {
+					label: freguesia,
+					data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
+					backgroundColor: [colors[freguesiasColorIndex]],
+					borderColor: [colors[freguesiasColorIndex]],
+					borderWidth: 1
+				};
+				freguesiasData.datasets.push(dataset);
+				freguesiasColorIndex = (freguesiasColorIndex + 1) % colors.length; // Loop through colors
 			}
 
 			const freguesiasConfig = {
-			type: 'bar',
-			data: freguesiasData,
-			options: {
-				scales: {
-				y: {
-					beginAtZero: true
+				type: 'bar',
+				data: freguesiasData,
+				options: {
+					scales: {
+						y: {
+							beginAtZero: true
+						}
+					}
 				}
-				}
-			}
 			};
 
 			const freguesiasChart = new Chart(
-			document.getElementById('freguesiasChart'),
-			freguesiasConfig
-			);			
+				document.getElementById('freguesiasChart'),
+				freguesiasConfig
+			);
 
 
-		// -------------------------------------------------------------------------------------------------------------
-			
-		const paisesData = {
-			labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
-			datasets: []
+			// -------------------------------------------------------------------------------------------------------------
+
+			const paisesData = {
+				labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
+				datasets: []
 			};
 
 			let paisesColorIndex = freguesiasColorIndex;
 
 			for (const pais in paises) {
-			const obj = paises[pais];
-			const dataset = {
-				label: pais,
-				data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
-				backgroundColor: [colors[ paisesColorIndex]],
-				borderColor: [colors[ paisesColorIndex]],
-				borderWidth: 1
-			};
-			paisesData.datasets.push(dataset);
-			paisesColorIndex = ( paisesColorIndex + 1) % colors.length; // Loop through colors
+				const obj = paises[pais];
+				const dataset = {
+					label: pais,
+					data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
+					backgroundColor: [colors[paisesColorIndex]],
+					borderColor: [colors[paisesColorIndex]],
+					borderWidth: 1
+				};
+				paisesData.datasets.push(dataset);
+				paisesColorIndex = (paisesColorIndex + 1) % colors.length; // Loop through colors
 			}
 
 			const paisesConfig = {
-			type: 'bar',
-			data: paisesData,
-			options: {
-				scales: {
-				y: {
-					beginAtZero: true
+				type: 'bar',
+				data: paisesData,
+				options: {
+					scales: {
+						y: {
+							beginAtZero: true
+						}
+					}
 				}
-				}
-			}
 			};
 
 			const paisesChart = new Chart(
-			document.getElementById('paisesChart'),
-			paisesConfig
-			);		
+				document.getElementById('paisesChart'),
+				paisesConfig
+			);
 
 			// -------------------------------------------------------------------------------------------------------------
 
 			const continentesData = {
-			labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
-			datasets: []
+				labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
+				datasets: []
 			};
 
 			let continentesColorIndex = paisesColorIndex;
 
 			for (const continente in continentes) {
-				
-			const obj = continentes[continente];
-			const dataset = {
-				label: continente,
-				data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
-				backgroundColor: [colors[ continentesColorIndex]],
-				borderColor: [colors[ continentesColorIndex]],
-				borderWidth: 1
-			};
-			continentesData.datasets.push(dataset);
-			continentesColorIndex = ( continentesColorIndex + 1) % colors.length; // Loop through colors
+
+				const obj = continentes[continente];
+				const dataset = {
+					label: continente,
+					data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
+					backgroundColor: [colors[continentesColorIndex]],
+					borderColor: [colors[continentesColorIndex]],
+					borderWidth: 1
+				};
+				continentesData.datasets.push(dataset);
+				continentesColorIndex = (continentesColorIndex + 1) % colors.length; // Loop through colors
 			}
 
 			const continentesConfig = {
-			type: 'bar',
-			data: continentesData,
-			options: {
-				scales: {
-				y: {
-					beginAtZero: true
+				type: 'bar',
+				data: continentesData,
+				options: {
+					scales: {
+						y: {
+							beginAtZero: true
+						}
+					}
 				}
-				}
-			}
 			};
 
 			const continentesChart = new Chart(
-			document.getElementById('continentesChart'),
-			continentesConfig
-			);		
+				document.getElementById('continentesChart'),
+				continentesConfig
+			);
 
 			// -------------------------------------------------------------------------------------------------------------
 			const mundosData = {
-			labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
-			datasets: []
+				labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
+				datasets: []
 			};
 
 			let mundosColorIndex = continentesColorIndex;
@@ -419,61 +478,61 @@
 			const dataset = {
 				label: "Resto Do Mundo",
 				data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
-				backgroundColor: [colors[ mundosColorIndex]],
-				borderColor: [colors[ mundosColorIndex]],
+				backgroundColor: [colors[mundosColorIndex]],
+				borderColor: [colors[mundosColorIndex]],
 				borderWidth: 1
 			};
 			mundosData.datasets.push(dataset);
-			mundosColorIndex = ( mundosColorIndex + 1) % colors.length; // Loop through colors
-			
+			mundosColorIndex = (mundosColorIndex + 1) % colors.length; // Loop through colors
+
 
 			const mundosConfig = {
-			type: 'bar',
-			data: mundosData,
-			options: {
-				scales: {
-				y: {
-					beginAtZero: true
+				type: 'bar',
+				data: mundosData,
+				options: {
+					scales: {
+						y: {
+							beginAtZero: true
+						}
+					}
 				}
-				}
-			}
 			};
 
 			const mundosChart = new Chart(
-			document.getElementById('mundosChart'),
-			mundosConfig
-			);		
+				document.getElementById('mundosChart'),
+				mundosConfig
+			);
 
-		  </script>
-		  
+		</script>
 
-	</div>
-	
-	<div class="logo-carousel-section">
-		<div class="container">
-			<div class="row">
-				<div class="col-lg-12">
-					<div class="logo-carousel-inner">
-						<div class="single-logo-item">
-							<img src="{%static 'website/assets/img/company-logos/1.png' %}" alt="">
-						</div>
-						<div class="single-logo-item">
-							<img src="{%static 'website/assets/img/company-logos/2.png' %}" alt="">
-						</div>
-						<div class="single-logo-item">
-							<img src="{%static 'website/assets/img/company-logos/3.png' %}" alt="">
-						</div>
-						<div class="single-logo-item">
-							<img src="{%static 'website/assets/img/company-logos/4.png' %}" alt="">
-						</div>
-						<div class="single-logo-item">
-							<img src="{%static 'website/assets/img/company-logos/5.png' %}" alt="">
-						</div>
+
+</div>
+
+<div class="logo-carousel-section">
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-12">
+				<div class="logo-carousel-inner">
+					<div class="single-logo-item">
+						<img src="{%static 'website/assets/img/company-logos/1.png' %}" alt="">
+					</div>
+					<div class="single-logo-item">
+						<img src="{%static 'website/assets/img/company-logos/2.png' %}" alt="">
+					</div>
+					<div class="single-logo-item">
+						<img src="{%static 'website/assets/img/company-logos/3.png' %}" alt="">
+					</div>
+					<div class="single-logo-item">
+						<img src="{%static 'website/assets/img/company-logos/4.png' %}" alt="">
+					</div>
+					<div class="single-logo-item">
+						<img src="{%static 'website/assets/img/company-logos/5.png' %}" alt="">
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-	
-	
+</div>
+
+
 {% endblock content %}

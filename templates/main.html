@@ -65,6 +65,7 @@
 				<div class="search-bar">
 					<div class="search-bar-tablecell">
 						<form method="GET" action="{% url 'loja-ver-produtos' %}">
+							{% csrf_token %}
 							<h3>Pesquise o seu produto</h3>
 
 							<input type="text" id="search-input" class="botao" name="q" placeholder="Filtre pelo nome ou categoria">

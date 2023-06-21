@@ -2,6 +2,9 @@
 {% load static %}
 {% block content%}
 
+<head>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <!-- breadcrumb-section -->
 <div class="breadcrumb-section breadcrumb-bg">
@@ -82,8 +85,19 @@
     font-weight: bold ;
   }
   
+    .categoria {
+    margin-left: 10px;
+  }
+    .seta {
+    display: inline-block;
+    width: 10px;
+    text-align: center;
+  }
+    .rotated {
+    transform: rotate(90deg);
+  }
 </style>
-
+</head>
 
 {% if termo_pesquisa %}
 <div class="pesquisa">
@@ -101,6 +115,34 @@
         {% endfor %}
     </ul>
 {% endif %}
+
+<!-- {% for categoria in categoria %}
+    {% if categoria.categoria_pai is null %}
+    <div class="categoria">
+        <span class="seta">></span>
+        <a href="{% url 'loja-ver-produtos' %}?q={{categoria.nome}}" >{{categoria.nome}}</a>
+        <ul>
+            {% for subcategoria in categoriaProduto %}
+                {% if subcategoria.categoria_pai and subcategoria.categoria_pai.id == categoria.id %}
+                    <li><a href="{% url 'loja-ver-produtos' %}?q={{subcategoria.nome}}" >{{subcategoria.nome}}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+{% endfor %} -->
+
+<script>
+    $(document).ready(function() {
+        $(".subcategorias").hide();
+
+        $(".categoria").click(function() {
+            $(this).find(".subcategorias").slideToggle();
+            $(this).find(".seta").toggleClass("rotated");
+        });
+    });
+</script>
+
 <div class="product-section mt-150 mb-150">
     <div class="row product-lists">
         {% for produto in produtos_precos %}

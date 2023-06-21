@@ -35,13 +35,13 @@ urlpatterns = [
     
     # fornecedores
     path('fornecedores/', views.FornecedoresList.as_view()), # já está no swagger
-    path('<str:username>/fornecedor/', views.FornecedoresDetail.as_view()), # já está no swagger
-    path('<str:username>/fornecedor/unidadesProducao/', views.UnidadeProducaoList.as_view()), #já está no swagger
-    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/', views.UnidadeProducaoDetail.as_view()), #já está no swagger
-    path('<str:username>/fornecedor/unidadesProducao/<str:idUnidadeProducao>/veiculos/', views.getVeiculos),
-    path('<str:username>/fornecedor/unidadesProducao/<str:idUnidadeProducao>/veiculos/<str:idVeiculo>/', views.getVeiculo),
-    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/produtos/', views.ProdutoUnidadeProducaoList.as_view()), #já está no swagger
-    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/produtos/<int:idProdutoUnidadeProducao>/', views.ProdutoUnidadeProducaoDetail.as_view()),
+    path('<str:username>/fornecedor/', views.FornecedoresDetail.as_view()),# já está no swagger
+    path('<str:username>/fornecedor/unidadesProducao/', views.UnidadeProducaoList.as_view()),# já está no swagger
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/', views.UnidadeProducaoDetail.as_view()),# já está no swagger
+    path('<str:username>/fornecedor/unidadesProducao/<str:idUnidadeProducao>/veiculos/', views.VeiculoList.as_view()),
+    path('<str:username>/fornecedor/unidadesProducao/<str:idUnidadeProducao>/veiculos/<str:idVeiculo>/', views.VeiculoDetail.as_view()),
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/produtos/', views.ProdutoUnidadeProducaoList.as_view()),# já está no swagger
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/produtos/<int:idProdutoUnidadeProducao>/', views.ProdutoUnidadeProducaoDetail.as_view()),# já está no swagger
     path('unidadesProducao/<str:id>/', views.UnidadeProducaoDetailSoInfo.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/encomendas/',views.EncomendasPorUPList.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/encomendas/<int:idEncomenda>/',views.EncomendasPorUPDetail.as_view()),
