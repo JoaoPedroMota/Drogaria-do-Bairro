@@ -2437,9 +2437,9 @@ class RelatorioImpactoLocalAdmin(APIView):
                         dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor]['dinheiroGasto'] += produto.preco
                         dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor]['numeroProdutosEncomendos']+=1
                     else:
-                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
-                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["dinheiroGasto"] = produto.preco
-                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["numeroProdutosEncomendos"]=1
+                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor] = {"dinheiroGasto":produto.preco, "numeroProdutosEncomendos":1}
+                        # dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["dinheiroGasto"] = produto.preco
+                        # dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["numeroProdutosEncomendos"]=1
                 elif continenteConsumidor != continenteUP and paisConsumidor.name != paisUP.name and cidadeConsumidor != cidadeUP and freguesiaConsumidor != freguesiaUP:
                     dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente['dinheiroGasto']+=produto.preco
                     dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente['numeroProdutosEncomendos']+=1
@@ -2700,9 +2700,9 @@ class RelatorioImpactoLocalConsumidor(APIView):
                         dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor]['dinheiroGasto'] += produto.preco
                         dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor]['numeroProdutosEncomendos']+=1
                     else:
-                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
-                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["dinheiroGasto"] = produto.preco
-                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["numeroProdutosEncomendos"]=1
+                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor] = {"dinheiroGasto":produto.preco, "numeroProdutosEncomendos":1}
+                        # dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["dinheiroGasto"] = produto.preco
+                        # dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["numeroProdutosEncomendos"]=1
                 elif continenteConsumidor != continenteUP and paisConsumidor.name != paisUP.name and cidadeConsumidor != cidadeUP and freguesiaConsumidor != freguesiaUP:
                     dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente['dinheiroGasto']+=produto.preco
                     dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente['numeroProdutosEncomendos']+=1
@@ -2906,13 +2906,19 @@ class RelatorioImpactoLocalFornecedor(APIView):
                         dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name]["dinheiroGasto"] = produto.preco
                         dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[paisConsumidor.name]["numeroProdutosEncomendos"]=1
                 if continenteConsumidor == continenteUP and paisConsumidor.name != paisUP.name and cidadeConsumidor != cidadeUP and freguesiaConsumidor != freguesiaUP:
+                    
                     if continenteConsumidor in dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente.keys():
                         dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor]['dinheiroGasto'] += produto.preco
                         dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor]['numeroProdutosEncomendos']+=1
                     else:
-                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor] = {"dinheiroGasto":0, "numeroProdutosEncomendos":0}
-                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["dinheiroGasto"] = produto.preco
-                        dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["numeroProdutosEncomendos"]=1
+                        
+                        
+
+                        dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente[continenteConsumidor] = {"dinheiroGasto":produto.preco, "numeroProdutosEncomendos":1}
+                        
+                        # dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["dinheiroGasto"] = produto.preco
+
+                        # dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes[continenteConsumidor]["numeroProdutosEncomendos"]=1
                 if continenteConsumidor != continenteUP and paisConsumidor.name != paisUP.name and cidadeConsumidor != cidadeUP and freguesiaConsumidor != freguesiaUP:
                     dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente['dinheiroGasto']+=produto.preco
                     dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente['numeroProdutosEncomendos']+=1

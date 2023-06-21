@@ -11,17 +11,37 @@
 						<h1>Relatório Geral</h1>
 						<br>
                         {% if request.user.is_fornecedor %}
-						<p>Dinheiro ganho:</p>
+						<p>Total Dinheiro ganho:</p>
                         <br>
+						
                         <p style="color:white">{{total.dinheiroGastoGanho}}€</p>
 						<br>
 						<p>Número de Encomendadas recebidas</p>
 						
                         <br>
-                        <p style="color:white">{{total.ProdutosEncomendados}}</p>
+                        <p style="color:white">{{total.ProdutosEncomendados}} encomendas</p>
 
-                        {% endif %}
+                        
+						{%elif request.user.is_consumidor%}
+						<p>Contribuição aos fornecedores registados no site  :</p>
+                        <br>
+                        <p style="color:white">{{total.dinheiroGastoGanho}}€</p>
+						<br>
+						<p>Número de Encomendadas feitas</p>
+                        <br>
+                        <p style="color:white">{{total.ProdutosEncomendados}} encomendas</p>
+
+						{% elif request.user.is_superuser %}
+
+						<p>Dinheiro angariado pelo o site  :</p>
+                        <br>
+                        <p style="color:white">{{total.dinheiroGastoGanho}}€</p>
+						<br>
+						<p>Número de Encomendadas realizadas no site</p>
+                        <br>
+                        <p style="color:white">{{total.ProdutosEncomendados}} encomendas</p>
 						
+						{% endif %}
 					</div>
 				</div>
 			
@@ -37,8 +57,6 @@
 	<br>
 	<br>
 	<br>
-	
-	
 	<br>
 	<!-- featured section -->>
 	<div class="product-section mt-150 mb-150">
@@ -117,7 +135,7 @@
 			<div class="chartCard" style="margin-top: -400px;">
 				
 				<div class="chartBox">
-					<h1 style="color:black ;font-weight:bold">Freguesias Iguais</h1>
+					<h1 style="color:black ;font-weight:bold">Países Iguais</h1>
 					<br>
 					<br>
 					<br>
@@ -170,7 +188,7 @@
 			var continentes=dicionarioImpactoLocal.MesmoContinente;
 			var mundos=dicionarioImpactoLocal.RestoDoMundo;
 			const data = {
-			labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
+			labels: ['Dinheiro Ganho', 'Numero Produtos Encomendados'],
 			datasets: []
 			};
 
@@ -359,9 +377,10 @@
 			let continentesColorIndex = paisesColorIndex;
 
 			for (const continente in continentes) {
+				
 			const obj = continentes[continente];
 			const dataset = {
-				label: continentes,
+				label: continente,
 				data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
 				backgroundColor: [colors[ continentesColorIndex]],
 				borderColor: [colors[ continentesColorIndex]],
@@ -396,10 +415,9 @@
 
 			let mundosColorIndex = continentesColorIndex;
 
-			for (const mundo in mundos) {
-			const obj = mundos[mundo];
+			const obj = mundos;
 			const dataset = {
-				label: mundos,
+				label: "Resto Do Mundo",
 				data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
 				backgroundColor: [colors[ mundosColorIndex]],
 				borderColor: [colors[ mundosColorIndex]],
@@ -407,11 +425,11 @@
 			};
 			mundosData.datasets.push(dataset);
 			mundosColorIndex = ( mundosColorIndex + 1) % colors.length; // Loop through colors
-			}
+			
 
 			const mundosConfig = {
 			type: 'bar',
-			data: continentesData,
+			data: mundosData,
 			options: {
 				scales: {
 				y: {
