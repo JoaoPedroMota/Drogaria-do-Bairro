@@ -2483,11 +2483,11 @@ class RelatorioImpactoLocalAdmin(APIView):
  
             
 
-        dicionarioResposta = {"Freguesias Iguais":dicionarioEncomendasMesmaFreguesia, 
-                              "Cidades Iguais, Freguesias diferentes": dicionarioEncomendasMesmaCidadeFreguesiaDiferente,
-                              "Mesmo país, cidades diferentes": dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes,
-                              "Mesmo Continente":dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente,
-                              "Resto do mundo":dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente,
+        dicionarioResposta = {"FreguesiasIguais":dicionarioEncomendasMesmaFreguesia, 
+                              "CidadesIguais": dicionarioEncomendasMesmaCidadeFreguesiaDiferente,
+                              "Mesmopais": dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes,
+                              "MesmoContinente":dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente,
+                              "RestodoMundo":dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente,
                               "Total":{"dinheiroGastoGanho":total, "ProdutosEncomendados":totalEncomendas}}
         # print(dicionarioResposta)
         # print(total)  
@@ -2734,11 +2734,11 @@ class RelatorioImpactoLocalConsumidor(APIView):
         # print(dicionarioEncomendasMesmaFreguesia)
         # print(total)
         
-        dicionarioResposta = {"Freguesias Iguais":dicionarioEncomendasMesmaFreguesia, 
-                              "Cidades Iguais, Freguesias diferentes": dicionarioEncomendasMesmaCidadeFreguesiaDiferente,
-                              "Mesmo país, cidades diferentes": dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes,
-                              "Mesmo Continente":dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente,
-                              "Resto do mundo":dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente,
+        dicionarioResposta = {"FreguesiasIguais":dicionarioEncomendasMesmaFreguesia, 
+                              "CidadesIguais": dicionarioEncomendasMesmaCidadeFreguesiaDiferente,
+                              "Mesmopais": dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes,
+                              "MesmoContinente":dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente,
+                              "RestoDoMundo":dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente,
                               "Total":{"dinheiroGastoGanho":total, "ProdutosEncomendados":totalEncomendas}}
         return Response(dicionarioResposta,status=status.HTTP_200_OK)
 
@@ -2944,11 +2944,11 @@ class RelatorioImpactoLocalFornecedor(APIView):
         # print(dicionarioEncomendasMesmaCidadeFreguesiaDiferente)
         # print(dicionarioEncomendasMesmaFreguesia)
         # print(total)   
-        dicionarioResposta = {"Freguesias Iguais":dicionarioEncomendasMesmaFreguesia, 
-                              "Cidades Iguais, Freguesias diferentes": dicionarioEncomendasMesmaCidadeFreguesiaDiferente,
-                              "Mesmo país, cidades diferentes": dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes,
-                              "Mesmo Continente":dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente,
-                              "Resto do mundo":dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente,
+        dicionarioResposta = {"FreguesiasIguais":dicionarioEncomendasMesmaFreguesia, 
+                              "CidadesIguais": dicionarioEncomendasMesmaCidadeFreguesiaDiferente,
+                              "Mesmopais": dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes,
+                              "MesmoContinente":dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente,
+                              "RestoDoMundo":dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente,
                               "Total":{"dinheiroGastoGanho":total, "ProdutosEncomendados":totalEncomendas}}
 
           

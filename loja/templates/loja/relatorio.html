@@ -1,145 +1,196 @@
 {% extends 'main.html' %}
 {% load static %}
 {% block content%}
-	<!-- end search arewa -->
-		
-	<!-- breadcrumb-section -->
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+
 	<div class="breadcrumb-section breadcrumb-bg">
 		<div class="container">
-			<div class="row">
+			
 				<div class="col-lg-8 offset-lg-2 text-center">
 					<div class="breadcrumb-text">
-						<h1>Relatorio Geral</h1>
+						<h1>Relatório Geral</h1>
+						<br>
                         {% if request.user.is_fornecedor %}
 						<p>Dinheiro ganho:</p>
                         <br>
-                        <p style="color:white">{{dicionarioDadosImpactoLocal.Total.dinheiroGastoGanho}}</p>
+                        <p style="color:white">{{total.dinheiroGastoGanho}}€</p>
+						<br>
+						<p>Número de Encomendadas recebidas</p>
+						
+                        <br>
+                        <p style="color:white">{{total.ProdutosEncomendados}}</p>
 
                         {% endif %}
+						
 					</div>
 				</div>
-			</div>
+			
 		</div>
 	</div>
 	<!-- end breadcrumb section -->
 
 	<!-- featured section -->
-	<div class="feature-bg">
-		<div class="container">
-			<div class="row">
-				<div class="col-lg-7">
-					<div class="featured-text">
-						<h2 class="pb-3">Porque <span class="orange-text">Drogaria do Bairro</span></h2>
-						<div class="row">
-							<div class="col-lg-6 col-md-6 mb-4 mb-md-5">
-								<div class="list-box d-flex">
-									<div class="list-icon">
-										<i class="fas fa-shipping-fast"></i>
-									</div>
-									<div class="content">
-										<h3>Entrega em sua casa</h3>
-										<p>Fazemos a sua encomenda com base na sua escolha de alimentos de várias lojas no seu raio de area</p>
-									</div>
-								</div>
-							</div>
-							<div class="col-lg-6 col-md-6 mb-5 mb-md-5">
-								<div class="list-box d-flex">
-									<div class="list-icon">
-										<i class="fas fa-money-bill-alt"></i>
-									</div>
-									<div class="content">
-										<h3>Melhor Preço</h3>
-										<p>Com base no impacto local, tentamos sempre mostrar-lhe todas as alternativas, indicando o melhor preço e o impacto que a sua compra tem na comunidade local</p>
-									</div>
-								</div>
-							</div>
-							<div class="col-lg-6 col-md-6 mb-5 mb-md-5">
-								<div class="list-box d-flex">
-									<div class="list-icon">
-										<i class="fas fa-briefcase"></i>
-									</div>
-									<div class="content">
-										<h3>Encomenda personalizade</h3>
-										<p>Encomenda com base nos alimentos que escolhe, por exemplo pode ter na sua encomenda produtos de diferentes mercearias</p>
-									</div>
-								</div>
-							</div>
-							<div class="col-lg-6 col-md-6">
-								<div class="list-box d-flex">
-									<div class="list-icon">
-										<i class="fas fa-sync-alt"></i>
-									</div>
-									<div class="content">
-										<h3>Devoluçao Gratis</h3>
-										<p>Devoluções gratis em caso de desagradado dentro das normais nacionais </p>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+	<div class="product-section mt-150 mb-150">
+
+		<style>
+			* {
+			  margin: 0;
+			  padding: 0;
+			  font-family: sans-serif;
+			}
+			.chartMenu {
+			  width: 100vw;
+			  height: 40px;
+			  background: #1A1A1A;
+			  color: rgba(54, 162, 235, 1);
+			}
+			.chartMenu p {
+			  padding: 10px;
+			  font-size: 20px;
+			}
+			.chartCard {
+			  width: 100vw;
+			  height: calc(100vh - 40px);
+			 
+			  display: flex;
+			  align-items: center;
+			  justify-content: center;
+			}
+			.chartBox {
+			  width: 700px;
+			  padding: 20px;
+			  border-radius: 20px;
+			  border: whi;
+			  background: white;
+			}
+		  </style>
+		</head>
+		<body>
+			
+			<div class="chartCard" style="margin-top: -400px;">
+			<div class="chartBox">
+			  <canvas id="myChart"></canvas>
 			</div>
-		</div>
+		  </div>
+		  
+		  <script>
+			
+			var dicionarioImpactoLocal =JSON.parse('{{ dicionarioDadosImpactoLocal|safe }}');
+			
+			// var freguesias=dicionarioImpactoLocal.FreguesiasIguais;
+			var cidades=dicionarioImpactoLocal.CidadesIguais;
+			
+			// var paises=dicionarioImpactoLocal;
+			// var continentes=dicionarioImpactoLocal;
+			// var mundo=dicionarioImpactoLocal;
+			const data = {
+			labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
+			datasets: []
+			};
+
+			const colors = [
+			'rgba(255, 26, 104, 0.65)', // Rosa Choque
+			'rgba(54, 162, 235, 0.65)', // Azul Vivo
+			'rgba(255, 197, 26, 0.65)', // Amarelo Vívido
+			'rgba(46, 204, 113, 0.65)', // Verde Esmeralda
+			'rgba(255, 99, 71, 0.65)', // Vermelho Tomate
+			'rgba(52, 152, 219, 0.65)', // Azul Clara
+			'rgba(230, 126, 34, 0.65)', // Laranja Escura
+			'rgba(155, 89, 182, 0.65)', // Roxo Ametista
+			'rgba(231, 76, 60, 0.65)', // Vermelho Pôr do Sol
+			'rgba(26, 188, 156, 0.65)', // Verde Turquesa
+			'rgba(241, 196, 15, 0.65)', // Amarelo Sol
+			'rgba(149, 165, 166, 0.65)', // Cinzento Suave
+			'rgba(46, 204, 113, 0.65)', // Verde Esmeralda
+			'rgba(192, 57, 43, 0.65)', // Vermelho Pimenta
+			'rgba(26, 82, 118, 0.65)', // Azul Petróleo
+			'rgba(249, 105, 14, 0.65)', // Laranja Abóbora
+			'rgba(142, 68, 173, 0.65)', // Roxo Brilhante
+			'rgba(243, 156, 18, 0.65)', // Laranja Radiante
+			'rgba(46, 134, 193, 0.65)', // Azul Capri
+			'rgba(230, 126, 34, 0.65)', // Laranja Escura
+			'rgba(22, 160, 133, 0.65)', // Verde Mar
+			'rgba(211, 84, 0, 0.65)', // Laranja Âmbar
+			'rgba(189, 195, 199, 0.65)', // Cinzento Prateado
+			'rgba(231, 76, 60, 0.65)', // Vermelho Pôr do Sol
+			'rgba(142, 68, 173, 0.65)', // Roxo Brilhante
+			'rgba(52, 73, 94, 0.65)', // Azul Meia-Noite
+			'rgba(243, 156, 18, 0.65)', // Laranja Radiante
+			'rgba(39, 174, 96, 0.65)', // Verde Esmeralda Brilhante
+			'rgba(128, 0, 0, 0.65)', // Marrom Escuro
+			'rgba(52, 73, 94, 0.65)', // Azul Meia-Noite
+			'rgba(52, 152, 219, 0.65)', // Azul Clara
+			'rgba(241, 196, 15, 0.65)', // Amarelo Sol
+			'rgba(243, 156, 18, 0.65)', // Laranja Radiante
+			'rgba(211, 84, 0, 0.65)', // Laranja Âmbar
+			'rgba(192, 57, 43, 0.65)', // Vermelho Pimenta
+			'rgba(241, 196, 15, 0.65)', // Amarelo Sol
+			'rgba(22, 160, 133, 0.65)', // Verde Mar
+			'rgba(211, 84, 0, 0.65)', // Laranja Âmbar
+			'rgba(142, 68, 173, 0.65)', // Roxo Brilhante
+			'rgba(243, 156, 18, 0.65)', // Laranja Radiante
+			'rgba(26, 82, 118, 0.65)', // Azul Petróleo
+			'rgba(52, 73, 94, 0.65)', // Azul Meia-Noite
+			'rgba(46, 204, 113, 0.65)', // Verde Esmeralda
+			'rgba(230, 126, 34, 0.65)', // Laranja Escura
+			'rgba(142, 68, 173, 0.65)', // Roxo Brilhante
+			'rgba(243, 156, 18, 0.65)', // Laranja Radiante
+			'rgba(39, 174, 96, 0.65)', // Verde Esmeralda Brilhante
+			'rgba(128, 0, 0, 0.65)', // Marrom Escuro
+			'rgba(22, 160, 133, 0.65)', // Verde Mar
+			'rgba(231, 76, 60, 0.65)', // Vermelho Pôr do Sol
+			'rgba(52, 152, 219, 0.65)', // Azul Clara
+			'rgba(241, 196, 15, 0.65)', // Amarelo Sol
+			'rgba(230, 126, 34, 0.65)', // Laranja Escura
+			'rgba(189, 195, 199, 0.65)', // Cinzento Prateado
+			'rgba(26, 188, 156, 0.65)', // Verde Turquesa
+			'rgba(155, 89, 182, 0.65)', // Roxo Ametista
+			'rgba(231, 76, 60, 0.65)', // Vermelho Pôr do Sol
+			'rgba(46, 204, 113, 0.65)', // Verde Esmeralda
+			'rgba(54, 162, 235, 0.65)', // Azul Vivo
+			'rgba(255, 26, 104, 0.65)', // Rosa Choque
+			];
+
+			let colorIndex = 0;
+
+			for (const cidade in cidades) {
+			const obj = cidades[cidade];
+			const dataset = {
+				label: cidade,
+				data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
+				backgroundColor: [colors[colorIndex]],
+				borderColor: [colors[colorIndex]],
+				borderWidth: 1
+			};
+			data.datasets.push(dataset);
+			colorIndex = (colorIndex + 1) % colors.length; // Loop through colors
+			}
+
+			const config = {
+			type: 'bar',
+			data,
+			options: {
+				scales: {
+				y: {
+					beginAtZero: true
+				}
+				}
+			}
+			};
+
+			const myChart = new Chart(
+			document.getElementById('myChart'),
+			config
+			);
+				
+						
+
+
+			
+		  </script>
+
 	</div>
-	<!-- end featured section -->
-
-	<!-- shop banner -->
 	
-	<!-- end shop banner -->
-
-	<!-- team section -->
-	<div class="mt-150">
-		<div class="container">
-			<div class="row">
-				<div class="col-lg-8 offset-lg-2 text-center">
-					<div class="section-title">
-						<h3>A nossa  <span class="orange-text">Equipa</span></h3>
-						<p>Vários dos nossos parceiros</p>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-lg-4 col-md-6">
-					<div class="single-team-item">
-						<div class="team-bg team-bg-1"></div>
-						<h4>João Cruz <span>Agricultor</span></h4>
-						<ul class="social-link-team">
-							<li><a href="#" target="_blank"><i class="fab fa-facebook-f"></i></a></li>
-							<li><a href="#" target="_blank"><i class="fab fa-twitter"></i></a></li>
-							<li><a href="#" target="_blank"><i class="fab fa-instagram"></i></a></li>
-						</ul>
-					</div>
-				</div>
-				<div class="col-lg-4 col-md-6">
-					<div class="single-team-item">
-						<div class="team-bg team-bg-2"></div>
-						<h4>Lurdes <span>Agricultor</span></h4>
-						<ul class="social-link-team">
-							<li><a href="#" target="_blank"><i class="fab fa-facebook-f"></i></a></li>
-							<li><a href="#" target="_blank"><i class="fab fa-twitter"></i></a></li>
-							<li><a href="#" target="_blank"><i class="fab fa-instagram"></i></a></li>
-						</ul>
-					</div>
-				</div>
-				<div class="col-lg-4 col-md-6 offset-md-3 offset-lg-0">
-					<div class="single-team-item">
-						<div class="team-bg team-bg-3"></div>
-						<h4>John  <span>Agricultor</span></h4>
-						<ul class="social-link-team">
-							<li><a href="#" target="_blank"><i class="fab fa-facebook-f"></i></a></li>
-							<li><a href="#" target="_blank"><i class="fab fa-twitter"></i></a></li>
-							<li><a href="#" target="_blank"><i class="fab fa-instagram"></i></a></li>
-						</ul>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<!-- end team section -->
-
-	
-
-	<!-- logo carousel -->
 	<div class="logo-carousel-section">
 		<div class="container">
 			<div class="row">

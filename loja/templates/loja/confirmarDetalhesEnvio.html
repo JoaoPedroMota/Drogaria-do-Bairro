@@ -7,6 +7,7 @@
     position: relative;
     
   }
+
 .form-control {
   font-family: system-ui, sans-serif;
     font-size: 2rem;
@@ -15,12 +16,13 @@
     display: flex;
     align-items: center; 
     gap: 0.5em;
-    background-color: #364b55;
+    background-color: white;
     border: none;
 }
 .form-control input[type="checkbox"] {
     width: 1.4em;
     height: 1.4em; 
+    background-color: black !important;
   }
   .hint-message {
     position: absolute;
@@ -53,6 +55,14 @@
   .ola{
     color: white;
   }
+.checkboxx{
+  background-color: black !important;
+
+}
+.nomes{
+  color:black !important;
+  font-weight: bold;
+}
 
 </style>
 <script>
@@ -84,74 +94,93 @@
                   <h1>Confirmar Detalhes de Envio</h1>
                  
               </div>
-              <br>
-              <br>
-                <form method="post" onsubmit="bloquerarBotao();">
-                  {% csrf_token %}
-                  {% for field in formulario %}
-                  <div class="form-group">
-                    <br>
-                    {% if field.name == 'guardar_esta_morada' %}
-                    <p><label for="{{ field.name }}">GUARDAR ESTES DETALHES PARA ENCOMENDAS FUTURAS </label></p>
-                    <br>
-                    {% else %}
-                    <p><label for="{{ field.name }}">{{ field.label }}</label></p>
-                    <br>
-                    {% endif %}
-                    {% if field.field.widget.input_type == 'select' %}
-                    
-                      <div class="input-wrapper">
-                        <select class="centered-inputEstado" name="{{ field.name }}" {% if field.required %}required{% endif %}>
-                          {% for code, label in field.field.choices %}
-                            <option value="{{ code }}" {% if label == field.value or code == field.value %}selected{% endif %}>{{ label }}</option>
-                          {% endfor %}
-                        </select>
-                        
-                      </div>
-                    {% elif field.name == 'usar_informacoes_utilizador' %}
-                      <input type="checkbox" name="{{field.name}}" placeholder="field.name" class="centered-inputNome" value="True" {% if field.value %} checked {% endif %} >
-                    {% elif field.name == 'guardar_esta_morada' %}
-                    <label class="form-control"> 
-                    <input type="checkbox" name="{{field.name}}" placeholder="{{field.name}}" class="centered-inputNome" value="True" {% if field.value %} checked {% endif %} >
-                  </label>
-                    {% else %}
-
-                    <div class="input-wrapper">
-                        
-                        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" class="centered-inputNome"placeholder="{{ field.field.label }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
-                        {% if field.help_text %}
-                        <abbr title="{{ field.help_text }}" class="hint-formulario" onclick="toggleHintMessage(this)">?</abbr>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                    {% if field.errors %}
-                    <ul class="field-error-list">
-                      {% for error in field.errors %}
-                      <li>{{ error }}</li>
-                      {% endfor %}
-                    </ul>
-                    {% endif %}
-                  </div>
-                  {% endfor %}
-                  
-                  <input type="submit" id="encomendar" value="ENCOMENDAR">
-                </form>
-                <a href="{% url 'loja-carrinho' %}" class="layout__boxTitle">
-                  <div  class="container">
-                      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
-                      <title>arrow-left</title>
-                      <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
-                      </svg>
-                      <h6 class="voltar">Voltar</h6>
-                  </div>
-              </a>
-                  
-
-                 
+              
+                
               </div>
           </div>
       </div>
   </div>
 </div>
 
+
+<div class="product-section mt-150 mb-150">
+  <div class="container">
+      <div class="row">
+          <div class="col-lg-8 offset-lg-2 text-center">
+              <div class="breadcrumb-text">
+                <div class="row">
+                  <br>
+<br>
+  <form method="post" onsubmit="bloquerarBotao();">
+    {% csrf_token %}
+    {% for field in formulario %}
+    <div class="form-group">
+      <br>
+      {% if field.name == 'guardar_esta_morada' %}
+      <p><label for="{{ field.name }}" class="nomes">GUARDAR ESTES DETALHES PARA ENCOMENDAS FUTURAS </label></p>
+      <br>
+      {% else %}
+      <p><label for="{{ field.name }}" class="nomes">{{ field.label }}</label></p>
+      <br>
+      {% endif %}
+      {% if field.field.widget.input_type == 'select' %}
+      
+        <div class="input-wrapper">
+          <select class="centered-inputEstado" name="{{ field.name }}" {% if field.required %}required{% endif %}>
+            {% for code, label in field.field.choices %}
+              <option value="{{ code }}" {% if label == field.value or code == field.value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          
+        </div>
+      {% elif field.name == 'usar_informacoes_utilizador' %}
+        <input type="checkbox" name="{{field.name}}" placeholder="field.name" class="centered-inputNome" value="True" {% if field.value %} checked {% endif %} >
+      {% elif field.name == 'guardar_esta_morada' %}
+      <label class="form-control"> 
+      <input type="checkbox" name="{{field.name}}" placeholder="{{field.name}}" class="centered-inputNome " value="True" {% if field.value %} checked {% endif %} >
+    </label>
+      {% else %}
+
+      <div class="input-wrapper">
+          
+              <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" class="centered-inputNome"placeholder="{{ field.field.label }}" {% if field.value %}value="{{ field.value }}"{% endif %}>
+              {% if field.help_text %}
+              <abbr title="{{ field.help_text }}" class="hint-formulario" onclick="toggleHintMessage(this)">?</abbr>
+              {% endif %}
+          </div>
+          {% endif %}
+          {% if field.errors %}
+          <ul class="field-error-list">
+            {% for error in field.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+        {% endfor %}
+        
+          <input type="submit" id="encomendar" value="ENCOMENDAR">
+          <a href="{% url 'loja-carrinho' %}" class="layout__boxTitle">
+            <div  class="container">
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32">
+                <title>arrow-left</title>
+                <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
+                </svg>
+                <h6 class="voltar">Voltar</h6>
+            </div>
+        </a>  
+        </form>
+          
+                  </div>
+                  
+                    
+                  </div>
+              </div>
+          </div>
+      </div>
+    </div>
+
 {% endblock %}
+
+
+  

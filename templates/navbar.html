@@ -4,8 +4,11 @@
 <script>
   
   function som() {
+    var isSoundPlaying = false;
     var audio = new Audio("{% static 'website/assets/mp3/som.mp3' %}");
     audio.play();
+    isSoundPlaying = true;
+    
     
   }
 
@@ -25,7 +28,7 @@
   }
 
   $(document).ready(function() {
-    
+    var isSoundPlayed = false;
     var csrftoken = getCookie('csrftoken');
     var notificationTable = $('.notification-table');
     notificationTable.hide();
@@ -38,10 +41,10 @@
     var a = parseInt(localStorage.getItem('a')) || 0;
 
     function loadNotifications() {
-      
+    
       var notificationBody = notificationTable.find('.notification-body');
       notificationBody.empty();
-
+    
       $.ajax({
         url: '/notificacoes/{{ request.user.username }}',
         type: 'GET',
@@ -50,32 +53,42 @@
           xhr.setRequestHeader('X-CSRFToken', csrftoken);
         },
         success: function(data) {
+         
           var notifications = data.notifications;
+         
           if (notifications.length === 0) {
             var notificationRow = $('<tr class="notification-row"><td class="notification-item">Nenhuma notificação de momento</td></tr>');
             notificationBody.append(notificationRow);
           } else {
             for (var i = 0; i < notifications.length; i++) {
+             
               var notification = notifications[i];
               var message = notification.message;
               var notificationRow = $('<tr class="notification-row"></tr>').attr('data-id', notification.id);
               var notificationItem = $('<td class="notification-item"></td>').text(message);
               notificationRow.append(notificationItem);
               if (notifications.length > 0) {
+                
                 if (i === 0) {
                   var new2 = $('<td class="notification-novas">Notificações sobre encomendas suas:</td>');
                   notificationBody.append(new2);
-                 
                   
+                  if (!isSoundPlayed) {
+
+                    // som();
+                    
+                  }
                   
                   
                 }
                 notificationBody.append(notificationRow);
-
+                
+                
               
             }
-            
+           
           }
+            
             var br = $('<br>');
             notificationBody.append(br);
 
@@ -112,7 +125,7 @@
           $('#bolinha-vermelha').text(novoNumeroNotificacoes);
           localStorage.setItem('numeroNotificacoes', novoNumeroNotificacoes);
           localStorage.setItem('a', notifications.length);
-          
+         
         },
         error: function(xhr, status, error) {
           console.log(error);

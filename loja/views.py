@@ -2575,8 +2575,9 @@ def relarioImpactoLocal(request, username):
         except json.decoder.JSONDecodeError:
             messages.error(request, "ERRO - Houve um erro a carregar os dados sobre as encomendas efetuadas.")
             return redirect("loja-perfil", userName=request.user.username)
-        
-        context['dicionarioDadosImpactoLocal']=conteudo
+        json_data = json.dumps(conteudo)
+        context['dicionarioDadosImpactoLocal'] = json_data
+        context['total']=conteudo['Total']
         return render(request,'loja/relatorio.html', context)
     
         # verificar se é nessário tratar os dados consoante o tipo de utilizador. 
