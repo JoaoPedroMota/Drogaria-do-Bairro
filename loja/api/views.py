@@ -64,7 +64,8 @@ def getRotas(request, format=None):
                     '/api/fornecedores/:id/unidadesProducao/:id/',
                     '/api/fornecedores/:id/unidadesProducao/:id/veiculos/',
                     '/api/fornecedores/:id/unidadesProducao/:id/veiculos/:id',
-                    ]
+                    ],
+            "info": "urls incompletos"
             }
     return Response(rotas)
 
@@ -575,20 +576,12 @@ class ProdutoUnidadeProducaoDetail(APIView):
             up = UnidadeProducao.objects.get(id=idUnidadeProducao)
         except UnidadeProducao.DoesNotExist:
             return Response(detail=f"Unidade de Produção com o id: {idUnidadeProducao} não existe", status=status.HTTP_404_NOT_FOUND)
-        
-        
-        
-        
-        
         if request.user.is_consumidor:
             return Response("Não pode apagar um produto unidade de produção. Não é um fornecedor!", status=status.HTTP_404_NOT_FOUND)
         if request.user.fornecedor != fornecedor:
             return Response("Só pode apagar os seus produtos associados às suas unidades de produção e não de outros fornecedores", status=status.HTTP_404_NOT_FOUND)
-        
-        
         if produto is None:
              return Response({"detail": f"Produto {idProdutoUnidadeProducao} associado à unidade de produção com o id {idUnidadeProducao} não encontrado."},status=status.HTTP_404_NOT_FOUND)
-
         # Exclua o objeto
         produto.delete()
             
@@ -614,18 +607,20 @@ class ProdutoUnidadeProducaoAll(APIView):
     """
     def get(self, request):
         if 'q' in request.data:
+            print(request.data)
             if request.data['q'] != '':
                 criterio_pesquisa = request.data['q']
                 produtos = ProdutoUnidadeProducao.objects.filter(
                     Q(produto__nome__icontains=criterio_pesquisa) |
                     Q(produto__categoria__nome__icontains=criterio_pesquisa)
                     )
+                print(produtos)
                 if produtos.count() == 1:
                     serializer = ProdutoUnidadeProducaoSerializer(produtos, many=False)
                 if produtos.count() > 1:
                     serializer = ProdutoUnidadeProducaoSerializer(produtos, many=True)
                 else:
-                    return Response(status=status.HTTP_404_NOT_FOUND)
+                    return Response({},status=status.HTTP_404_NOT_FOUND)
                 return Response(serializer.data, status=status.HTTP_200_OK)
                 
             else:
