@@ -54,7 +54,7 @@ urlpatterns = [
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/regressou/', views.VeiculoRegressou.as_view()),
     path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/encomendas/<int:idEncomenda>/emString/', views.RetornarNomeEncomenda.as_view()),
     path('<str:username>/fornecedor/relatorioImpactoLocal/', views.RelatorioImpactoLocalFornecedor.as_view()),
-    
+    path('<str:username>/fornecedor/unidadesProducao/<int:idUnidadeProducao>/produtos/<int:idProdutoUP>/ProdutoOpcaoList/', views.ProdutoOpcaoList.as_view()),
     
     
     

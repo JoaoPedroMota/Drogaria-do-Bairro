@@ -1,0 +1,22 @@
+{% extends 'main.html' %}
+
+{% block content %}
+  <h2>Criar Detalhes do Produto</h2>
+  <br>
+  <br>
+  <br>
+  <br>
+  
+  <form method="post">
+    {% csrf_token %}
+    {% for checkbox in opcao_form.opcoes %}
+      <label for="{{ checkbox.id_for_label }}">
+        {{ checkbox.choice_label }}
+        {{ checkbox }}
+      </label><br>
+    {% endfor %}
+    <button type="submit">Salvar</button>
+  </form>
+  
+  
+{% endblock %}

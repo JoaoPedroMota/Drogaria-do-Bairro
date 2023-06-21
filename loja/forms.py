@@ -321,3 +321,53 @@ class ProdutosEncomendadosVeiculosForm(forms.ModelForm):
     class Meta:
         model = ProdutosEncomendadosVeiculos
         fields = ['veiculo']
+
+
+
+#########################################
+class AtributoForm(forms.ModelForm):
+    class Meta:
+        model = Atributo
+        fields = ['nome']
+# class OpcaoForm(forms.ModelForm):
+#     class Meta:
+#         model = Opcao
+#         fields = ['nome', 'atributos']
+class CategoriaForm(forms.ModelForm):
+    class Meta:
+        model = Categoria
+        fields = ['nome', 'categoria_pai']
+
+class ProdutoOpcaoForm(forms.ModelForm):
+    class Meta:
+        model = ProdutoOpcao
+        fields = ['produto', 'opcao']
+        widgets = {
+            'produto': forms.Select(attrs={'class': 'form-control'}),
+            'opcao': forms.Select(attrs={'class': 'form-control'}),
+        }
+from django import forms
+
+class OpcaoForm(forms.Form):
+    opcoes = forms.MultipleChoiceField(
+        label='Opções',
+        choices=[],
+        widget=forms.CheckboxSelectMultiple
+    )
+
+    def __init__(self, opcoes_por_atributo=None, *args, **kwargs):
+        super(OpcaoForm, self).__init__(*args, **kwargs)
+        print("OPCOES POR ATRIBUTO")
+        print(opcoes_por_atributo)
+        if opcoes_por_atributo:
+            choices = []
+            for atributo, opcoes in opcoes_por_atributo.items():
+                choices.extend([(opcao, opcao) for opcao in opcoes])
+
+            # print("1 opcoes!!!!!",opcoes)
+            # print("2 opcoes_por_atributo!!!!!",opcoes_por_atributo)
+            self.fields['opcoes'].choices = choices
+            # print("3 opcoes!!!!!!!!",opcoes)
+            # print("4 opcoes_por_atributo!!!",opcoes_por_atributo)
+
+

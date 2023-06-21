@@ -2273,6 +2273,178 @@ class FazerEntrega(APIView):
         else:
             return Response({"details":"Não foram encontrados produtos para entregar neste veiculo"},status.HTTP_404_NOT_FOUND)
 
+
+class AtributosList(APIView):
+    def get_obj(self):
+        try:
+            return Atributo.objects.all()
+        except Atributo.DoesNotExist:
+            raise Http404
+
+    def get(self,request, format=None):
+        atributos=self.get_obj()
+        if atributos.exists():
+            serializar=AtributoSerializer(atributos, many=True)
+            return Response(serializar.data,status=status.HTTP_200_OK)
+        return Response({"atributos":"Não foram encontrados atributos"},status.HTTP_404_NOT_FOUND)
+
+class AtributosDetails(APIView):
+    def get_obj(self, id):
+        try:
+            return Atributo.objects.get(id=id)
+        except Atributo.DoesNotExist:
+            raise Http404
+
+    def get(self,request,id, format=None):
+        atributo=self.get_obj(id)
+        if atributo is not None:
+            serializar=AtributoSerializer(atributo, many=False)
+            return Response(serializar.data,status=status.HTTP_200_OK)
+        return Response({"atributo":"Não foi encontrado o atributo solicitado"},status.HTTP_404_NOT_FOUND)
+
+class CategoriaAtributoList(APIView):
+    def get_obj(self):
+        try:
+            return CategoriaAtributo.objects.all()
+        except CategoriaAtributo.DoesNotExist:
+            raise Http404
+
+    def get(self,request, format=None):
+        categoria_atributos=self.get_obj()
+        if categoria_atributos.exists():
+            serializar=AtributoSerializer(categoria_atributos, many=True)
+            return Response(serializar.data,status=status.HTTP_200_OK)
+        return Response({"categoria_atributos":"Sem resultados"},status.HTTP_404_NOT_FOUND)
+
+class CategoriaAtributoDetails(APIView):
+    def get_obj(self, id):
+        try:
+            return CategoriaAtributo.objects.get(id=id)
+        except CategoriaAtributo.DoesNotExist:
+            raise Http404
+
+    def get(self,request,id, format=None):
+        categoria_atributo=self.get_obj(id)
+        if categoria_atributo is not None:
+            serializar=AtributoSerializer(categoria_atributo, many=False)
+            return Response(serializar.data,status=status.HTTP_200_OK)
+        return Response({"atributo":"Sem resultados"},status.HTTP_404_NOT_FOUND)
+
+class OpcaoList(APIView):
+    def get_obj(self):
+        try:
+            return Opcao.objects.all()
+        except Opcao.DoesNotExist:
+            raise Http404
+
+    def get(self,request, format=None):
+        opcoes=self.get_obj()
+        if opcoes.exists():
+            serializar=AtributoSerializer(opcoes, many=True)
+            return Response(serializar.data,status=status.HTTP_200_OK)
+        return Response({"opcoes":"Não foram encontradas opções"},status.HTTP_404_NOT_FOUND)
+
+class OpcaoDetails(APIView):
+    def get_obj(self, id):
+        try:
+            return Opcao.objects.get(id=id)
+        except Opcao.DoesNotExist:
+            raise Http404
+
+    def get(self,request,id, format=None):
+        opcao=self.get_obj(id)
+        if opcao is not None:
+            serializar=AtributoSerializer(opcao, many=False)
+            return Response(serializar.data,status=status.HTTP_200_OK)
+        return Response({"opcao":"Não foi encontrada a opção solicitada"},status.HTTP_404_NOT_FOUND)
+
+class ProdutoOpcaoList(APIView):
+    def get_obj(self):
+        try:
+            return ProdutoOpcao.objects.all()
+        except ProdutoOpcao.DoesNotExist:
+            raise Http404
+
+    def get(self,request,username,idProdutoUP,idUnidadeProducao, format=None):
+        produto_opcoes=self.get_obj()
+        if produto_opcoes.exists():
+            serializar=ProdutoOpcaoSerializer(produto_opcoes, many=True)
+            return Response(serializar.data,status=status.HTTP_200_OK)
+        return Response({"produto_opcoes":"Não foram encontradas opções"},status.HTTP_404_NOT_FOUND)
+    
+    def get_Opcao(self, atributo):
+        try:
+            return Opcao.objects.filter(atributos=atributo)
+        except Opcao.DoesNotExist:
+            raise Http404
+        
+    def get_Opcao_por_id(self, id):
+        try:
+            return Opcao.objects.get(pk=id)
+        except Opcao.DoesNotExist:
+            raise Http404
+
+    def get_ProdutoUnidadeProducao(self, id):
+        try:
+            return ProdutoUnidadeProducao.objects.get(pk=id)
+        except ProdutoUnidadeProducao.DoesNotExist:
+            raise Http404
+
+    def post(self, request, username, idProdutoUP,idUnidadeProducao, format=None):
+        produto_up = self.get_ProdutoUnidadeProducao(int(idProdutoUP))
+        #print(produto_up)
+        if produto_up is not None:
+            
+            categoria = produto_up.produto.categoria
+
+            atributos_categoria= categoria.atributos_desta_categoria.all()
+            #print(atributos_categoria)
+
+            opcoesLista=[]
+            for instancia in atributos_categoria:
+                           
+                atributo=instancia.atributo
+                #print(atributo, type(atributo))
+                opcoes=self.get_Opcao(atributo)
+                for opcao in opcoes:
+                    opcoesLista.append(opcao)
+
+            for opcao in opcoesLista:
+                print(opcao, type(opcao), opcao.id)
+
+            idOpcao=request.data.get("idOpcao")
+            opcao=self.get_Opcao_por_id(idOpcao)   
+            #print("OPCAO: ",opcao, type(opcao))
+            if opcao in opcoesLista:
+                #print("ENTREI NO IF", opcao, type(opcao))
+                guardarNovoProdutoOpcao = ProdutoOpcao.objects.create(
+                    produto=produto_up,
+                    opcao=opcao,
+                )
+                guardarNovoProdutoOpcao.save
+                resposta_guardarNovoProdutoOpcao=ProdutoOpcaoSerializer(guardarNovoProdutoOpcao, many=False)
+                return Response(resposta_guardarNovoProdutoOpcao.data, status=status.HTTP_201_CREATED)
+            return Response({"produto_opcoes":"Ocorreu um erro ao criar esta opcao de produto, verifique se a opcao que escolheu é compativel com a categoria do produto"},status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"produto_opcoes":"Este Produto de Unidade de Producao não existe"},status.HTTP_404_NOT_FOUND)
+
+class ProdutoOpcaoDetails(APIView):
+    def get_obj(self, id):
+        try:
+            return ProdutoOpcao.objects.get(id=id)
+        except ProdutoOpcao.DoesNotExist:
+            raise Http404
+
+    def get(self,request,id, format=None):
+        produto_opcao=self.get_obj(id)
+        if produto_opcao is not None:
+            serializar=AtributoSerializer(produto_opcao, many=False)
+            return Response(serializar.data,status=status.HTTP_200_OK)
+        return Response({"produto_opcao":"Sem resultados"},status.HTTP_404_NOT_FOUND)
+
+
+
+
 class VeiculoRegressou(APIView):
     """
     Veiculo regressa à up

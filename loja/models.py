@@ -661,7 +661,7 @@ class ProdutoOpcao(models.Model):
     #valor = models.CharField(max_length=100)
 
     def __str__(self):
-        return f'{self.produto.nome} - {self.opcao.nome}: {self.valor}'
+        return f'{self.produto} - {self.opcao}'
 
     class Meta:
         verbose_name = "Opção guardada"
