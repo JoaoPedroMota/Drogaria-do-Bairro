@@ -78,7 +78,7 @@
             {% if produto.produto.unidade_medida == 'un' %}
             <td><input type="number" class="styled-input" step="1" min="1" max="999" placeholder="{{produto.quantidade|floatformat:2}}" name="quantidade_{{ produto.produto.id }}"  value="{{ produto.quantidade }}" >{{ produto.quantidade }} {{produto.produto.unidade_medida}}</td>
             {% else %}
-            <td><input type="number" class="styled-input" step="1" min="0.1" max="999" placeholder="{{ produto.quantidade }}" name="quantidade_{{ produto.produto.id }}"  value="{{ produto.quantidade }}" >{{ produto.quantidade }} {{produto.produto.unidade_medida}}</td>
+            <td><input type="number" class="styled-input" step="0.1" min="0.1" max="999" placeholder="{{ produto.quantidade }}" name="quantidade_{{ produto.produto.id }}"  value="{{ produto.quantidade }}" >{{ produto.quantidade }} {{produto.produto.unidade_medida}}</td>
             {% endif %}
             {% endwith %}
         </tr>
