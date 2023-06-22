@@ -1,12 +1,12 @@
 name: Docker Image CI
 
 on:
-  push:
-    branches: [ "main" ]
+push:
+branches: [ "testing" ]
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+REGISTRY: ghcr.io
+IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push-image:
