@@ -181,7 +181,8 @@ class Utilizador(AbstractUser):
             raise ValueError("Apenas os utilizadores que são consumidores têm carrinho, e só estes podem aceder aos produtos que têm no carrinho.")
     def save(self, *args, **kwargs):
         # Transformar o username em lower case
-        self.username = self.username.lower()
+        if self.username:
+            self.username = self.username.lower()
 
         # Combinar o first_name e last_name para formar o nome completo
         self.nome = f'{self.first_name} {self.last_name}'
@@ -661,7 +662,7 @@ class ProdutoOpcao(models.Model):
     #valor = models.CharField(max_length=100)
 
     def __str__(self):
-        return f'{self.produto.nome} - {self.opcao.nome}: {self.valor}'
+        return f'{self.produto} - {self.opcao}'
 
     class Meta:
         verbose_name = "Opção guardada"

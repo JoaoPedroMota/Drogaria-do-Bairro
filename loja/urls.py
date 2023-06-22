@@ -47,6 +47,8 @@ urlpatterns = [
     path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/veiculos/<int:idVeiculo>/veiculoRegressou/', views.veiculoRegressou, name='loja-veiculoRegressou'),
     path('notificacoes/<str:username>/', views.obterNotificacoesF, name='notificacoes'),
 
+    path('perfil/<str:username>/unidadesProducao/<int:idUnidadeProducao>/criar_produto_opcao/<int:idProdutoUP>/', views.criar_produto_opcao, name='loja-criar_produto_opcao'),
+    
     path('perfil/<str:username>/relatorioImpactoLocal/', views.relarioImpactoLocal, name='loja-relatorioImpactoLocal'),
 
 
@@ -55,6 +57,7 @@ urlpatterns = [
     path('checkoutSession/<int:idDetalhesEnvio>/', views.createCheckoutSession, name ='loja-checkoutSession'),
     path('paymentSuccess/<int:idDetalhesEnvio>/', views.payment_success, name='loja-paymentSuccess'),
     path('paymentFailure/', views.payment_failure, name='loja-paymentFailure'),
+
 
 ]
 
