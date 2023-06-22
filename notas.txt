@@ -1,7 +1,0 @@
-
-
-
-
-base64 enconding -- ascii
-
-https://docs.python.org/3/library/base64.html
