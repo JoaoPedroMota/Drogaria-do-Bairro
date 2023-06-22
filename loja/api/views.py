@@ -89,9 +89,9 @@ class UtilizadoresList(APIView):
         # else:
         #     return Response({"details":"Não tem autorização para aceder a estes dados"}, status=status.HTTP_403_FORBIDDEN)
     def post(self, request, format=None):
-        data2 = request.data.copy()
-        data2['username'] = data2['username'].lower()
-        utilizador = UtilizadorSerializer(data=data2)
+        # data2 = request.data.copy()
+        # data2['username'] = data2['username'].lower()
+        utilizador = UtilizadorSerializer(data=request.data)
         with transaction.atomic():
             if utilizador.is_valid():
                 utilizador_temp = utilizador.save()
@@ -2526,14 +2526,12 @@ class RelatorioImpactoLocalAdmin(APIView):
         # print(dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes)
         # print(dicionarioEncomendasMesmaCidadeFreguesiaDiferente)
         # print(dicionarioEncomendasMesmaFreguesia)
- 
-            
-
+        print(dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente)
         dicionarioResposta = {"FreguesiasIguais":dicionarioEncomendasMesmaFreguesia, 
                               "CidadesIguais": dicionarioEncomendasMesmaCidadeFreguesiaDiferente,
                               "Mesmopais": dicionarioEncomendasMesmoPaisCidadeEfreguesiaDiferentes,
                               "MesmoContinente":dicionarioEncomendasMesmoContinenntePaisCidadeEfreguesiaDiferente,
-                              "RestodoMundo":dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente,
+                              "RestoDoMundo":dicionarioEncomendaRestoMundoContinentePaisCidadeEfreguesiaDiferente,
                               "Total":{"dinheiroGastoGanho":total, "ProdutosEncomendados":totalEncomendas}}
         # print(dicionarioResposta)
         # print(total)  

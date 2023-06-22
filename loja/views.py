@@ -321,10 +321,10 @@ def callback(request):
     token = oauth.auth0.authorize_access_token(request)
     request.session["user"] = token
 
-    username = token['userinfo']['nickname']
+    #username = token['userinfo']['nickname']
     email = token['userinfo']['email']
 
-    user, created = Utilizador.objects.get_or_create(username=username, email=email)
+    user, created = Utilizador.objects.get_or_create(email=email)
 
     login(request, user)
 
@@ -2676,6 +2676,7 @@ def obterNotificacoesF(request,username):
 
 @login_required(login_url='loja-login')
 def relarioImpactoLocal(request, username):
+    produtosCarrinho = quantosProdutosNoCarrinho(request)
     data_inicio = None ## colocar as datas no formato YYYY-mm-dd
     data_fim = None ## colocar as datas no formato YYYY-mm-dd
     # if request.method == "POST":
@@ -2737,7 +2738,7 @@ def relarioImpactoLocal(request, username):
             json_data = json.dumps(conteudo)
             context['dicionarioDadosImpactoLocal'] = json_data
             context['total']=conteudo['Total']
-            
+            context['produtosCarrinho'] = produtosCarrinho
             
             return render(request,'loja/relatorio.html', context)
         
@@ -2764,7 +2765,7 @@ def relarioImpactoLocal(request, username):
             context['dicionarioDadosImpactoLocal'] = json_data
             context['total']=conteudo['Total']
             context['form']=form
-            
+            context['produtosCarrinho'] = produtosCarrinho
             return render(request,'loja/relatorio.html', context)
         
         else:

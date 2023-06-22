@@ -98,8 +98,8 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
     nome = CharField(read_only=True)
     imagem_perfil = serializers.ImageField(required=False)
     def create(self, validated_data):
-        if 'password' not in validated_data:
-            raise ValidationError("password is required")
+        # if 'password' not in validated_data:
+        #     raise ValidationError("password is required")
         if 'tipo_utilizador' not in validated_data:
             raise ValidationError("tipo_utilizador is required")
         if "email" not in validated_data:
@@ -112,9 +112,6 @@ class UtilizadorSerializer(CountryFieldMixin, ModelSerializer):
             raise ValidationError("cidade is required")
         if "telemovel" not in validated_data:
             raise ValidationError("telemovel is required")
-        
-        
-    
             validated_data['imagem_perfil'] = ContentFile(imagem_descodificada, '')
         validated_data['nome'] = f"{validated_data['first_name']} {validated_data['last_name']}"
         validated_data['cidade'] = validated_data['cidade'].upper()
