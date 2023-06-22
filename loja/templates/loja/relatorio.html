@@ -1,13 +1,10 @@
 {% extends 'main.html' %}
 {% load static %}
 {% block content%}
-
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-
 <div class="breadcrumb-section breadcrumb-bg">
 	<div class="container">
-
 		<div class="col-lg-8 offset-lg-2 text-center">
 			<div class="breadcrumb-text">
 				<h1>Relatório Geral</h1>
@@ -15,11 +12,9 @@
 				{% if request.user.is_fornecedor %}
 				<p>Total Dinheiro ganho:</p>
 				<br>
-
 				<p style="color:white">{{total.dinheiroGastoGanho}}€</p>
 				<br>
 				<p>Número de Encomendadas recebidas</p>
-
 				<br>
 				<p style="color:white">{{total.ProdutosEncomendados}} encomendas</p>
 
@@ -107,6 +102,17 @@
 <div class="product-section mt-150 mb-150">
 
 	<style>
+		  .center {
+        display: flex;
+        justify-content: center;
+    	}
+		
+		.formdata{
+			width: 44%;
+			margin-left: 28%;
+		}
+
+
 		* {
 			margin: 0;
 			padding: 0;
@@ -135,22 +141,32 @@
 		}
 
 		.chartBox {
-			  width: 700px;
-			  padding: 20px;
-			  border-radius: 20px;
-			  border: whi;
-			  background: white;
+			  width: 700px ;
+			  padding: 20px !important;
+			  border-radius: 20px !important;
+			  border: white !important;
+			  background: white !important;
+			  
 			}
 		.pequeno {
 			font-size: 10px !important;
 			color: white !important;
 		}
+		@media only screen and (max-height: 871px)  { 
+			h1{
+				font-size: 15px;
+			}
+			.chartBox {
+				width: 600px;
+				margin-top: -100px;
+				
+			}
+
+		}
 	</style>
 	</head>
 
 	<body>
-
-
 
 		<div class="chartCard" style="margin-top: -400px;">
 			<div class="chartBox">
@@ -161,6 +177,7 @@
 				<br>
 				<br>
 				<br>
+				
 				<canvas id="freguesiasChart"></canvas>
 			</div>
 		</div>
@@ -168,6 +185,18 @@
 		<br>
 		<br>
 		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		
 		<div class="chartCard" style="margin-top: -400px;">
 			<div class="chartBox">
 				<h1 style="color:black ;font-weight:bold">Cidades Iguais</h1>
@@ -180,6 +209,17 @@
 				<canvas id="myChart"></canvas>
 			</div>
 		</div>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
 		<br>
 		<br>
 		<br>
@@ -200,6 +240,17 @@
 		<br>
 		<br>
 		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
 		<div class="chartCard" style="margin-top: -400px;">
 			<div class="chartBox">
 				<h1 style="color:black ;font-weight:bold">Mesmo Continente</h1>
@@ -216,6 +267,11 @@
 		<br>
 		<br>
 		<br>
+		<br>
+				<br>
+				<br>
+				<br>
+				<br>
 		<div class="chartCard" style="margin-top: -400px;">
 			<div class="chartBox">
 				<h1 style="color:black ;font-weight:bold">Resto Do Mundo</h1>
@@ -228,9 +284,6 @@
 				<canvas id="mundosChart"></canvas>
 			</div>
 		</div>
-
-
-		
 		<script>
 
 			var dicionarioImpactoLocal = JSON.parse('{{ dicionarioDadosImpactoLocal|safe }}');
@@ -250,7 +303,7 @@
 
 
 			const data = {
-				labels: ['Dinheiro Ganho', 'Numero Produtos Encomendados'],
+				labels: ['Dinheiro(€)', 'Numero Produtos Encomendados'],
 				datasets: []
 			};
 
@@ -326,7 +379,12 @@
 					data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
 					backgroundColor: [colors[colorIndex]],
 					borderColor: [colors[colorIndex]],
-					borderWidth: 1
+					borderWidth: 1,
+					datalabels: {
+						font: {
+							weight: 'bold'
+					}
+				}
 				};
 				data.datasets.push(dataset);
 				colorIndex = (colorIndex + 1) % colors.length; // Loop through colors
@@ -335,16 +393,31 @@
 
 
 			const config = {
-				type: 'bar',
-				data,
-				options: {
-					scales: {
-						y: {
-							beginAtZero: true
+			type: 'bar',
+			data,
+			options: {
+				scales: {
+					y: {
+						beginAtZero: true,
+						ticks: {
+							font: {
+								size: 13,
+								weight: 'bold'
+							}
+						}
+					},
+					x: {
+						beginAtZero: true,
+						ticks: {
+							font: {
+								size:13,
+								weight: 'bold'
+							}
 						}
 					}
 				}
-			};
+			}
+		};
 
 			const myChart = new Chart(
 				document.getElementById('myChart'),
@@ -353,7 +426,7 @@
 			// -------------------------------------------------------------------------------------------------------------
 
 			const freguesiasData = {
-				labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
+				labels: ['Dinheiro(€)', 'Numero Produtos Encomendas'],
 				datasets: []
 			};
 
@@ -366,10 +439,16 @@
 					data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
 					backgroundColor: [colors[freguesiasColorIndex]],
 					borderColor: [colors[freguesiasColorIndex]],
-					borderWidth: 1
+					borderWidth: 1,
+					datalabels: {
+					font: {
+						weight: 'bold'
+					}
+					}
+					
 				};
 				freguesiasData.datasets.push(dataset);
-				freguesiasColorIndex = (freguesiasColorIndex + 1) % colors.length; // Loop through colors
+				freguesiasColorIndex = (freguesiasColorIndex + 1) % colors.length; 
 			}
 
 			const freguesiasConfig = {
@@ -377,10 +456,25 @@
 				data: freguesiasData,
 				options: {
 					scales: {
-						y: {
-							beginAtZero: true
+					y: {
+						beginAtZero: true,
+						ticks: {
+							font: {
+								size: 13,
+								weight: 'bold'
+							}
+						}
+					},
+					x: {
+						beginAtZero: true,
+						ticks: {
+							font: {
+								size: 13,
+								weight: 'bold'
+							}
 						}
 					}
+				}
 				}
 			};
 
@@ -393,7 +487,7 @@
 			// -------------------------------------------------------------------------------------------------------------
 
 			const paisesData = {
-				labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
+				labels: ['Dinheiro(€)', 'Numero Produtos Encomendas'],
 				datasets: []
 			};
 
@@ -406,7 +500,14 @@
 					data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
 					backgroundColor: [colors[paisesColorIndex]],
 					borderColor: [colors[paisesColorIndex]],
-					borderWidth: 1
+					borderWidth: 1,
+					datalabels: {
+					font: {
+						weight: 'bold'
+					}
+					}
+					
+
 				};
 				paisesData.datasets.push(dataset);
 				paisesColorIndex = (paisesColorIndex + 1) % colors.length; // Loop through colors
@@ -417,10 +518,25 @@
 				data: paisesData,
 				options: {
 					scales: {
-						y: {
-							beginAtZero: true
+					y: {
+						beginAtZero: true,
+						ticks: {
+							font: {
+								size: 13,
+								weight: 'bold'
+							}
+						}
+					},
+					x: {
+						beginAtZero: true,
+						ticks: {
+							font: {
+								size: 13,
+								weight: 'bold'
+							}
 						}
 					}
+				}
 				}
 			};
 
@@ -432,7 +548,7 @@
 			// -------------------------------------------------------------------------------------------------------------
 
 			const continentesData = {
-				labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
+				labels: ['Dinheiro(€)', 'Numero Produtos Encomendas'],
 				datasets: []
 			};
 
@@ -446,7 +562,12 @@
 					data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
 					backgroundColor: [colors[continentesColorIndex]],
 					borderColor: [colors[continentesColorIndex]],
-					borderWidth: 1
+					borderWidth: 1,
+					datalabels: {
+					font: {
+						weight: 'bold'
+					}
+					}
 				};
 				continentesData.datasets.push(dataset);
 				continentesColorIndex = (continentesColorIndex + 1) % colors.length; // Loop through colors
@@ -457,10 +578,25 @@
 				data: continentesData,
 				options: {
 					scales: {
-						y: {
-							beginAtZero: true
+					y: {
+						beginAtZero: true,
+						ticks: {
+							font: {
+								size: 13,
+								weight: 'bold'
+							}
+						}
+					},
+					x: {
+						beginAtZero: true,
+						ticks: {
+							font: {
+								size: 13,
+								weight: 'bold'
+							}
 						}
 					}
+				}
 				}
 			};
 
@@ -471,7 +607,7 @@
 
 			// -------------------------------------------------------------------------------------------------------------
 			const mundosData = {
-				labels: ['Dinheiro Gasto', 'Numero Produtos Encomendas'],
+				labels: ['Dinheiro(€) ', 'Numero Produtos Encomendas'],
 				datasets: []
 			};
 
@@ -483,7 +619,12 @@
 				data: [obj.dinheiroGasto, obj.numeroProdutosEncomendos],
 				backgroundColor: [colors[mundosColorIndex]],
 				borderColor: [colors[mundosColorIndex]],
-				borderWidth: 1
+				borderWidth: 1,
+				datalabels: {
+					font: {
+						weight: 'bold'
+					}
+					}
 			};
 			mundosData.datasets.push(dataset);
 			mundosColorIndex = (mundosColorIndex + 1) % colors.length; // Loop through colors
@@ -494,10 +635,25 @@
 				data: mundosData,
 				options: {
 					scales: {
-						y: {
-							beginAtZero: true
+					y: {
+						beginAtZero: true,
+						ticks: {
+							font: {
+								size: 13,
+								weight: 'bold'
+							}
+						}
+					},
+					x: {
+						beginAtZero: true,
+						ticks: {
+							font: {
+								size: 13,
+								weight: 'bold'
+							}
 						}
 					}
+				}
 				}
 			};
 
@@ -507,9 +663,24 @@
 			);
 
 		</script>
-
-
+		<div class='center'>
+		<a href="{% url 'loja-perfil' request.user.username %}" class="layout__boxTitle">
+			<div class="container">
+				<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+					viewBox="0 0 32 32">
+					<title>arrow-left</title>
+					<path
+						d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z">
+					</path>
+				</svg>
+				<h6 class="voltar">Voltar</h6>
+			</div>
+		</a>
+		</div>
 </div>
+
+
+
 
 <div class="logo-carousel-section">
 	<div class="container">
