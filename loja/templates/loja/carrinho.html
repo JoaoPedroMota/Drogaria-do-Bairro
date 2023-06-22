@@ -75,7 +75,11 @@
             <td class="product-name">{{ produto.nomeProduto }}</td>
             <td class="product-quantity">{{produto.precoKilo}}€/{{produto.produto.unidade_medida}}</td>    
             <td class="product-price">{{produto.preco|floatformat:2}}€</td>
-            <td><input type="number" class="styled-input" step="1" min="0.1" max="999" placeholder="{{produto.quantidade|floatformat:2}}" name="quantidade_{{ produto.produto.id }}"  value="{{ produto.quantidade }}" >{{ produto.quantidade }} {{produto.produto.unidade_medida}}</td>
+            {% if produto.produto.unidade_medida == 'un' %}
+            <td><input type="number" class="styled-input" step="1" min="1" max="999" placeholder="{{produto.quantidade|floatformat:2}}" name="quantidade_{{ produto.produto.id }}"  value="{{ produto.quantidade }}" >{{ produto.quantidade }} {{produto.produto.unidade_medida}}</td>
+            {% else %}
+            <td><input type="number" class="styled-input" step="1" min="0.1" max="999" placeholder="{{ produto.quantidade }}" name="quantidade_{{ produto.produto.id }}"  value="{{ produto.quantidade }}" >{{ produto.quantidade }} {{produto.produto.unidade_medida}}</td>
+            {% endif %}
             {% endwith %}
         </tr>
     </tbody>

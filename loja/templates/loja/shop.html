@@ -142,6 +142,9 @@
 </ul>
 {% endif %}
 
+{% for categoria in categoria %}
+<a class="button-link" href="{% url 'loja-ver-produtos' %}?q={{categoria}}" >{{categoria}}</a>
+{% endfor %}
 <!-- {% for categoria in categoria %}
     {% if categoria.categoria_pai is null %}
     <div class="categoria">
@@ -158,8 +161,10 @@
     {% endif %}
 {% endfor %} -->
 
-<script>
-    $(document).ready(function () {
+
+<!-- <script>
+    $(document).ready(function() {
+
         $(".subcategorias").hide();
 
         $(".categoria").click(function () {
@@ -167,7 +172,7 @@
             $(this).find(".seta").toggleClass("rotated");
         });
     });
-</script>
+</script> -->
 
 
 

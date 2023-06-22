@@ -1,10 +1,13 @@
 {% extends 'main.html' %}
 {% load static %}
 {% block content%}
+
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
 <div class="breadcrumb-section breadcrumb-bg">
 	<div class="container">
+
 		<div class="col-lg-8 offset-lg-2 text-center">
 			<div class="breadcrumb-text">
 				<h1>Relatório Geral</h1>
@@ -12,9 +15,11 @@
 				{% if request.user.is_fornecedor %}
 				<p>Total Dinheiro ganho:</p>
 				<br>
+
 				<p style="color:white">{{total.dinheiroGastoGanho}}€</p>
 				<br>
 				<p>Número de Encomendadas recebidas</p>
+
 				<br>
 				<p style="color:white">{{total.ProdutosEncomendados}} encomendas</p>
 
@@ -55,6 +60,13 @@
 					{% for field in form %}
 					<div class="form-group">
 						<p>{{ field.label }}</p>
+						{% if field.name == 'dataInicio' %}
+							<br>
+							<p class="pequeno">(Data de início do relatório)</p>
+						{% elif field.name == 'dataFim' %}
+							<br>
+							<p class="pequeno">(Data de fim do relatório, inclusive)</p>
+						{% endif %}
 						<br>
 						<input type="{{ field.field.widget.input_type }}" class="centered-inputNome"
 							id="{{ field.id_for_label }}" name="{{ field.name }}" placeholder="{{ field.label }}">
@@ -86,6 +98,17 @@
 		</div>
 
 	</div>
+	{% if dataInicio %}
+	<h2 style="font-size: 20px; color:white">Data de Início: <span style="font-weight: bold;">{{dataInicio}}</span></h2>
+	<br>
+	{% endif %}
+	{% if dataFim %}
+	<h2 style="font-size: 20px; color:white">Data de Fim:  <span style="font-weight: bold;">{{dataFim}}</span></h2>
+	{% endif %}
+
+
+
+
 </div>
 <br>
 <br>
@@ -102,6 +125,10 @@
 <div class="product-section mt-150 mb-150">
 
 	<style>
+		.pequeno{
+			font-size: 10px !important;
+			color: white !important;
+		}
 		  .center {
         display: flex;
         justify-content: center;
@@ -166,8 +193,7 @@
 	</style>
 	</head>
 
-	<body>
-
+		
 		<div class="chartCard" style="margin-top: -400px;">
 			<div class="chartBox">
 				<h1 style="color:black ;font-weight:bold">Freguesias Iguais</h1>
@@ -299,9 +325,6 @@
 			var paises = dicionarioImpactoLocal.Mesmopais;
 			var continentes = dicionarioImpactoLocal.MesmoContinente;
 			var mundos = dicionarioImpactoLocal.RestoDoMundo;
-
-
-
 			const data = {
 				labels: ['Dinheiro(€)', 'Numero Produtos Encomendados'],
 				datasets: []
