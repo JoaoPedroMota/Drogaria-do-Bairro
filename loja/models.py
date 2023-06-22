@@ -181,7 +181,8 @@ class Utilizador(AbstractUser):
             raise ValueError("Apenas os utilizadores que são consumidores têm carrinho, e só estes podem aceder aos produtos que têm no carrinho.")
     def save(self, *args, **kwargs):
         # Transformar o username em lower case
-        self.username = self.username.lower()
+        if self.username:
+            self.username = self.username.lower()
 
         # Combinar o first_name e last_name para formar o nome completo
         self.nome = f'{self.first_name} {self.last_name}'

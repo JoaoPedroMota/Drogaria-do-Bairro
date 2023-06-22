@@ -313,7 +313,7 @@ def checkout(request):
 
 def loginUtilizador(request):
     return oauth.auth0.authorize_redirect(
-        request, request.build_absolute_uri('https://drogariadobairro.pt/callback')
+        request, request.build_absolute_uri(reverse("loja-callback"))
     )
 
 
@@ -324,31 +324,14 @@ def callback(request):
     username = token['userinfo']['nickname']
     email = token['userinfo']['email']
 
-    user, created = Utilizador.objects.get_or_create(username=username, email=email)
+    user, created = Utilizador.objects.get_or_create(email=email)
 
     login(request, user)
 
     if created:
-        return redirect('https://drogariadobairro.pt/completarPerfil')
+        return redirect('loja-completarPerfil')
     else:
-        return redirect('https://drogariadobairro.pt')
-
-    # username = token['userinfo']['nickname']
-
-    # # url = f'http://127.0.0.1:8000/api/utilizadores/{username}'
-    # url = f'http://127.0.0.1:8000/api/utilizadores/ninfante'
-    
-    # response = requests.get(url)
-
-    # if response.status_code == 200:
-    #     print('AAAA\n\n')
-    #     print(response.json())
-    #     utilizador = UtilizadorSerializer(data=response.json())
-    #     login(request, utilizador)
-    #     return redirect(request.build_absolute_uri(reverse("loja-home")))
-    # else:
-    #     print('BBBB\n\n')
-
+        return redirect(request.build_absolute_uri(reverse("loja-home")))
 
 def logout(request):
     request.session.clear()
@@ -357,7 +340,7 @@ def logout(request):
         f"https://{settings.AUTH0_DOMAIN}/v2/logout?"
         + urlencode(
             {
-                "returnTo": request.build_absolute_uri('https://drogariadobairro.pt'),
+                "returnTo": request.build_absolute_uri(reverse("loja-home")),
                 "client_id": settings.AUTH0_CLIENT_ID,
             },
             quote_via=quote_plus,
