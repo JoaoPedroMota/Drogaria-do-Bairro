@@ -582,7 +582,7 @@ def perfil(request, userName):
     return render(request,'loja/perfil.html',context)
 
 # @login_required(login_url='loja-login')
-@fornecedor_required
+# @fornecedor_required
 def criarUP(request, userName):
     if request.user.username != userName:
         return redirect('loja-perfil', userName=request.user.username)
@@ -618,7 +618,7 @@ def criarUP(request, userName):
 
 
 
-@fornecedor_required
+# @fornecedor_required
 def unidadeProducao(request, userName, id):
     context = {}
     
@@ -859,7 +859,7 @@ def unidadeProducao(request, userName, id):
 #######################ZONA DE TESTE######################################################
 
 # @login_required(login_url='loja-login')
-@fornecedor_required
+# @fornecedor_required
 def editarUnidadeProducao(request, userName, id):
     if request.user.username != userName:
         return redirect('loja-perfil', userName=request.user.username)
@@ -889,7 +889,7 @@ def editarUnidadeProducao(request, userName, id):
     context = {'form':form, 'pagina':pagina, 'unidadeProducao':unidadeProducao}
     return render(request, 'loja/editarUnidadeProducao.html', context)
 
-@fornecedor_required
+#@fornecedor_required
 def removerUnidadeProducao(request, userName, id):
     if request.user.username != userName:
         return redirect('loja-perfil', userName=request.user.username)
@@ -906,7 +906,7 @@ def removerUnidadeProducao(request, userName, id):
 
 
 # @login_required(login_url='loja-login')
-@fornecedor_required
+#@fornecedor_required
 def criarVeiculo(request, userName, id):
     if request.user.username != userName:
         return redirect('loja-perfil', userName=request.user.username)
@@ -936,7 +936,7 @@ def criarVeiculo(request, userName, id):
     return render(request, 'loja/criarVeiculo.html', context)
 
 #@login_required(login_url='loja-login')
-@fornecedor_required
+#@fornecedor_required
 def editarVeiculo(request, userName, id, idVeiculo):
     if request.user.username != userName:
         return redirect('loja-perfil', userName=request.user.username)
@@ -971,7 +971,7 @@ def editarVeiculo(request, userName, id, idVeiculo):
 
 
 
-@fornecedor_required
+# @fornecedor_required
 def removerVeiculo(request, userName, id):
     if request.user.username != userName:
         return redirect('loja-perfil', userName=request.user.username)
@@ -985,7 +985,7 @@ def removerVeiculo(request, userName, id):
 
 
 #### O QUE É ISTO??????????????
-@fornecedor_required
+# @fornecedor_required
 def remover_veiculo(request, id):
     veiculo = get_object_or_404(Veiculo, pk=id)
     if request.method == 'POST':
@@ -1003,7 +1003,7 @@ def remover_veiculo(request, id):
 
 
 # @login_required(login_url='loja-login')
-@fornecedor_required
+# @fornecedor_required
 def criar_produto(request, userName):
     fornecedor = request.user.fornecedor if hasattr(request.user, 'fornecedor') else None
     
@@ -1692,7 +1692,7 @@ def remover_do_carrinho(request, produto_id):
     return redirect('loja-carrinho')
 
     
-@fornecedor_required
+# @fornecedor_required
 def removerAssociaoProdutoUP(request, username, idUnidadeProducao, idProdutoUnidadeProducao):    
     if request.user.username != username:
         return redirect('loja-perfil', userName=request.user.username)
@@ -1718,7 +1718,7 @@ def removerAssociaoProdutoUP(request, username, idUnidadeProducao, idProdutoUnid
 
 
 #@login_required(login_url='loja-login')
-@fornecedor_required
+# @fornecedor_required
 def criarAssociacaoProdutoUP(request, username):
     formulario = ProdutoUnidadeProducaoForm(user=request.user)
     if request.method == 'POST':
@@ -2385,7 +2385,7 @@ def verDetalhesEnvioNaEncomenda(request, username, idDetalhes, idEncomenda):
 
 
 
-@fornecedor_required
+# @fornecedor_required
 def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao,idProdutoEncomendado):
     
     if request.user.username != username:
@@ -2433,7 +2433,7 @@ def getDetalhesParaFornecedor(request,username, idEncomenda, idUnidadeProducao,i
 
 
 
-@fornecedor_required
+# @fornecedor_required
 def colocarProdutoEmVeiculoTransporte(request, username, idUnidadeProducao, idProdutoEncomenda):
     
     if request.user.username != username:
@@ -2496,7 +2496,7 @@ def colocarProdutoEmVeiculoTransporte(request, username, idUnidadeProducao, idPr
 
 
 # form = ProdutoUnidadeProducaoForm(request.POST, request.FILES,user=request.user)
-@fornecedor_required
+# @fornecedor_required
 def veiculoSairParaEntrega(request, username, idVeiculo, idUnidadeProducao):
     
     if request.user.username != username:
@@ -2523,7 +2523,7 @@ def veiculoSairParaEntrega(request, username, idVeiculo, idUnidadeProducao):
         
 
 
-@fornecedor_required
+# @fornecedor_required
 def entregarEncomenda(request, username, idUnidadeProducao,idVeiculo):
     if request.user.username != username:
         return redirect('loja-perfil', userName= request.user.username)
@@ -2543,7 +2543,7 @@ def entregarEncomenda(request, username, idUnidadeProducao,idVeiculo):
         return redirect('loja-unidadeProducao', userName=username, id=idUnidadeProducao)
     
     
-@fornecedor_required
+# @fornecedor_required
 def veiculoRegressou(request, username, idUnidadeProducao, idVeiculo):
     if request.user.username != username:
         return redirect('loja-perfil', userName=request.user.username)
