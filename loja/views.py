@@ -313,7 +313,7 @@ def checkout(request):
 
 def loginUtilizador(request):
     return oauth.auth0.authorize_redirect(
-        request, request.build_absolute_uri('https://drogariadobairro.pt/callback')
+        request, request.build_absolute_uri(reverse("loja-callback"))
     )
 
 
@@ -329,26 +329,9 @@ def callback(request):
     login(request, user)
 
     if created:
-        return redirect('https://drogariadobairro.pt/completarPerfil')
+        return redirect('loja-completarPerfil')
     else:
-        return redirect('https://drogariadobairro.pt')
-
-    # username = token['userinfo']['nickname']
-
-    # # url = f'http://127.0.0.1:8000/api/utilizadores/{username}'
-    # url = f'http://127.0.0.1:8000/api/utilizadores/ninfante'
-    
-    # response = requests.get(url)
-
-    # if response.status_code == 200:
-    #     print('AAAA\n\n')
-    #     print(response.json())
-    #     utilizador = UtilizadorSerializer(data=response.json())
-    #     login(request, utilizador)
-    #     return redirect(request.build_absolute_uri(reverse("loja-home")))
-    # else:
-    #     print('BBBB\n\n')
-
+        return redirect(request.build_absolute_uri(reverse("loja-home")))
 
 def logout(request):
     request.session.clear()
@@ -357,7 +340,7 @@ def logout(request):
         f"https://{settings.AUTH0_DOMAIN}/v2/logout?"
         + urlencode(
             {
-                "returnTo": request.build_absolute_uri('https://drogariadobairro.pt'),
+                "returnTo": request.build_absolute_uri(reverse("loja-home")),
                 "client_id": settings.AUTH0_CLIENT_ID,
             },
             quote_via=quote_plus,
@@ -2779,3 +2762,77 @@ def marcar_notificacao_lida(request, username):
     
     return JsonResponse({'success': True})
 
+from django.shortcuts import get_object_or_404
+
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib import messages
+from django.middleware.csrf import get_token
+import requests
+
+def criar_produto_opcao(request, username, idUnidadeProducao, idProdutoUP):
+    opcoes_por_atributo = {} 
+    if request.method == 'POST':
+        opcoes_por_atributo = {
+            atributo: Opcao.objects.filter(atributos=atributo)
+            for atributo in Atributo.objects.all()
+        }
+        opcao_form = OpcaoForm(opcoes_por_atributo=opcoes_por_atributo, data=request.POST)
+
+        if opcao_form.is_valid():
+            print("ENTREI NO IF DO FORM OK!!!!!!!!!!!!!!!!!!!!!!")
+            opcoes_selecionadas = opcao_form.cleaned_data['opcoes']
+            produto = get_object_or_404(ProdutoUnidadeProducao, pk=idProdutoUP)
+            print("produto OK!")
+            for opcao_id in opcoes_selecionadas:
+                print(opcao_id)
+                opcao_nome = opcao_id.split(' - ')[0]
+                print(opcao_nome)
+                opcao = get_object_or_404(Opcao, nome=opcao_nome)
+                print("opcao OK!")
+                ProdutoOpcao.objects.create(produto=produto, opcao=opcao)
+                
+                print("REQUEST USERNAME", request.user.username)
+                print("idUnidadeProducao ", idUnidadeProducao)
+                print("idProdutoUP", idProdutoUP)
+                url_produto_opcao = f'http://127.0.0.1:8000/api/{request.user.username}/fornecedor/unidadesProducao/{idUnidadeProducao}/produtos/{idProdutoUP}/ProdutoOpcaoList/'
+                criar_produto_opcao_dict_info = {
+                    'produto': idProdutoUP,
+                    'opcao': opcao,
+                }
+
+                sessao = requests.Session()
+                sessao.cookies.update(request.COOKIES)
+                csrf_token = get_token(request)
+                headers = {'X-CSRFToken': csrf_token}
+
+                resposta = sessao.post(url_produto_opcao, data=criar_produto_opcao_dict_info, headers=headers)
+
+                if resposta.status_code == 201:
+                    print("ENTREI NO PRIMEIRO IF!!!")
+                    messages.success(request, 'Opção de produto gravada com sucesso')
+                    return redirect('loja-perfil', userName=username)
+                else:
+                    print("ENTREI NO PRIMEIRO ELSE !!!")
+                    messages.error(request, 'Erro ao gravar opção de produto!')
+        else:
+            print("OPCAO FORM ERRORS :", opcao_form.errors)
+
+        context = {
+            'opcao_form': opcao_form,
+        }
+
+        return render(request, 'loja/criar_produto_opcao.html', context)
+    else:
+        print("ENTREI NO TERCEIRO ELSE")
+        opcoes_por_atributo = {
+            atributo: Opcao.objects.filter(atributos=atributo)
+            for atributo in Atributo.objects.all()
+        }
+        opcao_form = OpcaoForm(opcoes_por_atributo=opcoes_por_atributo)
+
+        context = {
+            'opcao_form': opcao_form,
+        }
+
+        return render(request, 'loja/criar_produto_opcao.html', context)
+    return HttpResponseBadRequest("Bad Request")

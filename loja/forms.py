@@ -27,10 +27,20 @@ class CompletarPerfil(ModelForm):
     telemovel = PhoneNumberField(required=True)
     first_name = forms.CharField(required=True)
     last_name = forms.CharField(required=True)
+    username = forms.CharField(required=True)
     
     class Meta:
         model = Utilizador
         fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','freguesia','morada','telemovel','tipo_utilizador', 'imagem_perfil']
+
+    # def clean(self):
+    #     cleaned_data = super().clean()
+    #     username = cleaned_data.get('username')
+
+    #     if username is None:
+    #        self.add_error('username', "O username é obrigatório.")
+    #     else:
+    #         return cleaned_data
 
 class criarUnidadeProducaoFormulario(ModelForm):
     class Meta:
@@ -321,3 +331,53 @@ class ProdutosEncomendadosVeiculosForm(forms.ModelForm):
     class Meta:
         model = ProdutosEncomendadosVeiculos
         fields = ['veiculo']
+
+
+
+#########################################
+class AtributoForm(forms.ModelForm):
+    class Meta:
+        model = Atributo
+        fields = ['nome']
+# class OpcaoForm(forms.ModelForm):
+#     class Meta:
+#         model = Opcao
+#         fields = ['nome', 'atributos']
+class CategoriaForm(forms.ModelForm):
+    class Meta:
+        model = Categoria
+        fields = ['nome', 'categoria_pai']
+
+class ProdutoOpcaoForm(forms.ModelForm):
+    class Meta:
+        model = ProdutoOpcao
+        fields = ['produto', 'opcao']
+        widgets = {
+            'produto': forms.Select(attrs={'class': 'form-control'}),
+            'opcao': forms.Select(attrs={'class': 'form-control'}),
+        }
+from django import forms
+
+class OpcaoForm(forms.Form):
+    opcoes = forms.MultipleChoiceField(
+        label='Opções',
+        choices=[],
+        widget=forms.CheckboxSelectMultiple
+    )
+
+    def __init__(self, opcoes_por_atributo=None, *args, **kwargs):
+        super(OpcaoForm, self).__init__(*args, **kwargs)
+        print("OPCOES POR ATRIBUTO")
+        print(opcoes_por_atributo)
+        if opcoes_por_atributo:
+            choices = []
+            for atributo, opcoes in opcoes_por_atributo.items():
+                choices.extend([(opcao, opcao) for opcao in opcoes])
+
+            # print("1 opcoes!!!!!",opcoes)
+            # print("2 opcoes_por_atributo!!!!!",opcoes_por_atributo)
+            self.fields['opcoes'].choices = choices
+            # print("3 opcoes!!!!!!!!",opcoes)
+            # print("4 opcoes_por_atributo!!!",opcoes_por_atributo)
+
+
