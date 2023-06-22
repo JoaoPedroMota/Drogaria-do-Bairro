@@ -17,7 +17,8 @@ def fornecedor_required(view_func):
 def consumidor_required(view_func):
     @login_required(login_url='loja-login')
     def wrapper(request, *args, **kwargs):
-        if request.user.is_consumidor:
+        consumidor = request.user.consumidor if hasattr(request.user, 'consumidor') else None
+        if request.user.is_consumidor or consumidor is not None:
             return view_func(request, *args, **kwargs)
         else:
             return redirect('loja-perfil', userName=request.user.username)
