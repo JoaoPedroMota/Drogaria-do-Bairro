@@ -1134,35 +1134,49 @@ def ver_produtos(request):
     response1 = requests.get(url1).json()
    
     
-    response2 = requests.get(url2, data={"q":q}).json()
+    response2 = requests.get(url2).json()
     
     response3 = requests.get(url3).json()
 
 
     response2_dict = {product['produto']: product for product in response2}
-   
+    response3_dict = {categoria['nome']: categoria for categoria in response3}
+
     merged_data = []
     for product1 in response1:
         product2 = response2_dict.get(product1['id'])
+        product3 = response3_dict.get(product1['categoria']['id'])
         if product2 is not None:
             merged_product = {
                 'id': product1['id'],
                 'nome': product1['nome'],
                 'preco_a_granel': product2['preco_a_granel'],
                 'preco_por_unidade': product2['preco_por_unidade'],
-                'imagem_produto': product2['imagem_produto']
+                'imagem_produto': product2['imagem_produto'],
+                'categoria': None,
+                'categoriaPai': None,
             }
-            if 'categoria' in product1:
+            for categorias in response3:
+                if merged_product['id'] == categorias['id']:
+                    merged_product['categoriaPai'] = categorias['nome']
+
+            if 'categoria' in product1 and 'categoriaPai' in merged_product:
                 merged_product['categoria'] = product1['categoria']['nome']
+                merged_product['categoriaPai'] = product1['categoria']['nome']
+                merged_product['idCategoria'] = product1['categoria']['id']
+            elif 'categoria' in product1 and merged_product['categoriaPai'] == None:
+                merged_product['categoria'] = product1['categoria']['nome']
+                merged_product['categoriaPai'] = None
                 merged_product['idCategoria'] = product1['categoria']['id']
             else:
                 merged_product['categoria'] = None
+                merged_product['categoriaPai'] = None
                 merged_product['idCategoria'] = None
             merged_data.append(merged_product)
 
     filtered_data = filter(
-        lambda p: p['categoria'] is not None and
-        (q.lower() in p['categoria'].lower() or q.lower() in p['nome'].lower()),
+        lambda p: p['categoria'] is not None and 
+        (q.lower() in p['categoria'].lower() or q.lower() in p['nome'].lower() or (p['categoriaPai'] is not None and q.lower() in p['categoriaPai'].lower())),
         merged_data
     )
 
@@ -1208,8 +1222,15 @@ def ver_produtos(request):
 
             actualFilteredProducts.append(product_info)
 
+    categoriasFilter = []
+    for product in response1:
+        for productExist in response2:
+            if product['id'] == productExist['produto'] and product['categoria']['nome'] not in categoriasFilter:
+                categoriasFilter.append(product['categoria']['nome'])
+    print('cat FILTER',str(categoriasFilter))
+
     produtosCarrinho = quantosProdutosNoCarrinho(request)
-    context = {'produtos_precos': actualFilteredProducts, 'termo_pesquisa': q, "produtosCarrinho": produtosCarrinho, "categoria": response3}
+    context = {'produtos_precos': actualFilteredProducts, 'termo_pesquisa': q, "produtosCarrinho": produtosCarrinho, "categoria": categoriasFilter}
     return render(request, 'loja/shop.html', context)
 
 
@@ -1400,7 +1421,7 @@ def adicionar_ao_carrinho(request, produto_id):
         csrf_token = get_token(request)
         headers = {'X-CSRFToken':csrf_token}
 
-        resposta = sessao.get(url, headers=headers)
+        resposta = requests.get(url)
         if resposta.status_code == 200: #ja existe o produto no carrinho, logo é um put
             content = resposta.json()
             idProdutoNoCarrinho = content.get('id')
@@ -1537,7 +1558,7 @@ def updateCarrinho(request):
         url = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/'
         cart = sessao.get(url, headers= headers)
         carrinho = cart.json()
-
+        print('PRINT CARINHOOOOOOO',str(carrinho))
         for produto in carrinho:
             produtoID = produto['produto']['id']
             print("ENTROOOOOOOOOOOOOOOOOU")
@@ -1556,23 +1577,31 @@ def updateCarrinho(request):
 
                 quantidadePorId = 'quantidade_'+produto_id
                 quantidade = Decimal(request.POST.get(quantidadePorId))
+                
                 preco_atualizado = preco_Kg * quantidade
-
+                print('##########################', preco_Kg, quantidade, preco_atualizado)
                 produtoUnidadeProducao = content['produto']
-                print("OLAAAAAAAAAAAAAAAA",str(produtoUnidadeProducao))
+                # print("OLAAAAAAAAAAAAAAAA",str(produtoUnidadeProducao))
                 idProdutoUnidadeProducao = produtoUnidadeProducao['id']
-                print("ADEEEEEEEEEEEEEEEEEEUS",idProdutoUnidadeProducao)
-                if produto_id in carrinho:
-                    totalQuantidade = float(quantidade)
+                # print("ADEEEEEEEEEEEEEEEEEEUS",idProdutoUnidadeProducao)
+                print("entrou ali?      ",produto_id, produto['produto']['id'])
+                if int(produto_id) == produto['produto']['id']:
+                    print("ENTROU AQUIIIIIIIIIIIIIIIIIIIIIII")
+                    totalQuantidade = float(preco_atualizado)
                     if totalQuantidade <= 999:
                         atualizar_carrinho_dict_info = {
                             'produto': idProdutoUnidadeProducao,
-                            'quantidade' : totalQuantidade
+                            'quantidade' : str(quantidade),
+                            'precoKilo': str(preco_Kg),
+                            'preco': str(totalQuantidade)
                         }
-
-                        
-                        urlAtualizar = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/{produto_id}/'
-                        respostaUpdate = sessao.put(urlAtualizar, headers=headers, data = atualizar_carrinho_dict_info)
+                        urlId = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/produtoUP/{produto_id}/'
+                        dataId = sessao.get(url, headers=headers)
+                        dataJsonId = dataId.json()
+                        produtoID_carrinho = (dataJsonId['id'])
+                        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!',str(atualizar_carrinho_dict_info))
+                        urlAtualizar = f'http://127.0.0.1:8000/api/{request.user.username}/consumidor/carrinho/{produtoID_carrinho}/'
+                        respostaUpdate = sessao.put(urlAtualizar, headers=headers, json = atualizar_carrinho_dict_info)
                     else:
                         mensagem_erro = "Erro: Quantidade máxima antigida. Máximo permitido é 999."
                         messages.error(request, mensagem_erro)
