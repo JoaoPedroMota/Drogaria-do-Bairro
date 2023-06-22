@@ -753,15 +753,15 @@ def unidadeProducao(request, userName, id):
         #print(data[0]['id'])
         #idFornecedor = data['id']
 
-    if request.user.username != userName:
-        return redirect('loja-perfil', userName=request.user.username)
-    else:
+    # if request.user.username != userName:
+    #     return redirect('loja-perfil', userName=request.user.username)
+    if True:
         url2 = 'http://127.0.0.1:8000/api/'+str(userName)+'/fornecedor/unidadesProducao/'+str(id)+'/veiculos/'
         response2 = requests.get(url2)
         if response2.status_code == 200:
             data2 = response2.json()
             # Process the data as needed
-            #return data
+            #return datagz
         else:
             #print('Error:', response2.status_code)
             #print('Response:', response2.content)
