@@ -18,7 +18,8 @@ def consumidor_required(view_func):
     @login_required(login_url='loja-login')
     def wrapper(request, *args, **kwargs):
         if request.user.is_consumidor:
-            return view_func(request, *args, **kwargs)
+            #return view_func(request, *args, **kwargs)
+            return True
         else:
             return redirect('loja-perfil', userName=request.user.username)
     return wrapper
