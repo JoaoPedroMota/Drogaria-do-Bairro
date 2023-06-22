@@ -2676,7 +2676,6 @@ def obterNotificacoesF(request,username):
 
 @login_required(login_url='loja-login')
 def relarioImpactoLocal(request, username):
-    produtosCarrinho = quantosProdutosNoCarrinho(request)
     data_inicio = None ## colocar as datas no formato YYYY-mm-dd
     data_fim = None ## colocar as datas no formato YYYY-mm-dd
     # if request.method == "POST":
