@@ -50,6 +50,16 @@
                               {% endif %}
                             {% endif %}
                             <br>
+
+                            {% if field.errors %}
+                        <ul class="field-error-list">
+                            {% for error in field.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </ul>
+                        <br>
+                        {% endif %}
+
                           {% endfor %}
                           
                           <input type="submit" id="login" value="GUARDAR">

@@ -27,10 +27,20 @@ class CompletarPerfil(ModelForm):
     telemovel = PhoneNumberField(required=True)
     first_name = forms.CharField(required=True)
     last_name = forms.CharField(required=True)
+    username = forms.CharField(required=True)
     
     class Meta:
         model = Utilizador
         fields = ['first_name', 'last_name', 'username','email', 'pais','cidade','freguesia','morada','telemovel','tipo_utilizador', 'imagem_perfil']
+
+    # def clean(self):
+    #     cleaned_data = super().clean()
+    #     username = cleaned_data.get('username')
+
+    #     if username is None:
+    #        self.add_error('username', "O username é obrigatório.")
+    #     else:
+    #         return cleaned_data
 
 class criarUnidadeProducaoFormulario(ModelForm):
     class Meta:
